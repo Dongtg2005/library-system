@@ -1,8 +1,8 @@
 spring:
   application:
-    name: book-service
+    name: auth-service
   datasource:
-    url: jdbc:postgresql://localhost:5432/book_db
+    url: jdbc:postgresql://localhost:5432/auth_db
     username: postgres
     password: postgres
     driver-class-name: org.postgresql.Driver
@@ -14,4 +14,8 @@ spring:
         dialect: org.hibernate.dialect.PostgreSQLDialect
 
 server:
-  port: 8084
+  port: 8081
+
+jwt:
+  secret: your-secret-key-change-in-production
+  expiration: 86400000

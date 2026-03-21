@@ -1,8 +1,8 @@
 spring:
   application:
-    name: book-service
+    name: user-service
   datasource:
-    url: jdbc:postgresql://localhost:5432/book_db
+    url: jdbc:postgresql://localhost:5432/user_db
     username: postgres
     password: postgres
     driver-class-name: org.postgresql.Driver
@@ -14,4 +14,4 @@ spring:
         dialect: org.hibernate.dialect.PostgreSQLDialect
 
 server:
-  port: 8084
+  port: 8082
