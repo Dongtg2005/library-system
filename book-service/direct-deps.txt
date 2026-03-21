@@ -1,0 +1,9 @@
+
+The following files have been resolved:
+   org.springframework.boot:spring-boot-starter-data-jpa:jar:3.5.12-SNAPSHOT:compile[36m -- module spring.boot.starter.data.jpa[0;1m [auto][m
+   org.springframework.boot:spring-boot-starter-validation:jar:3.5.12-SNAPSHOT:compile[36m -- module spring.boot.starter.validation[0;1m [auto][m
+   org.springframework.boot:spring-boot-starter-web:jar:3.5.12-SNAPSHOT:compile[36m -- module spring.boot.starter.web[0;1m [auto][m
+   org.postgresql:postgresql:jar:42.7.10:runtime[36m -- module org.postgresql.jdbc[0;1m [auto][m
+   org.projectlombok:lombok:jar:1.18.44:compile (optional)[36m -- module lombok[m
+   org.springframework.boot:spring-boot-starter-test:jar:3.5.12-SNAPSHOT:test[36m -- module spring.boot.starter.test[0;1m [auto][m
+
