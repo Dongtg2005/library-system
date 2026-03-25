@@ -2,30 +2,39 @@ spring:
   application:
     name: api-gateway
   cloud:
+    compatibility-verifier:
+      enabled: false
     gateway:
+      globalcors:
+        corsConfigurations:
+          '[/**]':
+            allowedOrigins: "*"
+            allowedMethods: "*"
+            allowedHeaders: "*"
+            allowCredentials: false
       routes:
         - id: auth-service
-          uri: http://localhost:8081
+          uri: http://auth-service:8081
           predicates:
-            - Path=/auth/**
+            - Path=/api/auth/**
           filters:
             - StripPrefix=1
         - id: user-service
-          uri: http://localhost:8082
+          uri: http://user-service:8082
           predicates:
-            - Path=/users/**
+            - Path=/api/users/**
           filters:
             - StripPrefix=1
         - id: book-service
-          uri: http://localhost:8084
+          uri: http://book-service:8083
           predicates:
-            - Path=/books/**
+            - Path=/api/books/**
           filters:
             - StripPrefix=1
         - id: borrow-service
-          uri: http://localhost:8083
+          uri: http://borrow-service:8084
           predicates:
-            - Path=/borrows/**
+            - Path=/api/borrows/**
           filters:
             - StripPrefix=1
 
