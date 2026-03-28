@@ -1,0 +1,60 @@
+version: '3.8'
+
+services:
+  # 1. PostgreSQL
+  postgres:
+    image: postgres:15-alpine
+    container_name: lms-postgres
+    restart: always
+    env_file:
+      - .env
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init-scripts/init-databases.sql:/docker-entrypoint-initdb.d/init-databases.sql
+    # Yêu cầu của bạn: Đảm bảo DB thực sự sẵn sàng nhận connection
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - lms-network
+
+  # 2. Redis
+  redis:
+    image: redis:7-alpine
+    container_name: lms-redis
+    restart: always
+    # Yêu cầu của bạn: Bật AOF để giữ lại Distributed Lock nếu container restart
+    command: redis-server --appendonly yes
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data # Ánh xạ data ra ngoài để persistence thực sự có tác dụng
+    networks:
+      - lms-network
+
+  # 3. RabbitMQ
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+    container_name: lms-rabbitmq
+    restart: always
+    env_file:
+      - .env
+    ports:
+      - "5672:5672"   # Port giao tiếp AMQP
+      - "15672:15672" # Port UI Management
+    # Chú ý: Queue và Exchange sẽ được Spring Boot AMQP tự động declare khi service khởi động, 
+    # nên ta không cần init script ở đây.
+    networks:
+      - lms-network
+
+volumes:
+  postgres_data:
+  redis_data:    # Thêm volume cho Redis
+
+networks:
+  lms-network:
+    driver: bridge
