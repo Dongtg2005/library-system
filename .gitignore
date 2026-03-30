@@ -7,6 +7,9 @@ logs/
 
 # Maven
 target/
+*.jar
+*.war
+*.ear
 pom.xml.tag
 pom.xml.releaseBackup
 pom.xml.versionsBackup
@@ -14,6 +17,21 @@ pom.xml.next
 release.properties
 dependency-reduced-pom.xml
 .flattened-pom.xml
+.classpath
+.project
+.settings/
+
+# Gradle
+.gradle/
+build/
+*.gradle
+
+# Node.js / React
+node_modules/
+build/
+dist/
+npm-debug.log
+yarn-error.log
 
 # IDE
 .idea/
@@ -22,9 +40,17 @@ dependency-reduced-pom.xml
 *.ipr
 .vscode/
 *.code-workspace
+*.swp
+*.swo
+*~
 
 # OS
 .DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
 Thumbs.db
 
 # Application
@@ -38,3 +64,12 @@ Thumbs.db
 
 # Generated files
 .factorypath
+
+# Docker
+.docker/
+docker-compose.override.yml
+
+# Temporary files
+*.tmp
+*.bak
+*.temp

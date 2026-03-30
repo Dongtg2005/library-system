@@ -61,45 +61,38 @@ export const authAPI = {
  * User API calls (User Service)
  */
 export const userAPI = {
-  // Get user profile
   getProfile: () => apiClient.get('/users/me'),
-  
-  // Update user profile
   updateProfile: (data) => apiClient.put('/users/me', data),
-  
-  // Change password
   changePassword: (data) => apiClient.post('/users/change-password', data),
+  getUsers: () => apiClient.get('/users'),
+  createUser: (data) => apiClient.post('/users', data),
+  updateUser: (id, data) => apiClient.put(`/users/${id}`, data),
+  updateRole: (id, data) => apiClient.patch(`/users/${id}/role`, data),
+  updateStatus: (id, data) => apiClient.patch(`/users/${id}/status`, data),
+  deleteUser: (id) => apiClient.delete(`/users/${id}`),
 };
 
 /**
  * Book API calls (Book Service)
  */
 export const bookAPI = {
-  // Get all books
   getBooks: (params) => apiClient.get('/books', { params }),
-  
-  // Search books
   searchBooks: (keyword) => apiClient.get('/books/search', { params: { q: keyword } }),
-  
-  // Get book details
   getBookDetails: (bookId) => apiClient.get(`/books/${bookId}`),
+  createBook: (data) => apiClient.post('/books', data),
+  updateBook: (bookId, data) => apiClient.put(`/books/${bookId}`, data),
+  deleteBook: (bookId) => apiClient.delete(`/books/${bookId}`),
 };
 
 /**
  * Borrow API calls (Borrow Service)
  */
 export const borrowAPI = {
-  // Get user's borrowed books
   getBorrowedBooks: () => apiClient.get('/borrows/my-books'),
-  
-  // Borrow a book
   borrowBook: (bookId) => apiClient.post('/borrows', { bookId }),
-  
-  // Return a book
   returnBook: (borrowId) => apiClient.post(`/borrows/${borrowId}/return`),
-  
-  // Get borrow history
   getBorrowHistory: () => apiClient.get('/borrows/history'),
+  getBorrowRecords: () => apiClient.get('/borrows'),
 };
 
 export default apiClient;
