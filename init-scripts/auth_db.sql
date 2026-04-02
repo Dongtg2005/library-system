@@ -170,3 +170,13 @@ CREATE TABLE audit_logs (
 CREATE INDEX idx_audit_logs_user ON audit_logs(user_id);
 CREATE INDEX idx_audit_logs_created ON audit_logs(created_at DESC);
 CREATE INDEX idx_audit_logs_action ON audit_logs(action);
+
+-- ============================================================================
+-- SEED DATA: DEFAULT ACCOUNTS (Password: 123456)
+-- ============================================================================
+INSERT INTO users (id, email, password, full_name, role, status) VALUES
+('a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11', 'admin@lms.com', '$2a$10$8.UnVuG9HHgffUDAlk8qfOuVGkqRzgVymGe07xd00GdRIdum5flge', 'LMS Administrator', 'ADMIN', 'ACTIVE'),
+('a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a12', 'librarian@lms.com', '$2a$10$8.UnVuG9HHgffUDAlk8qfOuVGkqRzgVymGe07xd00GdRIdum5flge', 'LMS Librarian', 'LIBRARIAN', 'ACTIVE'),
+('a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a13', 'student@lms.com', '$2a$10$8.UnVuG9HHgffUDAlk8qfOuVGkqRzgVymGe07xd00GdRIdum5flge', 'LMS Student', 'USER', 'ACTIVE'),
+('a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a14', 'user@lms.com', '$2a$10$8.UnVuG9HHgffUDAlk8qfOuVGkqRzgVymGe07xd00GdRIdum5flge', 'LMS Standard User', 'USER', 'ACTIVE');
+

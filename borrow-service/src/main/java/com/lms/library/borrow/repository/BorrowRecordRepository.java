@@ -1,0 +1,15 @@
+package com.lms.library.borrow.repository;
+
+import com.lms.library.borrow.entity.BorrowRecord;
+import com.lms.library.borrow.entity.enums.BorrowStatus;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
+
+import java.util.Collection;
+import java.util.UUID;
+
+@Repository
+public interface BorrowRecordRepository extends JpaRepository<BorrowRecord, UUID> {
+    
+    int countByMemberIdAndBorrowStatusIn(UUID memberId, Collection<BorrowStatus> borrowStatus);
+}

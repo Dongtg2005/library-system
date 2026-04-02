@@ -149,3 +149,13 @@ CREATE TABLE member_login_history (
 
 CREATE INDEX idx_member_login_history_member ON member_login_history(member_id);
 CREATE INDEX idx_member_login_history_date ON member_login_history(login_at DESC);
+
+-- ============================================================================
+-- SEED DATA: MEMBER PROFILES
+-- ============================================================================
+INSERT INTO members (id, auth_user_id, email, member_status, member_type, is_email_verified) VALUES
+('b0eebc99-9c0b-4ef8-bb6d-6bb9bd380b11', 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11', 'admin@lms.com', 'ACTIVE', 'STANDARD', TRUE),
+('b0eebc99-9c0b-4ef8-bb6d-6bb9bd380b12', 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a12', 'librarian@lms.com', 'ACTIVE', 'STANDARD', TRUE),
+('b0eebc99-9c0b-4ef8-bb6d-6bb9bd380b13', 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a13', 'student@lms.com', 'ACTIVE', 'STUDENT', TRUE),
+('b0eebc99-9c0b-4ef8-bb6d-6bb9bd380b14', 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a14', 'user@lms.com', 'ACTIVE', 'STANDARD', TRUE);
+
