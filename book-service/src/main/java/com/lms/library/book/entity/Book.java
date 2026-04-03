@@ -2,6 +2,9 @@ package com.lms.library.book.entity;
 import jakarta.persistence.*;
 import lombok.*;
 import java.util.UUID;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
+import java.time.LocalDateTime;
 @Entity // Định nghĩa một bảng trong database
 @Table(name = "books") // Đặt tên bảng là "books"
 @Getter
@@ -42,4 +45,11 @@ public class Book {
         OUT_OF_STOCK,   // Hết sách
         ARCHIVED        // Đã lưu trữ, không cho mượn nữa (có thể là sách cũ, hỏng...)
     }
+    @CreationTimestamp
+    @Column(name = "created_at", updatable = false)
+    private LocalDateTime createdAt;
+
+    @UpdateTimestamp
+    @Column(name = "updated_at")
+    private LocalDateTime updatedAt;
 }

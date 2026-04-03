@@ -1,10 +1,12 @@
 package com.lms.library.book.dto.mapper;
 
 import com.lms.library.book.dto.request.BookCreateRequest;
+import com.lms.library.book.dto.request.BookUpdateRequest;
 import com.lms.library.book.dto.response.BookResponse;
 import com.lms.library.book.entity.Book;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
+import org.mapstruct.MappingTarget;
 
 // @Mapper(componentModel = "spring") báo cho Spring Boot biết: 
 // "Hãy coi cái interface này như một Bean (nhân viên), khi nào tôi cần thì gọi nó ra làm việc"
@@ -22,4 +24,7 @@ public interface BookMapper {
 
     // 2. Chuyển từ Entity (vừa lấy từ kho ra) -> Response (trả về cho khách xem)
     BookResponse toResponse(Book entity);
+    
+    // Yêu cầu máy copy dữ liệu từ 'request' đắp thẳng vào 'entity' đang có sẵn
+    void updateEntityFromRequest(BookUpdateRequest request, @MappingTarget Book entity);
 }
