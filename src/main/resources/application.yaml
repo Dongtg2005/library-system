@@ -1,0 +1,39 @@
+spring:
+  application:
+    name: library-system
+  main:
+    allow-bean-definition-overriding: true
+  datasource:
+    url: jdbc:postgresql://postgres:5432/library_db
+    username: postgres
+    password: postgres
+    hikari:
+      maximum-pool-size: 20
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+  sql:
+    init:
+      mode: always
+      data-locations: classpath:data.sql
+
+server:
+  port: 8080
+  servlet:
+    context-path: /api
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+
+logging:
+  level:
+    com.lms: DEBUG
+    root: INFO
+
+jwt:
+  secret: your_secret_key_here_make_it_long_and_secure_for_production
+  expiration: 86400000

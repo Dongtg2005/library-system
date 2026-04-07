@@ -1,3 +1,33 @@
-.app-root {
+.App {
+  width: 100%;
   min-height: 100vh;
+}
+
+.loading-screen {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  background: linear-gradient(135deg, #0f766e 0%, #14b8a6 50%, #06b6d4 100%);
+  font-size: 1.5em;
+  color: white;
+  font-weight: 600;
+  letter-spacing: 1px;
+  animation: fadeIn 0.5s ease-in;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }

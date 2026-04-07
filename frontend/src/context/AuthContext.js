@@ -1,159 +1,136 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
-import { authAPI } from '../services/api';
+import React, { createContext, useState, useEffect, useCallback } from 'react';
 
-const AuthContext = createContext(null);
+export const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
-  const [token, setToken] = useState(null);
+  const [token, setToken] = useState(localStorage.getItem('token'));
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
 
-  // Initialize auth from localStorage
+  // Validate token on mount
   useEffect(() => {
-    const initializeAuth = async () => {
-      try {
-        const savedToken = localStorage.getItem('access_token');
-        
-        // If no token exists, user is not authenticated
-        if (!savedToken) {
-          setToken(null);
-          setUser(null);
-          setLoading(false);
-          return;
-        }
-        
-        try {
-          // Validate the token by calling an authenticated endpoint
-          const response = await authAPI.getCurrentUser();
-          
-          if (response && response.data) {
-            // Token is valid, set authenticated state
-            setToken(savedToken);
-            setUser(response.data);
-            localStorage.setItem('user', JSON.stringify(response.data));
-          } else {
-            // Response was successful but no data, clear auth
-            throw new Error('No user data received');
-          }
-        } catch (err) {
-          // Token is invalid, expired, or API error
-          console.error('Token validation failed:', err.message);
-          
-          // Clear all auth data from localStorage
-          localStorage.removeItem('access_token');
-          localStorage.removeItem('user');
-          
-          // Clear state
-          setToken(null);
-          setUser(null);
-        }
-      } finally {
-        setLoading(false);
-      }
-    };
-    
-    initializeAuth();
+    if (token) {
+      validateToken(token);
+    } else {
+      setLoading(false);
+    }
   }, []);
 
-  const register = async (email, password, fullName) => {
+  const validateToken = useCallback(async (tokenToValidate) => {
     try {
-      setError(null);
-      const response = await authAPI.register({
-        email,
-        password,
-        fullName,
+      const response = await fetch('/api/auth/validate?token=' + tokenToValidate, {
+        headers: {
+          'Content-Type': 'application/json',
+        },
       });
       
-      const { accessToken, ...userData } = response.data;
-      
-      // Save to localStorage
-      localStorage.setItem('access_token', accessToken);
-      localStorage.setItem('user', JSON.stringify(userData));
-      
-      // Update state
-      setToken(accessToken);
-      setUser(userData);
-      
-      return userData;
-    } catch (err) {
-      const message = err.response?.data?.message || 'Registration failed';
-      setError(message);
-      throw new Error(message);
+      if (response.ok) {
+        const userData = await response.json();
+        setUser(userData);
+      } else {
+        localStorage.removeItem('token');
+        setToken(null);
+        setUser(null);
+      }
+    } catch (error) {
+      console.error('Token validation error:', error);
+      localStorage.removeItem('token');
+      setToken(null);
+      setUser(null);
+    } finally {
+      setLoading(false);
     }
-  };
+  }, []);
 
   const login = async (email, password) => {
     try {
-      setError(null);
-      const response = await authAPI.login({
-        email,
-        password,
+      const response = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email, password }),
       });
-      
-      const { accessToken, ...userData } = response.data;
-      
-      // Save to localStorage
-      localStorage.setItem('access_token', accessToken);
-      localStorage.setItem('user', JSON.stringify(userData));
-      
-      // Update state
-      setToken(accessToken);
-      setUser(userData);
-      
-      return userData;
-    } catch (err) {
-      const message = err.response?.data?.message || 'Login failed';
-      setError(message);
-      throw new Error(message);
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || 'Login failed');
+      }
+
+      const data = await response.json();
+      localStorage.setItem('token', data.accessToken);
+      setToken(data.accessToken);
+      setUser(data);
+      return data;
+    } catch (error) {
+      console.error('Login error:', error);
+      throw error;
+    }
+  };
+
+  const register = async (email, password, fullName) => {
+    try {
+      const response = await fetch('/api/auth/register', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email, password, fullName }),
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || 'Registration failed');
+      }
+
+      const data = await response.json();
+      localStorage.setItem('token', data.accessToken);
+      setToken(data.accessToken);
+      setUser(data);
+      return data;
+    } catch (error) {
+      console.error('Register error:', error);
+      throw error;
     }
   };
 
   const logout = async () => {
     try {
       if (token) {
-        await authAPI.logout();
+        await fetch('/api/auth/logout', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+        });
       }
-    } catch (err) {
-      console.error('Logout error:', err);
+    } catch (error) {
+      console.error('Logout error:', error);
     } finally {
-      // Clear localStorage and state
-      localStorage.removeItem('access_token');
-      localStorage.removeItem('user');
+      localStorage.removeItem('token');
       setToken(null);
       setUser(null);
-      setError(null);
     }
-  };
-
-  const updateUser = (userData) => {
-    setUser(userData);
-    localStorage.setItem('user', JSON.stringify(userData));
   };
 
   const value = {
     user,
     token,
+    isAuthenticated: !!token && !!user,
     loading,
-    error,
-    register,
     login,
+    register,
     logout,
-    updateUser,
-    isAuthenticated: !!token,
   };
 
-  return (
-    <AuthContext.Provider value={value}>
-      {children}
-    </AuthContext.Provider>
-  );
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
 
 export const useAuth = () => {
-  const context = useContext(AuthContext);
+  const context = React.useContext(AuthContext);
   if (!context) {
-    throw new Error('useAuth must be used within an AuthProvider');
+    throw new Error('useAuth must be used within AuthProvider');
   }
   return context;
 };
