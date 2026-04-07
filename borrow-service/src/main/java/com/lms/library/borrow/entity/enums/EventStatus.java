@@ -5,5 +5,6 @@ public enum EventStatus {
     SUCCESS,
     FAILED,
     COMPENSATED,
+    COMPLETED,
     PENDING
 }

@@ -2,8 +2,10 @@ package com.lms.library.borrow.controller;
 
 import com.lms.library.borrow.dto.BorrowResponse;
 import com.lms.library.borrow.dto.CreateBorrowRequest;
+import com.lms.library.borrow.dto.ReturnRequest;
+import com.lms.library.borrow.dto.ReturnResponse;
 import com.lms.library.borrow.entity.enums.MemberType;
-import com.lms.library.borrow.service.BorrowService;
+import com.lms.library.borrow.service.IBorrowService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -16,6 +18,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -29,7 +32,7 @@ import java.util.UUID;
 @Tag(name = "Borrow Management", description = "Operations related to book borrowing and returning")
 public class BorrowController {
 
-    private final BorrowService borrowService;
+    private final IBorrowService borrowService;
 
     @Operation(summary = "Create a new borrowing record", 
                description = "Accepts a book borrowing request, validates policy, and initiates a Saga.")
@@ -55,6 +58,26 @@ public class BorrowController {
         
         // Return 202 ACCEPTED considering Saga state is INITIATED
         return ResponseEntity.status(HttpStatus.ACCEPTED).body(response);
+    }
+    
+    @Operation(summary = "Process book return", 
+               description = "Processes book return, updates status, calculates overdue fines, and creates return event")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Book return processed successfully"),
+        @ApiResponse(responseCode = "400", description = "Invalid input or borrow record not found"),
+        @ApiResponse(responseCode = "403", description = "Borrow record does not belong to the member"),
+        @ApiResponse(responseCode = "409", description = "Book has already been returned")
+    })
+    @PutMapping("/return")
+    public ResponseEntity<ReturnResponse> processReturn(
+            @Parameter(description = "Member ID from Security Context (X-User-Id header)")
+            @RequestHeader("X-User-Id") UUID memberId,
+            
+            @Valid @RequestBody ReturnRequest request) {
+
+        ReturnResponse response = borrowService.processReturn(memberId, request);
+        
+        return ResponseEntity.ok(response);
     }
     
     @GetMapping("/{id}")
