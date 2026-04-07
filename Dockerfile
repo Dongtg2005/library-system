@@ -1,6 +1,50 @@
-FROM eclipse-temurin:17-jdk-alpine
+# Multi-stage build for better caching and smaller final image
+FROM maven:3.9.6-eclipse-temurin-21 AS build
+
 WORKDIR /app
-COPY target/library-system-1.0.0.jar app.jar
+
+# Copy Maven wrapper and configuration first
+COPY mvnw .
+RUN chmod +x mvnw
+COPY .mvn .mvn/
+COPY pom.xml .
+
+# Download dependencies
+RUN ./mvnw dependency:go-offline -B
+
+# Copy source code and build
+COPY src ./src
+RUN ./mvnw clean package -DskipTests
+
+# Runtime stage
+FROM eclipse-temurin:21-jre-alpine
+
+# Install curl for health check
+RUN apk add --no-cache curl
+
+# Create app user
+RUN addgroup -S appuser && adduser -S appuser -G appuser -h /app -u 1001
+
+WORKDIR /app
+
+# Copy the built jar from the build stage
+COPY --from=build /app/target/library-system-*.jar app.jar
+
+# Change ownership to appuser
+RUN chown -R appuser:appuser /app
+
+# Switch to non-root user
+USER appuser
+
+# Expose port
 EXPOSE 8080
-HEALTHCHECK --interval=30s --timeout=10s --retries=3 --start-period=40s CMD wget --no-verbose --tries=1 --spider http://localhost:8080/api/actuator/health || exit 1
-ENTRYPOINT ["java", "-jar", "app.jar"]
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --retries=3 --start-period=40s \
+  CMD curl -f http://localhost:8080/api/actuator/health || wget --no-verbose --tries=1 --spider http://localhost:8080/api/actuator/health || exit 1
+
+# JVM options for production
+ENV JAVA_OPTS="-Xms512m -Xmx2g -XX:+UseG1GC -XX:+UseStringDeduplication"
+
+# Start the application
+ENTRYPOINT ["sh", "-c", "java $JAVA_OPTS -jar app.jar"]
