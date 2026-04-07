@@ -1,204 +1,340 @@
-# Library Management System - Microservices Architecture
+# Library Management System
 
-A scalable Library Management System built with Spring Boot microservices, featuring service discovery, API gateway, authentication, and book/borrow management services.
+A comprehensive library management system built with Spring Boot, React, and PostgreSQL following Clean Architecture principles.
 
-## Services Overview
+## 🏗️ Architecture
 
-### 1. **API Gateway** (Port: 8080)
-- Central entry point for all client requests
-- Routing to appropriate microservices
-- Load balancing
-- Located in `api-gateway/`
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                    Presentation Layer                       │
+│  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐ │
+│  │ Controllers  │  │   API Docs  │  │  Frontend   │ │
+│  └─────────────┘  └─────────────┘  └─────────────┘ │
+└─────────────────────────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────────────┐
+│                   Application Layer                        │
+│  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐ │
+│  │   Services  │  │     DTOs    │  │   Mappers    │ │
+│  └─────────────┘  └─────────────┘  └─────────────┘ │
+└─────────────────────────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────────────┐
+│                     Domain Layer                           │
+│  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐ │
+│  │   Entities  │  │ Repositories │  │ Exceptions   │ │
+│  └─────────────┘  └─────────────┘  └─────────────┘ │
+└─────────────────────────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────────────┐
+│                Infrastructure Layer                        │
+│  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐ │
+│  │ Persistence  │  │   Security   │  │   Config     │ │
+│  └─────────────┘  └─────────────┘  └─────────────┘ │
+└─────────────────────────────────────────────────────────────────┘
+```
 
-### 2. **Auth Service** (Port: 8081)
-- User authentication and authorization
-- JWT token generation and validation
-- Role-based access control
-- Located in `auth-service/`
+## 🚀 Quick Start
 
-### 3. **User Service** (Port: 8082)
-- User profile management
-- User registration and updates
-- Located in `user-service/`
+### Prerequisites
 
-### 4. **Borrow Service** (Port: 8083)
-- Book borrowing and returning
-- Borrow history
-- Utilizes Feign client for inter-service communication
-- Located in `borrow-service/`
+- Docker & Docker Compose
+- Java 17+ (for local development)
+- Node.js 18+ (for frontend development)
 
-### 5. **Book Service** (Port: 8084)
-- Book catalog management
-- Book inventory
-- Located in `book-service/`
+### Using Docker Compose (Recommended)
 
-## Project Structure
+1. **Clone repository:**
+   ```bash
+   git clone <repository-url>
+   cd library-system
+   ```
+
+2. **Configure environment variables:**
+   ```bash
+   cp .env.example .env
+   # Edit .env with your configuration
+   ```
+
+3. **Start system:**
+   ```bash
+   # Development
+   docker-compose up -d
+   
+   # Production
+   docker-compose -f docker-compose.prod.yaml up -d --build
+   ```
+
+4. **Access application:**
+   - Frontend: http://localhost:3000
+   - Backend API: http://localhost:8080/api
+   - Swagger Documentation: http://localhost:8080/swagger-ui.html
+   - Grafana Dashboard: http://localhost:3001 (admin/admin123)
+   - Prometheus: http://localhost:9090
+
+### Local Development
+
+1. **Start PostgreSQL:**
+   ```bash
+   docker-compose up postgres -d
+   ```
+
+2. **Run Backend:**
+   ```bash
+   ./mvnw spring-boot:run
+   ```
+
+3. **Run Frontend:**
+   ```bash
+   cd frontend
+   npm install
+   npm start
+   ```
+
+## 📁 Project Structure
 
 ```
 library-system/
-├── pom.xml (Parent POM)
-├── api-gateway/
-│   ├── pom.xml
-│   ├── src/
-│   │   ├── main/
-│   │   │   ├── java/com/lms/library/gateway/ApiGatewayApplication.java
-│   │   │   └── resources/application.yaml
-│   │   └── test/
-│   └── mvnw
-├── auth-service/
-│   ├── pom.xml
-│   ├── src/
-│   │   ├── main/
-│   │   │   ├── java/com/lms/library/auth/AuthServiceApplication.java
-│   │   │   └── resources/application.yaml
-│   │   └── test/
-│   └── mvnw
-├── user-service/
-│   ├── pom.xml
-│   ├── src/
-│   │   ├── main/
-│   │   │   ├── java/com/lms/library/user/UserServiceApplication.java
-│   │   │   └── resources/application.yaml
-│   │   └── test/
-│   └── mvnw
-├── book-service/
-│   ├── pom.xml
-│   ├── src/
-│   │   ├── main/
-│   │   │   ├── java/com/lms/library/book/BookServiceApplication.java
-│   │   │   └── resources/application.yaml
-│   │   └── test/
-│   └── mvnw
-└── borrow-service/
-    ├── pom.xml
-    ├── src/
-    │   ├── main/
-    │   │   ├── java/com/lms/library/borrow/BorrowServiceApplication.java
-    │   │   └── resources/application.yaml
-    │   └── test/
-    └── mvnw
+├── src/main/java/com/lms/library/
+│   ├── domain/                    # Business logic
+│   │   ├── entity/              # Domain entities
+│   │   ├── repository/          # Repository interfaces
+│   │   ├── exception/          # Business exceptions
+│   │   └── service/            # Domain services
+│   ├── application/              # Application layer
+│   │   ├── service/            # Application services
+│   │   └── dto/               # Data Transfer Objects
+│   ├── infrastructure/          # Infrastructure layer
+│   │   ├── persistence/        # Database persistence
+│   │   │   ├── jpa/          # JPA entities
+│   │   │   ├── repository/    # Repository implementations
+│   │   │   └── mapper/        # MapStruct mappers
+│   │   ├── security/           # Security configuration
+│   │   └── exception/        # Infrastructure exceptions
+│   ├── presentation/            # Presentation layer
+│   │   ├── controller/         # REST controllers
+│   │   └── exception/        # Global exception handler
+│   └── LibrarySystemApplication.java
+├── src/main/resources/
+│   ├── db/migration/           # Flyway migrations
+│   └── application.yml         # Configuration
+├── frontend/                   # React frontend
+├── docker-compose.yaml          # Development compose
+├── Dockerfile                 # Backend Dockerfile
+├── nginx/                     # Nginx configuration
+└── docs/                      # Documentation
 ```
 
-## Technology Stack
+## 🗄️ Database
 
-- **Java 21** - Latest Java LTS version
-- **Spring Boot 3.5.12-SNAPSHOT** - Latest Spring Boot
-- **Spring Cloud 2024.0.0** - Microservices patterns
-- **Spring Cloud Gateway** - API Gateway
-- **Spring Cloud Eureka** - Service Discovery
-- **Spring Cloud OpenFeign** - Declarative HTTP Client
-- **Spring Security** - Authentication & Authorization
-- **JWT (JJWT)** - Token-based authentication
-- **Spring Data JPA** - Data persistence
-- **PostgreSQL** - Relational Database
-- **Lombok** - Code generation
-- **Maven** - Build tool
+### Schema Overview
 
-## Getting Started
+The system uses PostgreSQL with the following main entities:
 
-### Prerequisites
-- Java 21+
-- Maven 3.9+
-- PostgreSQL 12+
+- **Users & Authentication**: Multi-role system with JWT tokens
+- **Books**: Physical and e-books with categories and tags
+- **Borrowing**: Reservations, borrow records, and fine management
+- **Reviews**: Ratings and review system
+- **Notifications**: Real-time notifications for users
+- **Analytics**: User activity and system metrics
 
-### Database Setup
+### Migrations
 
-Create databases for each service:
+Database migrations are managed with Flyway:
+- `V1__Create_initial_schema.sql` - Complete schema
+- `V1_1__Add_sample_data.sql` - Sample data for testing
 
-```sql
-CREATE DATABASE auth_db;
-CREATE DATABASE user_db;
-CREATE DATABASE book_db;
-CREATE DATABASE borrow_db;
-```
+## 🔧 Configuration
 
-### Build and Run
+### Environment Variables
 
-**Build entire project:**
+Key environment variables (see `.env.example`):
+
 ```bash
-mvn clean install
+# Database
+DB_HOST=localhost
+DB_PORT=5432
+DB_NAME=library_db
+DB_USER=postgres
+DB_PASSWORD=postgres
+
+# Redis Cache
+REDIS_HOST=localhost
+REDIS_PORT=6379
+REDIS_PASSWORD=redis123
+
+# Application
+JWT_SECRET=your-secret-key
+BACKEND_PORT=8080
+FRONTEND_PORT=3000
 ```
 
-**Run individual services:**
+### Profiles
+
+- **dev**: Development with debug logging
+- **prod**: Production with optimizations
+
+## 🔐 Security
+
+- **Authentication**: JWT tokens with refresh mechanism
+- **Authorization**: Role-based access control (RBAC)
+- **Password**: BCrypt encryption
+- **API Security**: Rate limiting, CORS, security headers
+- **Data**: PII encryption and audit logging
+
+## 📊 Features
+
+### Core Features
+- ✅ User management with multi-role system
+- ✅ Book catalog with advanced search
+- ✅ Borrow/return system with fine calculation
+- ✅ Review and rating system
+- ✅ Reservation system
+- ✅ Real-time notifications
+- ✅ Favorites and wishlist
+- ✅ Reading history tracking
+
+### Technical Features
+- ✅ Clean Architecture with separation of concerns
+- ✅ MapStruct for entity mapping
+- ✅ Flyway for database migrations
+- ✅ Redis caching for performance
+- ✅ Prometheus metrics and Grafana dashboards
+- ✅ Docker containerization
+- ✅ Nginx reverse proxy with SSL
+- ✅ Health checks and monitoring
+
+## 🧪 Testing
+
+### Run Tests
 ```bash
-# API Gateway
-cd api-gateway
-mvn spring-boot:run
+# Backend tests
+./mvnw test
 
-# Auth Service
-cd auth-service
-mvn spring-boot:run
-
-# User Service
-cd user-service
-mvn spring-boot:run
-
-# Book Service
-cd book-service
-mvn spring-boot:run
-
-# Borrow Service
-cd borrow-service
-mvn spring-boot:run
+# Frontend tests
+cd frontend
+npm test
 ```
 
-### Service Routing (via API Gateway)
+### Test Coverage
+- Unit tests for services and repositories
+- Integration tests for APIs
+- E2E tests for critical user flows
 
-- `/auth/**` → Auth Service (8081)
-- `/users/**` → User Service (8082)
-- `/books/**` → Book Service (8084)
-- `/borrows/**` → Borrow Service (8083)
+## 📈 Monitoring & Logging
 
-## Configuration
+### Application Metrics
+- **Prometheus**: http://localhost:9090
+- **Grafana**: http://localhost:3001
+- **Health Checks**: http://localhost:8080/api/actuator/health
 
-Each service has its own `application.yaml` configuration file with:
-- Service name
-- Database connection details
-- Port assignment
-- JWT settings (for Auth Service)
+### Logging
+- Structured JSON logging
+- Different levels for different environments
+- Log rotation and retention policies
 
-### Default Configuration
+## 🚀 Deployment
 
-**Database Connection:**
-- Host: localhost
-- Port: 5432
-- Username: postgres
-- Password: postgres
+### Production Deployment
 
-## Development
+1. **Build and deploy:**
+   ```bash
+   docker-compose -f docker-compose.prod.yaml up -d --build
+   ```
 
-### Adding New Endpoints
+2. **SSL Configuration:**
+   - Place SSL certificates in `nginx/ssl/`
+   - Update `nginx.conf` with your domain
 
-1. Create a Controller class in the appropriate service
-2. Add necessary models and repositories
-3. Implement business logic in services
-4. Test endpoints via API Gateway or directly
+3. **Environment Setup:**
+   - Configure production environment variables
+   - Set up database backups
+   - Configure monitoring alerts
 
-### Inter-Service Communication
+### Scaling
 
-Services use Spring Cloud OpenFeign for REST-based inter-service calls:
+- **Horizontal scaling**: Multiple backend instances
+- **Database**: Read replicas and connection pooling
+- **Cache**: Redis cluster for distributed caching
+- **CDN**: Static assets delivery
 
-```java
-@FeignClient(name = "book-service")
-public interface BookServiceClient {
-    @GetMapping("/api/books/{id}")
-    BookDTO getBook(@PathVariable Long id);
-}
-```
+## 🤝 Contributing
 
-## Testing
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Add tests for new features
+5. Submit a pull request
 
-Run tests for all services:
+### Code Style
+- Follow Clean Architecture principles
+- Use MapStruct for entity mapping
+- Write comprehensive unit tests
+- Document API changes
+
+## 📝 API Documentation
+
+### Swagger UI
+Access interactive API documentation at:
+http://localhost:8080/swagger-ui.html
+
+### Key Endpoints
+
+#### Authentication
+- `POST /api/auth/login` - User login
+- `POST /api/auth/register` - User registration
+- `POST /api/auth/logout` - User logout
+
+#### Books
+- `GET /api/books` - List books with pagination
+- `GET /api/books/{id}` - Get book details
+- `POST /api/books` - Create book (admin/librarian)
+- `PUT /api/books/{id}` - Update book (admin/librarian)
+
+#### Borrowing
+- `POST /api/borrows` - Create borrow request
+- `POST /api/borrows/return` - Return book
+- `GET /api/borrows/history` - User borrow history
+
+## 🐛 Troubleshooting
+
+### Common Issues
+
+1. **Database Connection Failed**
+   - Check PostgreSQL is running: `docker-compose ps`
+   - Verify environment variables
+   - Check database logs: `docker-compose logs postgres`
+
+2. **Build Fails**
+   - Clear Docker cache: `docker system prune -a`
+   - Check Java version: `java -version`
+   - Verify Maven wrapper: `./mvnw -version`
+
+3. **Frontend Not Loading**
+   - Check API URL in environment variables
+   - Verify CORS configuration
+   - Check backend health: `curl localhost:8080/api/actuator/health`
+
+### Logs
+
 ```bash
-mvn test
+# View all logs
+docker-compose logs
+
+# View specific service logs
+docker-compose logs backend
+docker-compose logs postgres
+docker-compose logs frontend
 ```
 
-Run tests for a specific service:
-```bash
-cd service-name
-mvn test
-```
+## 📄 License
 
-## License
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-This project is licensed under the MIT License.
+## 📞 Support
+
+For support and questions:
+- Create an issue in the repository
+- Check documentation in the `/docs` folder
+- Review the troubleshooting section above
+
+---
+
+**Built with ❤️ using Clean Architecture principles and modern Java technologies.**
