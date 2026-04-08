@@ -17,18 +17,25 @@ import java.util.List;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/borrows")
+@RequestMapping("/api/v1/borrows")
 @RequiredArgsConstructor
 @Slf4j
+@io.swagger.v3.oas.annotations.tags.Tag(name = "Borrow Management", description = "Operations related to book borrowing and returning")
 public class BorrowController {
     
     private final BorrowManagementService borrowManagementService;
     
+    @io.swagger.v3.oas.annotations.Operation(summary = "Create a new borrowing record", 
+                                             description = "Accepts a book borrowing request, validates policy, and creates a record.")
+    @io.swagger.v3.oas.annotations.responses.ApiResponses(value = {
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "201", description = "Borrowing process initiated"),
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "Invalid input or borrowing limit exceeded")
+    })
     @PostMapping
     @PreAuthorize("hasRole('ADMIN') or hasRole('LIBRARIAN') or hasRole('USER')")
     public ResponseEntity<BorrowResponse> createBorrowing(
             @Valid @RequestBody CreateBorrowRequest request,
-            @RequestParam(required = false, defaultValue = "USER") BorrowPolicy.MemberType memberType) {
+            @RequestParam(required = false, defaultValue = "STUDENT") BorrowPolicy.MemberType memberType) {
         
         UUID memberId = ControllerHelper.getCurrentUserId();
         log.info("Creating borrow request for member: {}", memberId);

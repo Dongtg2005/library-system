@@ -18,7 +18,7 @@ export const AuthProvider = ({ children }) => {
 
   const validateToken = useCallback(async (tokenToValidate) => {
     try {
-      const response = await fetch('/api/auth/validate?token=' + tokenToValidate, {
+      const response = await fetch('/api/v1/auth/validate?token=' + tokenToValidate, {
         headers: {
           'Content-Type': 'application/json',
         },
@@ -44,7 +44,7 @@ export const AuthProvider = ({ children }) => {
 
   const login = async (email, password) => {
     try {
-      const response = await fetch('/api/auth/login', {
+      const response = await fetch('/api/v1/auth/login', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -70,7 +70,7 @@ export const AuthProvider = ({ children }) => {
 
   const register = async (email, password, fullName) => {
     try {
-      const response = await fetch('/api/auth/register', {
+      const response = await fetch('/api/v1/auth/register', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -97,7 +97,7 @@ export const AuthProvider = ({ children }) => {
   const logout = async () => {
     try {
       if (token) {
-        await fetch('/api/auth/logout', {
+        await fetch('/api/v1/auth/logout', {
           method: 'POST',
           headers: {
             'Authorization': `Bearer ${token}`,

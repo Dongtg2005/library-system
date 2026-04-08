@@ -13,9 +13,10 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/auth")
+@RequestMapping("/api/v1/auth")
 @RequiredArgsConstructor
 @Slf4j
+@io.swagger.v3.oas.annotations.tags.Tag(name = "Authentication", description = "Operations related to user authentication")
 public class AuthController {
     
     private final AuthenticationService authenticationService;

@@ -15,9 +15,10 @@ import org.springframework.web.bind.annotation.*;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/books")
+@RequestMapping("/api/v1/books")
 @RequiredArgsConstructor
 @Slf4j
+@io.swagger.v3.oas.annotations.tags.Tag(name = "Book Management", description = "Operations related to books")
 public class BookController {
     
     private final BookManagementService bookManagementService;

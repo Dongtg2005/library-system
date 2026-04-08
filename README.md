@@ -65,7 +65,7 @@ A comprehensive library management system built with Spring Boot, React, and Pos
 4. **Access application:**
    - Frontend: http://localhost:3000
    - Backend API: http://localhost:8080/api
-   - Swagger Documentation: http://localhost:8080/swagger-ui.html
+   - Swagger Documentation: http://localhost:8080/swagger-ui/index.html
    - Grafana Dashboard: http://localhost:3001 (admin/admin123)
    - Prometheus: http://localhost:9090
 

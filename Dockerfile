@@ -10,11 +10,11 @@ COPY .mvn .mvn/
 COPY pom.xml .
 
 # Download dependencies
-RUN ./mvnw dependency:go-offline -B
+RUN mvn dependency:go-offline -B
 
 # Copy source code and build
 COPY src ./src
-RUN ./mvnw clean package -DskipTests
+RUN mvn clean package -DskipTests
 
 # Runtime stage
 FROM eclipse-temurin:21-jre-alpine
@@ -41,7 +41,7 @@ EXPOSE 8080
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=10s --retries=3 --start-period=40s \
-  CMD curl -f http://localhost:8080/api/actuator/health || wget --no-verbose --tries=1 --spider http://localhost:8080/api/actuator/health || exit 1
+  CMD curl -f http://localhost:8080/actuator/health || wget --no-verbose --tries=1 --spider http://localhost:8080/actuator/health || exit 1
 
 # JVM options for production
 ENV JAVA_OPTS="-Xms512m -Xmx2g -XX:+UseG1GC -XX:+UseStringDeduplication"
