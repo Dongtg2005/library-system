@@ -7,15 +7,6 @@ export const AuthProvider = ({ children }) => {
   const [token, setToken] = useState(localStorage.getItem('token'));
   const [loading, setLoading] = useState(true);
 
-  // Validate token on mount
-  useEffect(() => {
-    if (token) {
-      validateToken(token);
-    } else {
-      setLoading(false);
-    }
-  }, []);
-
   const validateToken = useCallback(async (tokenToValidate) => {
     try {
       const response = await fetch('/api/v1/auth/validate?token=' + tokenToValidate, {
@@ -41,6 +32,15 @@ export const AuthProvider = ({ children }) => {
       setLoading(false);
     }
   }, []);
+
+  // Validate token on mount and whenever it changes
+  useEffect(() => {
+    if (token) {
+      validateToken(token);
+    } else {
+      setLoading(false);
+    }
+  }, [token, validateToken]);
 
   const login = async (email, password) => {
     try {

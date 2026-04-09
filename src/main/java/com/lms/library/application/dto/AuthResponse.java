@@ -18,7 +18,7 @@ public class AuthResponse {
     private String fullName;
     private String role;
     private String tokenType;
-    private String token;
+    private String accessToken;
     private LocalDateTime expiresAt;
     
     public static AuthResponse from(User user, String token, LocalDateTime expiresAt) {
@@ -28,7 +28,7 @@ public class AuthResponse {
                 .fullName(user.getFullName())
                 .role(user.getRole().name())
                 .tokenType("Bearer")
-                .token(token)
+                .accessToken(token)
                 .expiresAt(expiresAt)
                 .build();
     }

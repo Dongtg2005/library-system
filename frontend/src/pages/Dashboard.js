@@ -10,7 +10,7 @@ const Dashboard = () => {
   useEffect(() => {
     const checkBackend = async () => {
       try {
-        const response = await fetch('/api/actuator/health', {
+        const response = await fetch('/api/v1/auth/me', {
           headers: {
             'Content-Type': 'application/json',
             ...(token && { 'Authorization': `Bearer ${token}` }),
@@ -18,11 +18,10 @@ const Dashboard = () => {
         });
 
         if (response.ok) {
-          const data = await response.json();
-          setBackendStatus(`Connected - Status: ${data.status}`);
+          setBackendStatus('Connected - API is working');
         } else if (response.status === 401) {
           setApiError('Authentication required for API');
-          setBackendStatus('Unauthorized');
+          setBackendStatus('Connected but unauthorized');
         } else {
           setBackendStatus(`Error: HTTP ${response.status}`);
         }
@@ -32,7 +31,9 @@ const Dashboard = () => {
       }
     };
 
-    checkBackend();
+    if (token) {
+      checkBackend();
+    }
   }, [token]);
 
   return (
