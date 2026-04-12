@@ -1,5 +1,6 @@
 package com.lms.library.domain.entity;
 
+import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -10,21 +11,57 @@ import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Data
+@Entity
+@Table(name = "fines")
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
 public class Fine {
-    
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
+
+    @Column(name = "borrow_record_id", nullable = false)
     private UUID borrowRecordId;
+
+    @Column(name = "member_id", nullable = false)
     private UUID memberId;
+
+    @Column(precision = 10, scale = 2, nullable = false)
     private BigDecimal amount;
-    private FineType fineType;
-    private FineStatus status;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "fine_type", length = 20)
+    private FineType fineType = FineType.OVERDUE;
+
+    @Enumerated(EnumType.STRING)
+    @Column(length = 20)
+    private FineStatus status = FineStatus.PENDING;
+
+    @Column(columnDefinition = "TEXT")
     private String reason;
+
+    @Column(updatable = false)
     private LocalDateTime createdAt;
+
+    @Column(name = "paid_at")
     private LocalDateTime paidAt;
+
     private LocalDateTime updatedAt;
+
+    @PrePersist
+    protected void onCreate() {
+        createdAt = LocalDateTime.now();
+        updatedAt = LocalDateTime.now();
+        if (fineType == null) fineType = FineType.OVERDUE;
+        if (status == null) status = FineStatus.PENDING;
+    }
+
+    @PreUpdate
+    protected void onUpdate() {
+        updatedAt = LocalDateTime.now();
+    }
     
     public enum FineType {
         OVERDUE,

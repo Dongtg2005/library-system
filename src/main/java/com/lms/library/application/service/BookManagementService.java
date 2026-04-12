@@ -35,7 +35,6 @@ public class BookManagementService {
                 .isbn(request.getIsbn())
                 .title(request.getTitle())
                 .author(request.getAuthor())
-                .category(request.getCategory())
                 .totalQuantity(request.getTotalQuantity())
                 .availableQty(request.getTotalQuantity())
                 .status(Book.BookStatus.AVAILABLE)
@@ -107,9 +106,10 @@ public class BookManagementService {
         if (request.getAuthor() != null) {
             existingBook.setAuthor(request.getAuthor());
         }
-        if (request.getCategory() != null) {
-            existingBook.setCategory(request.getCategory());
-        }
+        // TODO: Handle category update with new categories list
+        // if (request.getCategory() != null) {
+        //     existingBook.setCategory(request.getCategory());
+        // }
         if (request.getTotalQuantity() != null) {
             existingBook.setTotalQuantity(request.getTotalQuantity());
             // Adjust available quantity if needed

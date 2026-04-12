@@ -26,12 +26,18 @@ public class BookResponse {
     private LocalDateTime updatedAt;
     
     public static BookResponse from(Book book) {
+        // Get first category name if available
+        String categoryName = null;
+        if (book.getCategories() != null && !book.getCategories().isEmpty()) {
+            categoryName = book.getCategories().get(0).getName();
+        }
+        
         return BookResponse.builder()
                 .id(book.getId())
                 .isbn(book.getIsbn())
                 .title(book.getTitle())
                 .author(book.getAuthor())
-                .category(book.getCategory())
+                .category(categoryName)
                 .totalQuantity(book.getTotalQuantity())
                 .availableQty(book.getAvailableQty())
                 .status(book.getStatus())

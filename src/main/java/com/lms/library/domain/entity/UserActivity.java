@@ -6,6 +6,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 @Data
 @NoArgsConstructor
@@ -16,24 +17,24 @@ public class UserActivity {
     private Long userId;
     private ActivityType activityType;
     private ResourceType resourceType;
-    private String resourceId;
+    private UUID resourceId;
     private String description;
     private String ipAddress;
     private String userAgent;
     private LocalDateTime createdAt;
-    
+
     public enum ActivityType {
-        LOGIN, LOGOUT, BORROW, RETURN, REVIEW, 
-        SEARCH, VIEW_BOOK, ADD_FAVORITE, 
+        LOGIN, LOGOUT, BORROW, RETURN, REVIEW,
+        SEARCH, VIEW_BOOK, ADD_FAVORITE,
         RESERVE_BOOK, CANCEL_RESERVATION
     }
-    
+
     public enum ResourceType {
         BOOK, USER, REVIEW, RESERVATION, CATEGORY, TAG
     }
-    
+
     public boolean isBookRelated() {
-        return ResourceType.BOOK.equals(resourceType) || 
+        return ResourceType.BOOK.equals(resourceType) ||
                ActivityType.BORROW.equals(activityType) ||
                ActivityType.RETURN.equals(activityType) ||
                ActivityType.VIEW_BOOK.equals(activityType);

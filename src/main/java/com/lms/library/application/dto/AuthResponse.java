@@ -22,11 +22,14 @@ public class AuthResponse {
     private LocalDateTime expiresAt;
     
     public static AuthResponse from(User user, String token, LocalDateTime expiresAt) {
+        String roleName = user.getRoles() != null && !user.getRoles().isEmpty()
+                ? user.getRoles().get(0).getName()
+                : "USER";
         return AuthResponse.builder()
                 .userId(user.getId())
                 .email(user.getEmail())
                 .fullName(user.getFullName())
-                .role(user.getRole().name())
+                .role(roleName)
                 .tokenType("Bearer")
                 .accessToken(token)
                 .expiresAt(expiresAt)
