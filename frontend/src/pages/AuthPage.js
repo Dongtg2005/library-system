@@ -1,11 +1,11 @@
 import React from 'react';
 import AuthForms from '../components/AuthForms';
 
-const AuthPage = () => {
+const AuthPage = ({ initialMode = 'login' }) => {
   return (
-    <div className="min-h-screen bg-slate-950 p-4 text-white sm:p-6 lg:p-8">
+    <div className="min-h-screen bg-slate-100 p-4 text-slate-900 dark:bg-slate-950 dark:text-slate-100 sm:p-6 lg:p-8">
       <div className="mx-auto grid min-h-[calc(100vh-2rem)] max-w-7xl place-items-center">
-        <AuthForms />
+        <AuthForms initialMode={initialMode} />
       </div>
     </div>
   );

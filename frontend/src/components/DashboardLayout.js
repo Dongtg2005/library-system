@@ -10,10 +10,10 @@ import { useToast } from '../context/ToastContext';
 
 const titleMap = {
   '/dashboard': 'Dashboard',
-  '/auth': 'Auth Service',
+  '/profile': 'Profile',
   '/users': 'User Service',
-  '/books': 'Book Service',
-  '/borrow': 'Borrow Service',
+  '/admin/books': 'Book Service',
+  '/admin/borrow': 'Borrow Service',
 };
 
 const DashboardLayout = () => {
@@ -64,3 +64,4 @@ const DashboardLayout = () => {
 };
 
 export default DashboardLayout;
+

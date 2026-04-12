@@ -14,10 +14,10 @@ import { useTheme } from '../context/ThemeContext';
 
 const navItems = [
   { to: '/dashboard', label: 'Dashboard', icon: <Squares2X2Icon className="h-5 w-5" /> },
-  { to: '/auth', label: 'Auth Service', icon: <ShieldCheckIcon className="h-5 w-5" /> },
+  { to: '/profile', label: 'Profile', icon: <ShieldCheckIcon className="h-5 w-5" /> },
   { to: '/users', label: 'User Service', icon: <UsersIcon className="h-5 w-5" /> },
-  { to: '/books', label: 'Book Service', icon: <BookOpenIcon className="h-5 w-5" /> },
-  { to: '/borrow', label: 'Borrow Service', icon: <ArrowPathIcon className="h-5 w-5" /> },
+  { to: '/admin/books', label: 'Book Service', icon: <BookOpenIcon className="h-5 w-5" /> },
+  { to: '/admin/borrow', label: 'Borrow Service', icon: <ArrowPathIcon className="h-5 w-5" /> },
 ];
 
 const Sidebar = ({ collapsed, onToggle, user }) => {
