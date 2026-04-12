@@ -12,7 +12,7 @@ public interface FineRepository extends JpaRepository<Fine, UUID> {
 
     List<Fine> findByBorrowRecordId(UUID borrowRecordId);
 
-    List<Fine> findByMemberId(UUID memberId);
+    List<Fine> findByMemberId(Long memberId);
 
     List<Fine> findByStatus(Fine.FineStatus status);
 }

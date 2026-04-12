@@ -72,6 +72,10 @@ public class BorrowPolicy {
     }
 
     public enum MemberType {
+        GUEST,
+        USER,
+        LIBRARIAN,
+        ADMIN,
         STUDENT,
         FACULTY,
         STAFF,

@@ -16,7 +16,7 @@ import java.util.UUID;
 @Builder
 public class BorrowResponse {
     private UUID id;
-    private UUID memberId;
+    private Long memberId;
     private UUID bookId;
     private LocalDate borrowDate;
     private ZonedDateTime borrowTime;

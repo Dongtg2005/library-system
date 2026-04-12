@@ -12,9 +12,9 @@ import java.util.UUID;
 @Repository
 public interface BorrowRecordRepository extends JpaRepository<BorrowRecord, UUID> {
 
-    List<BorrowRecord> findByMemberId(UUID memberId);
+    List<BorrowRecord> findByMemberId(Long memberId);
 
-    int countByMemberIdAndBorrowStatusIn(UUID memberId, Collection<BorrowRecord.BorrowStatus> borrowStatus);
+    int countByMemberIdAndBorrowStatusIn(Long memberId, Collection<BorrowRecord.BorrowStatus> borrowStatus);
 
     List<BorrowRecord> findByBookId(UUID bookId);
 

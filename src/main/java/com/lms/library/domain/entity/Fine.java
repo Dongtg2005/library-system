@@ -26,7 +26,7 @@ public class Fine {
     private UUID borrowRecordId;
 
     @Column(name = "member_id", nullable = false)
-    private UUID memberId;
+    private Long memberId;
 
     @Column(precision = 10, scale = 2, nullable = false)
     private BigDecimal amount;

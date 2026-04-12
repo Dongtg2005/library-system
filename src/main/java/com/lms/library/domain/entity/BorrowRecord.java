@@ -25,7 +25,7 @@ public class BorrowRecord {
     private UUID id;
 
     @Column(name = "member_id", nullable = false)
-    private UUID memberId;
+    private Long memberId;
 
     @Column(name = "book_id", nullable = false)
     private UUID bookId;

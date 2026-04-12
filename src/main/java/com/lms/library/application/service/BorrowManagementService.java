@@ -31,11 +31,13 @@ public class BorrowManagementService {
     private final FineRepository fineRepository;
     
     @Transactional
-    public BorrowResponse createBorrowing(UUID memberId, BorrowPolicy.MemberType memberType, CreateBorrowRequest request) {
+    public BorrowResponse createBorrowing(Long memberId, BorrowPolicy.MemberType memberType, CreateBorrowRequest request) {
         log.info("Processing borrow request for member: {}", memberId);
         
         // Fetch Borrow Policy
-        BorrowPolicy policy = borrowPolicyRepository.findByMemberType(memberType)
+        BorrowPolicy policy = borrowPolicyRepository.findAllByMemberTypeOrderByCreatedAtDesc(memberType)
+                .stream()
+                .findFirst()
                 .orElseThrow(() -> new PolicyNotFoundException("Borrow policy not found for member type: " + memberType));
         
         // Count Active Borrows
@@ -67,7 +69,7 @@ public class BorrowManagementService {
     }
     
     @Transactional
-    public ReturnResponse processReturn(UUID memberId, ReturnRequest request) {
+    public ReturnResponse processReturn(Long memberId, ReturnRequest request) {
         log.info("Processing return for member: {}", memberId);
         
         BorrowRecord record = borrowRecordRepository.findById(request.getBorrowRecordId())
@@ -107,7 +109,7 @@ public class BorrowManagementService {
     }
     
     @Transactional
-    public BorrowResponse extendLoan(UUID borrowRecordId, UUID memberId) {
+    public BorrowResponse extendLoan(UUID borrowRecordId, Long memberId) {
         log.info("Extending loan for record: {}", borrowRecordId);
         
         BorrowRecord record = borrowRecordRepository.findById(borrowRecordId)
@@ -128,14 +130,14 @@ public class BorrowManagementService {
     }
     
     @Transactional(readOnly = true)
-    public List<BorrowResponse> getMemberBorrowHistory(UUID memberId) {
+    public List<BorrowResponse> getMemberBorrowHistory(Long memberId) {
         List<BorrowRecord> records = borrowRecordRepository.findByMemberId(memberId);
         return records.stream()
                 .map(BorrowResponse::from)
                 .toList();
     }
     
-    private void calculateOverdueFines(UUID memberId) {
+    private void calculateOverdueFines(Long memberId) {
         List<BorrowRecord> overdueRecords = borrowRecordRepository.findByMemberId(memberId)
                 .stream()
                 .filter(BorrowRecord::isOverdue)
@@ -164,8 +166,11 @@ public class BorrowManagementService {
         }
         
         int overdueDays = record.getOverdueDays();
-        BorrowPolicy policy = borrowPolicyRepository.findByMemberType(BorrowPolicy.MemberType.STUDENT)
-                .orElseThrow(() -> new PolicyNotFoundException("Default policy not found"));
+        BorrowPolicy policy = borrowPolicyRepository.findAllByMemberTypeOrderByCreatedAtDesc(BorrowPolicy.MemberType.USER)
+                .stream()
+                .findFirst()
+                .orElseGet(() -> borrowPolicyRepository.findAll().stream().findFirst()
+                        .orElseThrow(() -> new PolicyNotFoundException("Default policy not found")));
         
         return policy.calculateOverdueFine(overdueDays);
     }
