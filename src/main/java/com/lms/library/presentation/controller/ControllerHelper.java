@@ -5,18 +5,20 @@ import com.lms.library.domain.entity.User;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 
+import java.nio.charset.StandardCharsets;
 import java.util.UUID;
 
 public class ControllerHelper {
     
     public static UUID getCurrentUserId() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        String username = authentication.getName();
+        String principal = authentication.getName();
+
         try {
-            return UUID.fromString(username);
-        } catch (IllegalArgumentException e) {
-            // Fallback for email-based authentication
-            throw new IllegalStateException("Invalid user ID format in authentication context");
+            return UUID.fromString(principal);
+        } catch (IllegalArgumentException ignored) {
+            // Current JWT subject is email, so derive deterministic UUID from email
+            return UUID.nameUUIDFromBytes(principal.getBytes(StandardCharsets.UTF_8));
         }
     }
     

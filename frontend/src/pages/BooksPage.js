@@ -1,193 +1,221 @@
-import React, { useState, useEffect } from 'react';
-import { useAuth } from '../context/AuthContext';
-import './BooksPage.css';
+import React, { useEffect, useMemo, useState } from 'react';
+import { Link, useLocation } from 'react-router-dom';
+import { fetchBooks, searchBooks } from '../lib/api';
 
-const BooksPage = ({ currentPage, setCurrentPage }) => {
-  const { token } = useAuth();
+const statusColors = {
+  AVAILABLE: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-200',
+  OUT_OF_STOCK: 'bg-rose-100 text-rose-700 dark:bg-rose-500/15 dark:text-rose-200',
+  ARCHIVED: 'bg-slate-200 text-slate-700 dark:bg-slate-700 dark:text-slate-200',
+  DAMAGED: 'bg-amber-100 text-amber-700 dark:bg-amber-500/15 dark:text-amber-200',
+};
+
+const BooksPage = () => {
+  const location = useLocation();
   const [books, setBooks] = useState([]);
+  const [page, setPage] = useState(0);
+  const [totalPages, setTotalPages] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [searchTerm, setSearchTerm] = useState('');
-  const [selectedBook, setSelectedBook] = useState(null);
+
+  const [searchInput, setSearchInput] = useState('');
+  const [categoryFilter, setCategoryFilter] = useState('');
+  const [authorFilter, setAuthorFilter] = useState('');
+  const [statusFilter, setStatusFilter] = useState('');
 
   useEffect(() => {
-    if (currentPage === 'books') {
-      fetchBooks();
-    }
-  }, [currentPage, token]);
+    const params = new URLSearchParams(location.search);
+    const category = params.get('category') || '';
+    setCategoryFilter(category);
+    setPage(0);
+  }, [location.search]);
 
-  const fetchBooks = async () => {
-    try {
+  useEffect(() => {
+    let mounted = true;
+
+    const load = async () => {
       setLoading(true);
       setError('');
-      
-      // Mock books data - replace with actual API when backend ready
-      const mockBooks = [
-        {
-          id: '1',
-          isbn: '978-3-16-148410-0',
-          title: 'Dế Mèn Là Vợ Tôi',
-          author: 'Nguyễn Nhật Ánh',
-          publisher: 'NXB Văn Học',
-          pages: 320,
-          availableQuantity: 5,
-          totalQuantity: 10,
-          averageRating: 4.5,
-          ratingCount: 12,
-          coverImageUrl: '📚',
-          description: 'Một tác phẩm kinh điển của văn học Việt Nam',
-        },
-        {
-          id: '2',
-          isbn: '978-3-16-148411-0',
-          title: 'Số Đỏ',
-          author: 'Bùi Anh Tấn',
-          publisher: 'NXB Văn Học',
-          pages: 280,
-          availableQuantity: 3,
-          totalQuantity: 8,
-          averageRating: 4.2,
-          ratingCount: 8,
-          coverImageUrl: '📖',
-          description: 'Tác phẩm tiêu biểu về tình yêu và con người',
-        },
-        {
-          id: '3',
-          isbn: '978-3-16-148412-0',
-          title: 'Chí Phèo',
-          author: 'Nam Cao',
-          publisher: 'NXB Văn Học',
-          pages: 250,
-          availableQuantity: 0,
-          totalQuantity: 15,
-          averageRating: 4.8,
-          ratingCount: 25,
-          coverImageUrl: '📘',
-          description: 'Câu chuyện đau lòng về cuộc đời của một nhân vật',
-        },
-      ];
+      try {
+        const hasFilters = searchInput || categoryFilter || authorFilter || statusFilter;
+        const params = {
+          page,
+          size: 12,
+          ...(hasFilters
+            ? {
+                title: searchInput,
+                author: authorFilter,
+                category: categoryFilter,
+                status: statusFilter,
+              }
+            : {}),
+        };
 
-      setBooks(mockBooks);
-    } catch (err) {
-      setError('Failed to load books: ' + err.message);
-    } finally {
-      setLoading(false);
-    }
-  };
+        const response = hasFilters ? await searchBooks(params) : await fetchBooks(params);
+        if (!mounted) return;
 
-  const filteredBooks = books.filter(book =>
-    book.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    book.author.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+        setBooks(response?.content || []);
+        setTotalPages(response?.totalPages || 0);
+      } catch (err) {
+        if (!mounted) return;
+        setError(err.message || 'Failed to load books');
+        setBooks([]);
+        setTotalPages(0);
+      } finally {
+        if (mounted) setLoading(false);
+      }
+    };
 
-  if (currentPage !== 'books') return null;
+    load();
+
+    return () => {
+      mounted = false;
+    };
+  }, [page, searchInput, categoryFilter, authorFilter, statusFilter]);
+
+  const categories = useMemo(() => {
+    const set = new Set();
+    books.forEach((book) => {
+      if (book.category) set.add(book.category);
+    });
+    return Array.from(set);
+  }, [books]);
+
+  const authors = useMemo(() => {
+    const set = new Set();
+    books.forEach((book) => {
+      if (book.author) set.add(book.author);
+    });
+    return Array.from(set);
+  }, [books]);
 
   return (
-    <div className="books-page">
-      <div className="page-header">
-        <h2>📚 Browse Library Books</h2>
-        <p>Discover and borrow books from our collection</p>
-      </div>
+    <div className="grid gap-6 lg:grid-cols-[0.3fr_0.7fr] page-fade">
+      <aside className="rounded-[2rem] border border-white/70 bg-white/85 p-5 shadow-sm backdrop-blur dark:border-slate-800 dark:bg-slate-900/75">
+        <h2 className="text-lg font-black">Filters</h2>
 
-      {error && <div className="error-message">{error}</div>}
+        <div className="mt-4 space-y-4">
+          <label className="block text-sm font-medium text-slate-600 dark:text-slate-300">
+            Category
+            <select
+              value={categoryFilter}
+              onChange={(event) => {
+                setPage(0);
+                setCategoryFilter(event.target.value);
+              }}
+              className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-950"
+            >
+              <option value="">All</option>
+              {categories.map((category) => (
+                <option key={category} value={category}>{category}</option>
+              ))}
+            </select>
+          </label>
 
-      <div className="search-bar">
-        <input
-          type="text"
-          placeholder="Search by title or author..."
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          className="search-input"
-        />
-      </div>
+          <label className="block text-sm font-medium text-slate-600 dark:text-slate-300">
+            Author
+            <select
+              value={authorFilter}
+              onChange={(event) => {
+                setPage(0);
+                setAuthorFilter(event.target.value);
+              }}
+              className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-950"
+            >
+              <option value="">All</option>
+              {authors.map((author) => (
+                <option key={author} value={author}>{author}</option>
+              ))}
+            </select>
+          </label>
 
-      {loading ? (
-        <div className="loading">Loading books...</div>
-      ) : (
-        <>
-          <div className="books-count">
-            Found {filteredBooks.length} book(s)
+          <label className="block text-sm font-medium text-slate-600 dark:text-slate-300">
+            Availability
+            <select
+              value={statusFilter}
+              onChange={(event) => {
+                setPage(0);
+                setStatusFilter(event.target.value);
+              }}
+              className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-950"
+            >
+              <option value="">All</option>
+              <option value="AVAILABLE">Available</option>
+              <option value="OUT_OF_STOCK">Out of stock</option>
+              <option value="ARCHIVED">Archived</option>
+              <option value="DAMAGED">Damaged</option>
+            </select>
+          </label>
+        </div>
+      </aside>
+
+      <section className="rounded-[2rem] border border-white/70 bg-white/85 p-6 shadow-sm backdrop-blur dark:border-slate-800 dark:bg-slate-900/75">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <h1 className="text-2xl font-black text-slate-950 dark:text-white">Books</h1>
+          <input
+            type="search"
+            value={searchInput}
+            onChange={(event) => {
+              setPage(0);
+              setSearchInput(event.target.value);
+            }}
+            placeholder="Search books..."
+            className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-2 text-sm outline-none focus:border-primary md:w-72 dark:border-slate-700 dark:bg-slate-950"
+          />
+        </div>
+
+        {error && (
+          <div className="mt-4 rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700 dark:border-rose-500/20 dark:bg-rose-500/10 dark:text-rose-200">
+            {error}
           </div>
+        )}
 
-          {filteredBooks.length === 0 ? (
-            <div className="no-results">
-              No books found matching your search.
-            </div>
-          ) : (
-            <div className="books-grid">
-              {filteredBooks.map(book => (
-                <div key={book.id} className="book-card">
-                  <div className="book-cover">{book.coverImageUrl}</div>
-                  <div className="book-info">
-                    <h3 className="book-title">{book.title}</h3>
-                    <p className="book-author">by {book.author}</p>
-                    <div className="book-meta">
-                      <span className="rating">
-                        ⭐ {book.averageRating} ({book.ratingCount} reviews)
-                      </span>
-                    </div>
-                    <div className="book-availability">
-                      <span className={book.availableQuantity > 0 ? 'available' : 'unavailable'}>
-                        {book.availableQuantity > 0 
-                          ? `${book.availableQuantity} available` 
-                          : 'Out of stock'}
-                      </span>
-                    </div>
-                    <button
-                      className={`btn-borrow ${book.availableQuantity > 0 ? '' : 'disabled'}`}
-                      disabled={book.availableQuantity <= 0}
-                      onClick={() => setSelectedBook(book)}
-                    >
-                      {book.availableQuantity > 0 ? 'Borrow' : 'Request Reservation'}
-                    </button>
-                    <button
-                      className="btn-details"
-                      onClick={() => setSelectedBook(book)}
-                    >
-                      View Details
-                    </button>
+        {loading ? (
+          <div className="mt-6 rounded-2xl bg-slate-100 px-4 py-8 text-sm text-slate-600 dark:bg-slate-800 dark:text-slate-300">Loading books...</div>
+        ) : (
+          <>
+            <div className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+              {books.map((book) => (
+                <article key={book.id} className="rounded-3xl border border-slate-200 bg-white p-5 dark:border-slate-800 dark:bg-slate-950/90">
+                  <h3 className="text-lg font-bold text-slate-950 dark:text-white">{book.title}</h3>
+                  <p className="mt-1 text-sm text-slate-600 dark:text-slate-300">{book.author}</p>
+                  <p className="mt-3 text-sm text-slate-500 dark:text-slate-400">{book.category || 'Uncategorized'}</p>
+                  <div className="mt-3 flex items-center justify-between">
+                    <span className={`rounded-full px-3 py-1 text-xs font-bold ${statusColors[book.status] || statusColors.ARCHIVED}`}>
+                      {book.status}
+                    </span>
+                    <span className="text-xs text-slate-500 dark:text-slate-400">{book.availableQty}/{book.totalQuantity}</span>
                   </div>
-                </div>
+                  <Link to={`/books/${book.id}`} className="mt-4 inline-flex text-sm font-semibold text-primary">View Detail</Link>
+                </article>
               ))}
             </div>
-          )}
-        </>
-      )}
 
-      {/* Book Detail Modal */}
-      {selectedBook && (
-        <div className="modal-overlay" onClick={() => setSelectedBook(null)}>
-          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-            <button className="close-btn" onClick={() => setSelectedBook(null)}>✕</button>
-            <div className="modal-book-detail">
-              <div className="modal-cover">{selectedBook.coverImageUrl}</div>
-              <div className="modal-info">
-                <h2>{selectedBook.title}</h2>
-                <p className="author">by {selectedBook.author}</p>
-                <p className="publisher">Publisher: {selectedBook.publisher}</p>
-                <p className="isbn">ISBN: {selectedBook.isbn}</p>
-                <p className="pages">Pages: {selectedBook.pages}</p>
-                <p className="description">{selectedBook.description}</p>
-                <div className="modal-availability">
-                  <strong>Availability: </strong>
-                  {selectedBook.availableQuantity}/{selectedBook.totalQuantity} books available
-                </div>
-                <div className="modal-actions">
-                  <button
-                    className={`btn-primary ${selectedBook.availableQuantity > 0 ? '' : 'disabled'}`}
-                    disabled={selectedBook.availableQuantity <= 0}
-                  >
-                    Borrow This Book
-                  </button>
-                  <button className="btn-secondary" onClick={() => setSelectedBook(null)}>
-                    Close
-                  </button>
-                </div>
-              </div>
+            {!books.length && (
+              <div className="mt-6 rounded-2xl bg-slate-100 px-4 py-8 text-sm text-slate-600 dark:bg-slate-800 dark:text-slate-300">No books found.</div>
+            )}
+
+            <div className="mt-8 flex items-center justify-between">
+              <button
+                type="button"
+                onClick={() => setPage((prev) => Math.max(prev - 1, 0))}
+                disabled={page === 0}
+                className="rounded-xl border border-slate-200 px-4 py-2 text-sm font-semibold disabled:opacity-50 dark:border-slate-700"
+              >
+                Previous
+              </button>
+              <p className="text-sm text-slate-600 dark:text-slate-300">Page {page + 1} / {Math.max(totalPages, 1)}</p>
+              <button
+                type="button"
+                onClick={() => setPage((prev) => (prev + 1 < totalPages ? prev + 1 : prev))}
+                disabled={totalPages === 0 || page + 1 >= totalPages}
+                className="rounded-xl border border-slate-200 px-4 py-2 text-sm font-semibold disabled:opacity-50 dark:border-slate-700"
+              >
+                Next
+              </button>
             </div>
-          </div>
-        </div>
-      )}
+          </>
+        )}
+      </section>
     </div>
   );
 };
