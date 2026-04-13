@@ -34,7 +34,8 @@ spring:
   security:
     jwt:
       secret: ${JWT_SECRET:mySecretKeyForLibraryManagementSystem2024}
-      expiration: 86400 # 24 hours
+      expiration: 604800 # 7 days
+      refresh-expiration: 2592000 # 30 days for refresh token
   
   main:
     allow-bean-definition-overriding: true

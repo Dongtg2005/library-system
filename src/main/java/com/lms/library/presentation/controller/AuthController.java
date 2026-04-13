@@ -12,6 +12,8 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Map;
+
 @RestController
 @RequestMapping("/api/v1/auth")
 @RequiredArgsConstructor
@@ -46,12 +48,17 @@ public class AuthController {
     }
     
     @GetMapping("/validate")
-    public ResponseEntity<AuthResponse> validateToken(@RequestParam String token) {
+    public ResponseEntity<?> validateToken(@RequestParam String token) {
         log.info("Validating token");
-        User user = authenticationService.validateToken(token);
-        
-        AuthResponse response = ControllerHelper.buildAuthResponse(user);
-        return ResponseEntity.ok(response);
+        try {
+            User user = authenticationService.validateToken(token);
+            AuthResponse response = ControllerHelper.buildAuthResponse(user);
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            log.warn("Token validation failed: {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(Map.of("valid", false, "error", "Token expired or invalid"));
+        }
     }
     
     @PostMapping("/logout")
