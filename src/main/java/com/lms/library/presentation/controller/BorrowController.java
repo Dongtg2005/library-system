@@ -80,6 +80,27 @@ public class BorrowController {
         return ResponseEntity.ok(response);
     }
 
+    // Librarian endpoints for approving/rejecting borrow requests
+    @PutMapping("/{borrowRecordId}/approve")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('LIBRARIAN')")
+    public ResponseEntity<BorrowResponse> approveBorrowRequest(@PathVariable UUID borrowRecordId) {
+        Long librarianId = getCurrentUserId();
+        log.info("Approving borrow request: {} by librarian: {}", borrowRecordId, librarianId);
+        BorrowResponse response = borrowManagementService.approveBorrowRequest(borrowRecordId, librarianId);
+        return ResponseEntity.ok(response);
+    }
+
+    @PutMapping("/{borrowRecordId}/reject")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('LIBRARIAN')")
+    public ResponseEntity<BorrowResponse> rejectBorrowRequest(
+            @PathVariable UUID borrowRecordId,
+            @RequestParam(required = false) String reason) {
+        Long librarianId = getCurrentUserId();
+        log.info("Rejecting borrow request: {} by librarian: {} with reason: {}", borrowRecordId, librarianId, reason);
+        BorrowResponse response = borrowManagementService.rejectBorrowRequest(borrowRecordId, librarianId, reason);
+        return ResponseEntity.ok(response);
+    }
+
     private Long getCurrentUserId() {
         String email = ControllerHelper.getCurrentUserEmail();
         User user = authenticationService.findByEmail(email);

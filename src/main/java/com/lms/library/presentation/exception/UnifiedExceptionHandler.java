@@ -8,6 +8,10 @@ import com.lms.library.domain.exception.BorrowLimitExceededException;
 import com.lms.library.domain.exception.PolicyNotFoundException;
 import com.lms.library.domain.exception.ForbiddenOperationException;
 import com.lms.library.domain.exception.DuplicateIdempotencyException;
+import com.lms.library.domain.exception.CardExpiredException;
+import com.lms.library.domain.exception.OutstandingFineException;
+import com.lms.library.domain.exception.BookNotAvailableException;
+import com.lms.library.domain.exception.BookAlreadyBorrowedException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -129,7 +133,67 @@ public class UnifiedExceptionHandler {
         log.warn("Borrow limit exceeded: {}", ex.getMessage());
         return buildErrorResponse(
                 HttpStatus.BAD_REQUEST,
-                "Borrow Limit Exceeded",
+                "OVER_BORROW_LIMIT",
+                ex.getMessage(),
+                request
+        );
+    }
+
+    /**
+     * Handle CardExpiredException
+     */
+    @ExceptionHandler(CardExpiredException.class)
+    public ResponseEntity<Map<String, Object>> handleCardExpired(
+            CardExpiredException ex, WebRequest request) {
+        log.warn("Card expired: {}", ex.getMessage());
+        return buildErrorResponse(
+                HttpStatus.BAD_REQUEST,
+                "CARD_EXPIRED",
+                ex.getMessage(),
+                request
+        );
+    }
+
+    /**
+     * Handle OutstandingFineException
+     */
+    @ExceptionHandler(OutstandingFineException.class)
+    public ResponseEntity<Map<String, Object>> handleOutstandingFine(
+            OutstandingFineException ex, WebRequest request) {
+        log.warn("Outstanding fine: {}", ex.getMessage());
+        return buildErrorResponse(
+                HttpStatus.BAD_REQUEST,
+                "OUTSTANDING_FINE",
+                ex.getMessage(),
+                request
+        );
+    }
+
+    /**
+     * Handle BookNotAvailableException
+     */
+    @ExceptionHandler(BookNotAvailableException.class)
+    public ResponseEntity<Map<String, Object>> handleBookNotAvailable(
+            BookNotAvailableException ex, WebRequest request) {
+        log.warn("Book not available: {}", ex.getMessage());
+        return buildErrorResponse(
+                HttpStatus.BAD_REQUEST,
+                "BOOK_NOT_AVAILABLE",
+                ex.getMessage(),
+                request
+        );
+    }
+
+    /**
+     * Handle BookAlreadyBorrowedException
+     */
+    @ExceptionHandler(BookAlreadyBorrowedException.class)
+    public ResponseEntity<Map<String, Object>> handleBookAlreadyBorrowed(
+            BookAlreadyBorrowedException ex, WebRequest request) {
+        log.warn("Book already borrowed: {}", ex.getMessage());
+        return buildErrorResponse(
+                HttpStatus.BAD_REQUEST,
+                "BOOK_ALREADY_BORROWED",
                 ex.getMessage(),
                 request
         );
