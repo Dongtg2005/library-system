@@ -133,6 +133,7 @@ CREATE TABLE IF NOT EXISTS borrow_records (
     fine_paid_at TIMESTAMP,
     notes TEXT,
     return_notes TEXT,
+    rejection_reason TEXT,
     librarian_id BIGINT REFERENCES users(id),
     return_librarian_id BIGINT REFERENCES users(id),
     renewal_count INTEGER DEFAULT 0,
@@ -201,6 +202,7 @@ CREATE TABLE IF NOT EXISTS user_profiles (
     total_pages_read BIGINT DEFAULT 0,
     total_fines DECIMAL(10,2) DEFAULT 0.00,
     outstanding_fines DECIMAL(10,2) DEFAULT 0.00,
+    card_expiry_date DATE,
     membership_level VARCHAR(20) DEFAULT 'BRONZE' CHECK (membership_level IN ('BRONZE', 'SILVER', 'GOLD', 'PLATINUM')),
     points INTEGER DEFAULT 0,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -426,14 +428,14 @@ INSERT INTO borrow_policies (name, member_type, max_books_allowed, loan_period_d
 ON CONFLICT DO NOTHING;
 
 INSERT INTO users (email, password_hash, full_name, phone, status) VALUES
-('admin@library.com', '$2a$10$dXJ0a1pHQVpiUnAwQVpFMeNzYt5cjKMQ0t8y0Wt8KqDKNjkjDJH62', 'System Administrator', '0900000000', 'ACTIVE'),
-('librarian1@library.com', '$2a$10$qN2yI4yKzwI4yI4yI4yI4O1N9P5Q8R3S6T1U2V7W4X5Y2Z3A4CvQy', 'Nguyễn Văn A', '0901234567', 'ACTIVE'),
-('librarian2@library.com', '$2a$10$qN2yI4yKzwI4yI4yI4yI4O1N9P5Q8R3S6T1U2V7W4X5Y2Z3A4CvQy', 'Trần Thị B', '0902345678', 'ACTIVE'),
-('user1@library.com', '$2a$10$BcZnVd5pQ9K8M4L7J3H6G1E2F5I8K1M0P9S2V5Y8B1E4R7U0X3A6', 'Lê Văn C', '0903456789', 'ACTIVE'),
-('user2@library.com', '$2a$10$BcZnVd5pQ9K8M4L7J3H6G1E2F5I8K1M0P9S2V5Y8B1E4R7U0X3A6', 'Phạm Thị D', '0904567890', 'ACTIVE'),
-('user3@library.com', '$2a$10$BcZnVd5pQ9K8M4L7J3H6G1E2F5I8K1M0P9S2V5Y8B1E4R7U0X3A6', 'Hoàng Văn E', '0905678901', 'ACTIVE'),
-('user4@library.com', '$2a$10$BcZnVd5pQ9K8M4L7J3H6G1E2F5I8K1M0P9S2V5Y8B1E4R7U0X3A6', 'Nguyễn Thị F', '0906789012', 'ACTIVE'),
-('user5@library.com', '$2a$10$BcZnVd5pQ9K8M4L7J3H6G1E2F5I8K1M0P9S2V5Y8B1E4R7U0X3A6', 'Trần Văn G', '0907890123', 'ACTIVE')
+('admin@library.com', '$2a$10$yokV23U/FbikNLBJWVeb5OzIWempu27HD8D7Fybqjb54f.gcPx.oG', 'System Administrator', '0900000000', 'ACTIVE'),
+('librarian1@library.com', '$2a$10$QMCzByGVtR2rJVRndC0Woee2dwQvG2bSa6uEpeqaD.1bHoYszZHJO', 'Nguyễn Văn A', '0901234567', 'ACTIVE'),
+('librarian2@library.com', '$2a$10$QMCzByGVtR2rJVRndC0Woee2dwQvG2bSa6uEpeqaD.1bHoYszZHJO', 'Trần Thị B', '0902345678', 'ACTIVE'),
+('user1@library.com', '$2a$10$jkMxBiQJTtA7F2MITBwCYuUHhkAYRLE/xaE7MOKDHbsGfpr5pBnyC', 'Lê Văn C', '0903456789', 'ACTIVE'),
+('user2@library.com', '$2a$10$jkMxBiQJTtA7F2MITBwCYuUHhkAYRLE/xaE7MOKDHbsGfpr5pBnyC', 'Phạm Thị D', '0904567890', 'ACTIVE'),
+('user3@library.com', '$2a$10$jkMxBiQJTtA7F2MITBwCYuUHhkAYRLE/xaE7MOKDHbsGfpr5pBnyC', 'Hoàng Văn E', '0905678901', 'ACTIVE'),
+('user4@library.com', '$2a$10$jkMxBiQJTtA7F2MITBwCYuUHhkAYRLE/xaE7MOKDHbsGfpr5pBnyC', 'Nguyễn Thị F', '0906789012', 'ACTIVE'),
+('user5@library.com', '$2a$10$jkMxBiQJTtA7F2MITBwCYuUHhkAYRLE/xaE7MOKDHbsGfpr5pBnyC', 'Trần Văn G', '0907890123', 'ACTIVE')
 ON CONFLICT (email) DO NOTHING;
 
 INSERT INTO user_roles (user_id, role_id) VALUES
@@ -460,5 +462,6 @@ INSERT INTO user_profiles (user_id, full_name, email, bio, membership_level, poi
 (5, 'Phạm Thị D', 'user2@library.com', 'Sinh viên năm 4', 'BRONZE', 120),
 (6, 'Hoàng Văn E', 'user3@library.com', 'Người đi làm công ty', 'GOLD', 580),
 (7, 'Nguyễn Thị F', 'user4@library.com', 'Học sinh cấp 3', 'SILVER', 340),
-(8, 'Trần Văn G', 'user5@library.com', 'Gia đình', 'PLATINUM', 890)
+(8, 'Trần Văn G', 'user5@library.com', 'Gia đình', 'PLATINUM', 890),
+(9, 'Test User', 'user@library.com', 'Người dùng thử nghiệm', 'BRONZE', 0)
 ON CONFLICT (user_id) DO NOTHING;

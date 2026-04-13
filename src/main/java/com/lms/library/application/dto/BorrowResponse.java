@@ -31,7 +31,8 @@ public class BorrowResponse {
     private BorrowRecord.BookCondition conditionOnReturn;
     private String notes;
     private String returnNotes;
-    
+    private String rejectionReason;
+
     public static BorrowResponse from(BorrowRecord record) {
         return BorrowResponse.builder()
                 .id(record.getId())
@@ -50,6 +51,7 @@ public class BorrowResponse {
                 .conditionOnReturn(record.getConditionOnReturn())
                 .notes(record.getNotes())
                 .returnNotes(record.getReturnNotes())
+                .rejectionReason(record.getRejectionReason())
                 .build();
     }
 }

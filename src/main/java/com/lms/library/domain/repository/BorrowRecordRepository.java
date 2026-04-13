@@ -7,6 +7,7 @@ import org.springframework.stereotype.Repository;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 @Repository
@@ -22,4 +23,6 @@ public interface BorrowRecordRepository extends JpaRepository<BorrowRecord, UUID
     List<BorrowRecord> findOverdueRecords();
 
     List<BorrowRecord> findByBorrowStatus(BorrowRecord.BorrowStatus status);
+
+    Optional<BorrowRecord> findByMemberIdAndBookIdAndBorrowStatusIn(Long memberId, UUID bookId, Collection<BorrowRecord.BorrowStatus> statuses);
 }

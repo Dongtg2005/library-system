@@ -90,6 +90,9 @@ public class BorrowRecord {
     @Column(name = "return_notes", columnDefinition = "TEXT")
     private String returnNotes;
 
+    @Column(name = "rejection_reason", columnDefinition = "TEXT")
+    private String rejectionReason;
+
     @Column(name = "librarian_id")
     private Long librarianId;
 

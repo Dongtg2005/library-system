@@ -9,6 +9,7 @@ import lombok.NoArgsConstructor;
 import org.hibernate.annotations.Type;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
@@ -84,6 +85,9 @@ public class UserProfile {
     @Column(name = "outstanding_fines", precision = 10, scale = 2)
     private BigDecimal outstandingFines = BigDecimal.ZERO;
 
+    @Column(name = "card_expiry_date")
+    private LocalDate cardExpiryDate;
+
     @Column(updatable = false)
     private LocalDateTime createdAt;
 
@@ -119,6 +123,10 @@ public class UserProfile {
 
     public boolean isActive() {
         return MemberStatus.ACTIVE.equals(this.memberStatus);
+    }
+
+    public boolean isCardExpired() {
+        return cardExpiryDate != null && LocalDate.now().isAfter(cardExpiryDate);
     }
 
     public boolean isSuspended() {

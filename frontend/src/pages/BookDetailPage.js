@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import Button from '../components/Button';
+import BorrowConfirmModal from '../components/BorrowConfirmModal';
 import { useAuth } from '../context/AuthContext';
 import { createBorrow, fetchBookById } from '../lib/api';
 import { useToast } from '../context/ToastContext';
@@ -16,6 +17,7 @@ const BookDetailPage = () => {
   const [error, setError] = useState('');
   const [borrowing, setBorrowing] = useState(false);
   const [favorite, setFavorite] = useState(false);
+  const [showModal, setShowModal] = useState(false);
 
   useEffect(() => {
     let mounted = true;
@@ -47,15 +49,19 @@ const BookDetailPage = () => {
 
   const role = (user?.role || 'GUEST').toUpperCase();
 
-  const handleBorrow = async () => {
+  const handleBorrow = () => {
     if (!isAuthenticated || !token || !book?.id) {
       navigate('/login');
       return;
     }
+    setShowModal(true);
+  };
 
+  const confirmBorrow = async () => {
     setBorrowing(true);
     try {
       await createBorrow(token, book.id);
+      setShowModal(false);
       toast?.addToast({ type: 'success', title: 'Borrow requested', message: 'Your request was sent successfully.' });
     } catch (err) {
       toast?.addToast({ type: 'error', title: 'Borrow failed', message: err.message || 'Please try again.' });
@@ -87,6 +93,14 @@ const BookDetailPage = () => {
   const isAvailable = book.status === 'AVAILABLE' && book.availableQty > 0;
 
   return (
+    <>
+      <BorrowConfirmModal
+        isOpen={showModal}
+        onClose={() => setShowModal(false)}
+        onConfirm={confirmBorrow}
+        book={book}
+        loading={borrowing}
+      />
     <div className="grid gap-6 lg:grid-cols-[0.4fr_0.6fr] page-fade">
       <div className="rounded-[2rem] border border-white/70 bg-white/85 p-6 dark:border-slate-800 dark:bg-slate-900/75">
         <div className="flex h-[28rem] items-end rounded-[1.5rem] bg-[linear-gradient(145deg,#0f172a,#334155_55%,#fb923c_140%)] p-6 text-white">
@@ -145,6 +159,7 @@ const BookDetailPage = () => {
         </div>
       </div>
     </div>
+    </>
   );
 };
 
