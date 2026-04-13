@@ -6,8 +6,8 @@ import { AuthProvider, useAuth } from './context/AuthContext';
 import { ThemeProvider } from './context/ThemeContext';
 import { ToastProvider } from './context/ToastContext';
 import AuthPage from './pages/AuthPage';
-import AdminDashboard from './pages/AdminDashboard';
 import BookDetailPage from './pages/BookDetailPage';
+import RoleBasedDashboard from './components/RoleBasedDashboard';
 import BookPage from './pages/BookPage';
 import BooksPage from './pages/BooksPage';
 import BorrowBookPage from './pages/BorrowBookPage';
@@ -97,7 +97,7 @@ function AppRoutes() {
           </RequireAuth>
         }
       >
-        <Route path="dashboard" element={<AdminDashboard />} />
+        <Route path="dashboard" element={<RoleBasedDashboard />} />
         <Route path="users" element={<UserPage />} />
         <Route path="admin/books" element={<BookPage />} />
         <Route path="admin/borrow" element={<BorrowPage />} />

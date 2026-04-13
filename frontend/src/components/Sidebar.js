@@ -12,16 +12,26 @@ import {
 } from '@heroicons/react/24/outline';
 import { useTheme } from '../context/ThemeContext';
 
-const navItems = [
+const adminNavItems = [
   { to: '/dashboard', label: 'Dashboard', icon: <Squares2X2Icon className="h-5 w-5" /> },
-  { to: '/profile', label: 'Profile', icon: <ShieldCheckIcon className="h-5 w-5" /> },
-  { to: '/users', label: 'User Service', icon: <UsersIcon className="h-5 w-5" /> },
+  { to: '/users', label: 'User Management', icon: <UsersIcon className="h-5 w-5" /> },
   { to: '/admin/books', label: 'Book Service', icon: <BookOpenIcon className="h-5 w-5" /> },
   { to: '/admin/borrow', label: 'Borrow Service', icon: <ArrowPathIcon className="h-5 w-5" /> },
+  { to: '/profile', label: 'Settings', icon: <ShieldCheckIcon className="h-5 w-5" /> },
+];
+
+const librarianNavItems = [
+  { to: '/dashboard', label: 'Work Dashboard', icon: <Squares2X2Icon className="h-5 w-5" /> },
+  { to: '/admin/borrow', label: 'Borrow Requests', icon: <ArrowPathIcon className="h-5 w-5" /> },
+  { to: '/admin/books', label: 'Book Inventory', icon: <BookOpenIcon className="h-5 w-5" /> },
+  { to: '/profile', label: 'Profile', icon: <ShieldCheckIcon className="h-5 w-5" /> },
 ];
 
 const Sidebar = ({ collapsed, onToggle, user }) => {
   const { darkMode, toggleTheme } = useTheme();
+  const role = (user?.role || '').toUpperCase();
+  const navItems = role === 'LIBRARIAN' ? librarianNavItems : adminNavItems;
+  const title = role === 'LIBRARIAN' ? 'Librarian Suite' : 'Admin Suite';
 
   return (
     <aside className={`sticky top-0 flex h-screen flex-col border-r border-slate-200 bg-white/95 backdrop-blur-xl transition-all duration-300 dark:border-slate-800 dark:bg-slate-950/95 ${collapsed ? 'w-24' : 'w-72'}`}>
@@ -33,7 +43,7 @@ const Sidebar = ({ collapsed, onToggle, user }) => {
           {!collapsed && (
             <div>
               <p className="text-sm font-medium text-slate-500 dark:text-slate-400">Library</p>
-              <h1 className="text-lg font-black tracking-tight text-slate-900 dark:text-white">Admin Suite</h1>
+              <h1 className="text-lg font-black tracking-tight text-slate-900 dark:text-white">{title}</h1>
             </div>
           )}
         </div>
