@@ -44,7 +44,50 @@ export const searchBooks = (params = {}) => apiRequest(withQuery('/api/v1/books/
 
 export const fetchBookById = (id) => apiRequest(`/api/v1/books/${id}`);
 
+export const createBook = (token, payload) =>
+  apiRequest('/api/v1/books', {
+    method: 'POST',
+    token,
+    body: payload,
+  });
+
+export const updateBook = (token, id, payload) =>
+  apiRequest(`/api/v1/books/${id}`, {
+    method: 'PUT',
+    token,
+    body: payload,
+  });
+
+export const deleteBook = (token, id) =>
+  apiRequest(`/api/v1/books/${id}`, {
+    method: 'DELETE',
+    token,
+  });
+
 export const fetchCurrentUser = (token) => apiRequest('/api/v1/auth/me', { token });
+
+export const fetchUsers = (token, params = {}) =>
+  apiRequest(withQuery('/api/v1/users', params), { token });
+
+export const createUser = (token, payload) =>
+  apiRequest('/api/v1/users', {
+    method: 'POST',
+    token,
+    body: payload,
+  });
+
+export const updateUser = (token, id, payload) =>
+  apiRequest(`/api/v1/users/${id}`, {
+    method: 'PUT',
+    token,
+    body: payload,
+  });
+
+export const deleteUser = (token, id) =>
+  apiRequest(`/api/v1/users/${id}`, {
+    method: 'DELETE',
+    token,
+  });
 
 export const fetchBorrowHistory = (token) => apiRequest('/api/v1/borrows/history', { token });
 

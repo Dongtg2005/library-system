@@ -20,11 +20,25 @@ public class AuthResponse {
     private String tokenType;
     private String accessToken;
     private LocalDateTime expiresAt;
+
+    private static String resolveRole(User user) {
+        if (user.getRoles() == null || user.getRoles().isEmpty()) {
+            return "USER";
+        }
+
+        if (user.getRoles().stream().anyMatch(role -> "ADMIN".equalsIgnoreCase(role.getName()))) {
+            return "ADMIN";
+        }
+
+        if (user.getRoles().stream().anyMatch(role -> "LIBRARIAN".equalsIgnoreCase(role.getName()))) {
+            return "LIBRARIAN";
+        }
+
+        return "USER";
+    }
     
     public static AuthResponse from(User user, String token, LocalDateTime expiresAt) {
-        String roleName = user.getRoles() != null && !user.getRoles().isEmpty()
-                ? user.getRoles().get(0).getName()
-                : "USER";
+        String roleName = resolveRole(user);
         return AuthResponse.builder()
                 .userId(user.getId())
                 .email(user.getEmail())

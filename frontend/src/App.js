@@ -47,6 +47,18 @@ const PublicOnly = ({ children }) => {
   return children;
 };
 
+const RequireRole = ({ roles, children }) => {
+  const { isAuthenticated, loading, user } = useAuth();
+
+  if (loading) return <LoadingScreen />;
+  if (!isAuthenticated) return <Navigate to="/login" replace />;
+
+  const currentRole = (user?.role || '').toUpperCase();
+  if (!roles.includes(currentRole)) return <Navigate to="/" replace />;
+
+  return children;
+};
+
 function AppRoutes() {
   return (
     <Routes>
@@ -92,15 +104,36 @@ function AppRoutes() {
 
       <Route
         element={
-          <RequireAuth>
+          <RequireRole roles={['ADMIN', 'LIBRARIAN']}>
             <DashboardLayout />
-          </RequireAuth>
+          </RequireRole>
         }
       >
         <Route path="dashboard" element={<RoleBasedDashboard />} />
-        <Route path="users" element={<UserPage />} />
-        <Route path="admin/books" element={<BookPage />} />
-        <Route path="admin/borrow" element={<BorrowPage />} />
+        <Route
+          path="users"
+          element={
+            <RequireRole roles={['ADMIN']}>
+              <UserPage />
+            </RequireRole>
+          }
+        />
+        <Route
+          path="admin/books"
+          element={
+            <RequireRole roles={['ADMIN', 'LIBRARIAN']}>
+              <BookPage />
+            </RequireRole>
+          }
+        />
+        <Route
+          path="admin/borrow"
+          element={
+            <RequireRole roles={['ADMIN', 'LIBRARIAN']}>
+              <BorrowPage />
+            </RequireRole>
+          }
+        />
       </Route>
 
       <Route path="*" element={<Navigate to="/" replace />} />

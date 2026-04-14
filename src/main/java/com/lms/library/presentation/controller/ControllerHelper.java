@@ -28,9 +28,14 @@ public class ControllerHelper {
     }
     
     public static AuthResponse buildAuthResponse(User user) {
-        String roleName = user.getRoles() != null && !user.getRoles().isEmpty()
-                ? user.getRoles().get(0).getName()
-                : "USER";
+        String roleName = "USER";
+        if (user.getRoles() != null && !user.getRoles().isEmpty()) {
+            if (user.getRoles().stream().anyMatch(role -> "ADMIN".equalsIgnoreCase(role.getName()))) {
+                roleName = "ADMIN";
+            } else if (user.getRoles().stream().anyMatch(role -> "LIBRARIAN".equalsIgnoreCase(role.getName()))) {
+                roleName = "LIBRARIAN";
+            }
+        }
         return AuthResponse.builder()
                 .userId(user.getId())
                 .email(user.getEmail())
