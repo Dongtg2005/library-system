@@ -40,16 +40,29 @@ public class AuthController {
     @GetMapping("/me")
     public ResponseEntity<AuthResponse> getCurrentUser() {
         String email = ControllerHelper.getCurrentUserEmail();
-        User user = authenticationService.findByEmail(email);
-        log.info("Getting current user info: {}", email);
+        
+        // Thêm check an toàn chống NullPointerException nếu có lọt filter
+        if (email == null || "anonymousUser".equals(email)) {
+            log.warn("Ngăn chặn lỗi NPE: Attempted to get /me without valid authentication context");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
         
         AuthResponse response = ControllerHelper.buildAuthResponse(user);
         return ResponseEntity.ok(response);
     }
     
+// Fix 2.6: Security REST convention -> DO NOT expose token as a query param in URL
+    // Client MUST send: Header: Authorization: Bearer <token>
     @GetMapping("/validate")
-    public ResponseEntity<?> validateToken(@RequestParam String token) {
-        log.info("Validating token");
+    public ResponseEntity<?> validateToken(@RequestHeader(value = "Authorization", required = false) String authHeader) {
+        log.info("Validating token from Header");
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(Map.of("valid", false, "error", "Missing or invalid Authorization header"));
+        }
+
+        String token = authHeader.substring(7); // Remove "Bearer "
+        
         try {
             User user = authenticationService.validateToken(token);
             AuthResponse response = ControllerHelper.buildAuthResponse(user);

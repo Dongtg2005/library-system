@@ -49,12 +49,13 @@ public class JwtUtil {
     }
     
     private String buildToken(Map<String, Object> extraClaims, String subject, Long expiration) {
+        // FIXED BUG EXPIRED token: convert second -> ms bằng cách nhân expiration * 1000L
         return Jwts
                 .builder()
                 .setClaims(extraClaims)
                 .setSubject(subject)
                 .setIssuedAt(new Date())
-                .setExpiration(new Date(System.currentTimeMillis() + expiration))
+                .setExpiration(new Date(System.currentTimeMillis() + (expiration * 1000L)))
                 .signWith(getSigningKey(), SignatureAlgorithm.HS256)
                 .compact();
     }

@@ -31,13 +31,11 @@ public class SecurityConfig {
             .csrf(AbstractHttpConfigurer::disable)
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/api/v1/auth/**").permitAll()
-                .requestMatchers("/actuator/**").permitAll()
-                .requestMatchers("/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
-                .requestMatchers(HttpMethod.GET, "/api/v1/books/**").permitAll()
-                .requestMatchers("/api/v1/books/**").authenticated()
-                .requestMatchers("/api/v1/borrows/**").authenticated()
-                .anyRequest().authenticated()
+                // CHÚ Ý BẢO MẬT: Chỉ cho phép truy cập tự do vào các endpoint thiết yếu 
+                // như đăng ký, đăng nhập và validate token
+                .requestMatchers("/api/v1/auth/register", "/api/v1/auth/login", "/api/v1/auth/validate").permitAll()
+                // Endpoint /me và /logout bắt buộc phải có Authentication (Đăng nhập rồi mới được lấy thông tin)
+                .requestMatchers("/api/v1/auth/me", "/api/v1/auth/logout").authenticated()
             )
             .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
         
