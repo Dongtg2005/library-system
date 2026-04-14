@@ -42,6 +42,8 @@ export const fetchBooks = (params = {}) => apiRequest(withQuery('/api/v1/books',
 
 export const searchBooks = (params = {}) => apiRequest(withQuery('/api/v1/books/search', params));
 
+export const autocompleteBooks = (q) => apiRequest(withQuery('/api/v1/books/autocomplete', { q }));
+
 export const fetchBookById = (id) => apiRequest(`/api/v1/books/${id}`);
 
 export const fetchCurrentUser = (token) => apiRequest('/api/v1/auth/me', { token });
