@@ -15,7 +15,12 @@ import java.util.UUID;
 
 @Data
 @Entity
-@Table(name = "books")
+@Table(name = "books", indexes = {
+    // Đánh index để Query search (ISBN, Title, Author) chạy cực nhanh
+    @Index(name = "idx_book_isbn", columnList = "isbn", unique = true),
+    @Index(name = "idx_book_title", columnList = "title"),
+    @Index(name = "idx_book_author", columnList = "author")
+})
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
