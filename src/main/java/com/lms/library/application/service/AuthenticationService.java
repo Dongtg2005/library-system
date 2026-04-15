@@ -14,6 +14,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.time.LocalDateTime;
 
 @Service
@@ -22,6 +23,7 @@ import java.time.LocalDateTime;
 public class AuthenticationService {
     
     private final UserRepository userRepository;
+    private final UserManagementService userManagementService;
     private final PasswordEncoder passwordEncoder;
     private final JwtUtil jwtUtil;
     
@@ -38,6 +40,7 @@ public class AuthenticationService {
                 .password(passwordEncoder.encode(request.getPassword()))
                 .fullName(request.getFullName())
                 .status(User.UserStatus.ACTIVE)
+            .roles(new ArrayList<>(java.util.List.of(userManagementService.resolveRole("USER"))))
                 .createdAt(LocalDateTime.now())
                 .updatedAt(LocalDateTime.now())
                 .build();

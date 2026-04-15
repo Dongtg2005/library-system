@@ -1,25 +1,109 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { ArrowPathIcon, ClockIcon, ExclamationTriangleIcon } from '@heroicons/react/24/outline';
 import Button from './Button';
 import Input from './Input';
 import { borrowRows } from '../data/mockData';
+import { createBorrow, extendBorrow, fetchBorrowHistory, returnBorrow } from '../lib/api';
+import { useAuth } from '../context/AuthContext';
+
+const isUuid = (value) => typeof value === 'string' && /^[0-9a-fA-F-]{36}$/.test(value);
 
 const BorrowManagement = () => {
+  const { token } = useAuth();
+  const [rows, setRows] = useState([]);
   const [query, setQuery] = useState('');
   const [filter, setFilter] = useState('All');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+
+  const loadRows = async () => {
+    setLoading(true);
+    setError('');
+
+    try {
+      const payload = await fetchBorrowHistory(token);
+      const mapped = Array.isArray(payload)
+        ? payload.map((item) => ({
+            id: item.id,
+            user: `Member #${item.memberId}`,
+            book: item.bookId ? `Book #${String(item.bookId).slice(0, 8)}` : '-',
+            borrowDate: item.borrowDate || '-',
+            dueDate: item.dueDate || '-',
+            status: String(item.borrowStatus || 'UNKNOWN').replace(/_/g, ' '),
+            fine: '$0.00',
+            raw: item,
+          }))
+        : [];
+
+      setRows(mapped);
+    } catch (apiError) {
+      setError(apiError.message || 'Unable to load borrow history from API. Showing fallback data.');
+      setRows(borrowRows.map((row) => ({ ...row, raw: row })));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (!token) return;
+    loadRows();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [token]);
 
   const filtered = useMemo(() => {
-    return borrowRows.filter((row) => {
-      const matchesSearch = [row.user, row.book, row.status].some((value) => value.toLowerCase().includes(query.toLowerCase()));
-      const matchesFilter = filter === 'All' || row.status === filter;
+    return rows.filter((row) => {
+      const normalized = String(row.status || '').toLowerCase();
+      const matchesSearch = [row.user, row.book, row.status].some((value) => String(value || '').toLowerCase().includes(query.toLowerCase()));
+      const matchesFilter =
+        filter === 'All' ||
+        (filter === 'Borrowed' && (normalized.includes('borrow') || normalized.includes('approved') || normalized.includes('active'))) ||
+        (filter === 'Returned' && normalized.includes('return')) ||
+        (filter === 'Overdue' && normalized.includes('overdue'));
+
       return matchesSearch && matchesFilter;
     });
-  }, [query, filter]);
+  }, [query, filter, rows]);
+
+  const handleReturn = async (id) => {
+    if (!token || !isUuid(id)) return;
+
+    try {
+      await returnBorrow(token, id, 'Returned from admin panel');
+      loadRows();
+    } catch (returnError) {
+      setError(returnError.message || 'Unable to return book.');
+    }
+  };
+
+  const handleBorrow = async (row) => {
+    if (!token) return;
+
+    const bookId = row?.raw?.bookId || row?.raw?.book || row?.raw?.bookUuid;
+    if (!isUuid(bookId)) return;
+
+    try {
+      await createBorrow(token, bookId, 'Created from admin panel');
+      loadRows();
+    } catch (borrowError) {
+      setError(borrowError.message || 'Unable to create borrow request.');
+    }
+  };
+
+  const handleExtend = async (id) => {
+    if (!token || !isUuid(id)) return;
+
+    try {
+      await extendBorrow(token, id);
+      loadRows();
+    } catch (extendError) {
+      setError(extendError.message || 'Unable to extend loan.');
+    }
+  };
 
   const summary = [
-    { label: 'Active borrows', value: '1,284', icon: <ArrowPathIcon className="h-5 w-5" /> },
-    { label: 'Overdue items', value: '38', icon: <ExclamationTriangleIcon className="h-5 w-5" /> },
-    { label: 'Late fees', value: '$4,860', icon: <ClockIcon className="h-5 w-5" /> },
+    { label: 'Active borrows', value: rows.filter((row) => String(row.status).toLowerCase().includes('borrow') || String(row.status).toLowerCase().includes('active')).length.toString(), icon: <ArrowPathIcon className="h-5 w-5" /> },
+    { label: 'Overdue items', value: rows.filter((row) => String(row.status).toLowerCase().includes('overdue')).length.toString(), icon: <ExclamationTriangleIcon className="h-5 w-5" /> },
+    { label: 'Returned items', value: rows.filter((row) => String(row.status).toLowerCase().includes('return')).length.toString(), icon: <ClockIcon className="h-5 w-5" /> },
   ];
 
   return (
@@ -42,6 +126,9 @@ const BorrowManagement = () => {
         </div>
       </div>
 
+      {error && <p className="text-sm text-amber-600">{error}</p>}
+      {loading && <p className="text-sm text-slate-500">Loading borrow records...</p>}
+
       <div className="grid gap-4">
         {filtered.map((row) => (
           <div key={row.id} className="rounded-[28px] border border-slate-200 bg-white p-5 shadow-lg transition hover:-translate-y-1 dark:border-slate-800 dark:bg-slate-950">
@@ -60,9 +147,10 @@ const BorrowManagement = () => {
                 <p className="mt-2 font-semibold text-slate-700 dark:text-slate-200">{row.dueDate}</p>
               </div>
               <div className="flex flex-wrap gap-2">
-                <span className={`rounded-full px-3 py-1 text-xs font-bold ${row.status === 'Overdue' ? 'bg-rose-500/10 text-rose-600' : row.status === 'Returned' ? 'bg-emerald-500/10 text-emerald-600' : 'bg-amber-500/10 text-amber-600'}`}>{row.status}</span>
-                <Button variant="secondary" size="sm">Return</Button>
-                <Button variant="accent" size="sm">Borrow</Button>
+                <span className={`rounded-full px-3 py-1 text-xs font-bold ${String(row.status).toLowerCase().includes('overdue') ? 'bg-rose-500/10 text-rose-600' : String(row.status).toLowerCase().includes('return') ? 'bg-emerald-500/10 text-emerald-600' : 'bg-amber-500/10 text-amber-600'}`}>{row.status}</span>
+                <Button variant="secondary" size="sm" onClick={() => handleReturn(row.id)}>Return</Button>
+                <Button variant="accent" size="sm" onClick={() => handleBorrow(row)}>Borrow</Button>
+                <Button variant="ghost" size="sm" onClick={() => handleExtend(row.id)}>Extend</Button>
               </div>
             </div>
           </div>

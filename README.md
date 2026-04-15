@@ -69,6 +69,20 @@ A comprehensive library management system built with Spring Boot, React, and Pos
    - Grafana Dashboard: http://localhost:3001 (admin/admin123)
    - Prometheus: http://localhost:9090
 
+### Test Accounts (Local)
+
+Use these accounts for local testing after `docker compose up --build -d`.
+
+- Admin account (easy to identify)
+   - Display name: ADMIN_TEST_ACCOUNT
+   - Email: admin@library.local
+   - Password: Admin@123
+   - Role: ADMIN
+
+Notes:
+- This account is stored in PostgreSQL runtime data, not in source code.
+- If you run `docker compose down -v`, the database volume is removed and you need to recreate test accounts.
+
 ### Local Development
 
 1. **Start PostgreSQL:**
