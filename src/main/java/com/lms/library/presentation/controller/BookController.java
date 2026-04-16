@@ -13,6 +13,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+import java.util.Map;
 
 import java.util.List;
 import java.util.UUID;
@@ -111,5 +113,33 @@ public class BookController {
         log.info("Returning book with ID: {}", id);
         bookManagementService.returnBook(id);
         return ResponseEntity.ok().build();
+    }
+    
+    @PostMapping("/{id}/cover")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('LIBRARIAN')")
+    public ResponseEntity<CoverResponse> uploadCover(
+            @PathVariable UUID id,
+            @RequestParam("cover_image") MultipartFile file) {
+        log.info("REST request to upload cover for Book : {}", id);
+        CoverResponse response = bookManagementService.uploadCover(id, file);
+        return ResponseEntity.ok(response);
+    }
+    
+    @PostMapping("/{id}/cover-from-url")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('LIBRARIAN')")
+    public ResponseEntity<CoverResponse> uploadCoverFromUrl(
+            @PathVariable UUID id,
+            @Valid @RequestBody CoverUrlRequest request) {
+        log.info("REST request to upload cover from URL for Book : {}", id);
+        CoverResponse response = bookManagementService.uploadCoverFromUrl(id, request.getUrl());
+        return ResponseEntity.ok(response);
+    }
+    
+    @DeleteMapping("/{id}/cover")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('LIBRARIAN')")
+    public ResponseEntity<Map<String, Boolean>> deleteCover(@PathVariable UUID id) {
+        log.info("REST request to delete cover for Book : {}", id);
+        bookManagementService.deleteCover(id);
+        return ResponseEntity.ok(Map.of("success", true));
     }
 }

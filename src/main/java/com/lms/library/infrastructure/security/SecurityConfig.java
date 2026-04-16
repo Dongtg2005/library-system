@@ -31,11 +31,20 @@ public class SecurityConfig {
             .csrf(AbstractHttpConfigurer::disable)
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
-                // CHÚ Ý BẢO MẬT: Chỉ cho phép truy cập tự do vào các endpoint thiết yếu 
-                // như đăng ký, đăng nhập và validate token
+                // Actuator health/info endpoints: must be public for Docker healthcheck
+                .requestMatchers("/actuator/health", "/actuator/info").permitAll()
+                // Swagger UI: public access for API documentation
+                .requestMatchers("/swagger-ui/**", "/api-docs/**", "/swagger-ui.html").permitAll()
+                // Static file (Uploaded Covers)
+                .requestMatchers("/uploads/**").permitAll()
+                // Auth endpoints: open for register, login, validate
                 .requestMatchers("/api/v1/auth/register", "/api/v1/auth/login", "/api/v1/auth/validate").permitAll()
-                // Endpoint /me và /logout bắt buộc phải có Authentication (Đăng nhập rồi mới được lấy thông tin)
+                // Book browsing: public read access (GET only)
+                .requestMatchers(HttpMethod.GET, "/api/v1/books/**").permitAll()
+                // Auth endpoints that require authentication
                 .requestMatchers("/api/v1/auth/me", "/api/v1/auth/logout").authenticated()
+                // All other endpoints require authentication
+                .anyRequest().authenticated()
             )
             .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
         

@@ -11,6 +11,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
+import java.time.LocalDateTime;
 
 import java.util.UUID;
 
@@ -20,6 +22,7 @@ import java.util.UUID;
 public class BookManagementService {
     
     private final BookRepository bookRepository;
+    private final FileStorageService fileStorageService;
     
     @Transactional
     public BookResponse createBook(BookCreateRequest request) {
@@ -157,5 +160,61 @@ public class BookManagementService {
         
         book.returnBook();
         bookRepository.save(book);
+    }
+    
+    @Transactional
+    public CoverResponse uploadCover(UUID bookId, MultipartFile file) {
+        log.info("Uploading cover for book ID: {}", bookId);
+        Book book = bookRepository.findById(bookId)
+                .orElseThrow(() -> new ResourceNotFoundException("Book not found with ID: " + bookId));
+                
+        // Delete old cover if exists
+        if (book.getCoverImageUrl() != null) {
+            fileStorageService.deleteFileByUrl(book.getCoverImageUrl());
+        }
+        
+        String coverUrl = fileStorageService.storeCoverImage(file);
+        book.setCoverImageUrl(coverUrl);
+        bookRepository.save(book);
+        
+        return CoverResponse.builder()
+                .success(true)
+                .coverUrl(coverUrl)
+                .updatedAt(LocalDateTime.now())
+                .build();
+    }
+    
+    @Transactional
+    public CoverResponse uploadCoverFromUrl(UUID bookId, String url) {
+        log.info("Uploading remote cover for book ID: {}", bookId);
+        Book book = bookRepository.findById(bookId)
+                .orElseThrow(() -> new ResourceNotFoundException("Book not found with ID: " + bookId));
+                
+        if (book.getCoverImageUrl() != null) {
+            fileStorageService.deleteFileByUrl(book.getCoverImageUrl());
+        }
+        
+        String coverUrl = fileStorageService.storeCoverImageFromUrl(url);
+        book.setCoverImageUrl(coverUrl);
+        bookRepository.save(book);
+        
+        return CoverResponse.builder()
+                .success(true)
+                .coverUrl(coverUrl)
+                .updatedAt(LocalDateTime.now())
+                .build();
+    }
+    
+    @Transactional
+    public void deleteCover(UUID bookId) {
+        log.info("Deleting cover for book ID: {}", bookId);
+        Book book = bookRepository.findById(bookId)
+                .orElseThrow(() -> new ResourceNotFoundException("Book not found with ID: " + bookId));
+                
+        if (book.getCoverImageUrl() != null) {
+            fileStorageService.deleteFileByUrl(book.getCoverImageUrl());
+            book.setCoverImageUrl(null);
+            bookRepository.save(book);
+        }
     }
 }

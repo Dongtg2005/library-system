@@ -429,17 +429,18 @@ ON CONFLICT DO NOTHING;
 
 INSERT INTO users (email, password_hash, full_name, phone, status) VALUES
 ('admin@library.com', '$2a$10$yokV23U/FbikNLBJWVeb5OzIWempu27HD8D7Fybqjb54f.gcPx.oG', 'System Administrator', '0900000000', 'ACTIVE'),
-('librarian1@library.com', '$2a$10$QMCzByGVtR2rJVRndC0Woee2dwQvG2bSa6uEpeqaD.1bHoYszZHJO', 'Nguyễn Văn A', '0901234567', 'ACTIVE'),
-('librarian2@library.com', '$2a$10$QMCzByGVtR2rJVRndC0Woee2dwQvG2bSa6uEpeqaD.1bHoYszZHJO', 'Trần Thị B', '0902345678', 'ACTIVE'),
-('user1@library.com', '$2a$10$jkMxBiQJTtA7F2MITBwCYuUHhkAYRLE/xaE7MOKDHbsGfpr5pBnyC', 'Lê Văn C', '0903456789', 'ACTIVE'),
-('user2@library.com', '$2a$10$jkMxBiQJTtA7F2MITBwCYuUHhkAYRLE/xaE7MOKDHbsGfpr5pBnyC', 'Phạm Thị D', '0904567890', 'ACTIVE'),
-('user3@library.com', '$2a$10$jkMxBiQJTtA7F2MITBwCYuUHhkAYRLE/xaE7MOKDHbsGfpr5pBnyC', 'Hoàng Văn E', '0905678901', 'ACTIVE'),
-('user4@library.com', '$2a$10$jkMxBiQJTtA7F2MITBwCYuUHhkAYRLE/xaE7MOKDHbsGfpr5pBnyC', 'Nguyễn Thị F', '0906789012', 'ACTIVE'),
-('user5@library.com', '$2a$10$jkMxBiQJTtA7F2MITBwCYuUHhkAYRLE/xaE7MOKDHbsGfpr5pBnyC', 'Trần Văn G', '0907890123', 'ACTIVE')
+('librarian1@library.com', '$2a$10$QMCzByGVtR2rJVRndC0Woee2dwQvG2bSa6uEpeqaD.1bHoYszZHJO', 'Nguyen Van A', '0901234567', 'ACTIVE'),
+('librarian2@library.com', '$2a$10$QMCzByGVtR2rJVRndC0Woee2dwQvG2bSa6uEpeqaD.1bHoYszZHJO', 'Tran Thi B', '0902345678', 'ACTIVE'),
+('user1@library.com', '$2a$10$jkMxBiQJTtA7F2MITBwCYuUHhkAYRLE/xaE7MOKDHbsGfpr5pBnyC', 'Le Van C', '0903456789', 'ACTIVE'),
+('user2@library.com', '$2a$10$jkMxBiQJTtA7F2MITBwCYuUHhkAYRLE/xaE7MOKDHbsGfpr5pBnyC', 'Pham Thi D', '0904567890', 'ACTIVE'),
+('user3@library.com', '$2a$10$jkMxBiQJTtA7F2MITBwCYuUHhkAYRLE/xaE7MOKDHbsGfpr5pBnyC', 'Hoang Van E', '0905678901', 'ACTIVE'),
+('user4@library.com', '$2a$10$jkMxBiQJTtA7F2MITBwCYuUHhkAYRLE/xaE7MOKDHbsGfpr5pBnyC', 'Nguyen Thi F', '0906789012', 'ACTIVE'),
+('user5@library.com', '$2a$10$jkMxBiQJTtA7F2MITBwCYuUHhkAYRLE/xaE7MOKDHbsGfpr5pBnyC', 'Tran Van G', '0907890123', 'ACTIVE'),
+('user@library.com', '$2a$10$jkMxBiQJTtA7F2MITBwCYuUHhkAYRLE/xaE7MOKDHbsGfpr5pBnyC', 'Test User', '0908000000', 'ACTIVE')
 ON CONFLICT (email) DO NOTHING;
 
 INSERT INTO user_roles (user_id, role_id) VALUES
-(1, 4), (2, 3), (3, 3), (4, 2), (5, 2), (6, 2), (7, 2), (8, 2)
+(1, 4), (2, 3), (3, 3), (4, 2), (5, 2), (6, 2), (7, 2), (8, 2), (9, 2)
 ON CONFLICT DO NOTHING;
 
 INSERT INTO books (isbn, title, author, publisher, publication_date, language, pages, format, total_quantity, available_qty, average_rating, rating_count, view_count, category) VALUES
@@ -458,10 +459,13 @@ INSERT INTO books (isbn, title, author, publisher, publication_date, language, p
 ON CONFLICT (isbn) DO NOTHING;
 
 INSERT INTO user_profiles (user_id, full_name, email, bio, membership_level, points) VALUES
-(4, 'Lê Văn C', 'user1@library.com', 'Thủ thư với 10 năm kinh nghiệm', 'SILVER', 250),
-(5, 'Phạm Thị D', 'user2@library.com', 'Sinh viên năm 4', 'BRONZE', 120),
-(6, 'Hoàng Văn E', 'user3@library.com', 'Người đi làm công ty', 'GOLD', 580),
-(7, 'Nguyễn Thị F', 'user4@library.com', 'Học sinh cấp 3', 'SILVER', 340),
-(8, 'Trần Văn G', 'user5@library.com', 'Gia đình', 'PLATINUM', 890),
-(9, 'Test User', 'user@library.com', 'Người dùng thử nghiệm', 'BRONZE', 0)
+(1, 'System Administrator', 'admin@library.com', 'System Administrator', 'PLATINUM', 9999),
+(2, 'Nguyen Van A', 'librarian1@library.com', 'Librarian', 'GOLD', 500),
+(3, 'Tran Thi B', 'librarian2@library.com', 'Librarian', 'GOLD', 500),
+(4, 'Le Van C', 'user1@library.com', 'Regular reader', 'SILVER', 250),
+(5, 'Pham Thi D', 'user2@library.com', 'Student', 'BRONZE', 120),
+(6, 'Hoang Van E', 'user3@library.com', 'Working professional', 'GOLD', 580),
+(7, 'Nguyen Thi F', 'user4@library.com', 'High school student', 'SILVER', 340),
+(8, 'Tran Van G', 'user5@library.com', 'Family member', 'PLATINUM', 890),
+(9, 'Test User', 'user@library.com', 'Test account', 'BRONZE', 0)
 ON CONFLICT (user_id) DO NOTHING;

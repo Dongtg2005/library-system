@@ -22,6 +22,7 @@ public class BookResponse {
     private Integer totalQuantity;
     private Integer availableQty;
     private Book.BookStatus status;
+    private String coverImageUrl;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
     
@@ -38,6 +39,7 @@ public class BookResponse {
                 .title(book.getTitle())
                 .author(book.getAuthor())
                 .category(categoryName)
+                .coverImageUrl(book.getCoverImageUrl())
                 .totalQuantity(book.getTotalQuantity())
                 .availableQty(book.getAvailableQty())
                 .status(book.getStatus())
