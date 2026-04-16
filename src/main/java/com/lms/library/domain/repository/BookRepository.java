@@ -20,6 +20,8 @@ public interface BookRepository extends JpaRepository<Book, UUID>, JpaSpecificat
 
     boolean existsByIsbn(String isbn);
 
+    long countByCreatedAtBefore(java.time.LocalDateTime date);
+
     // Không cần dùng query hardcode lằng nhằng như thế này nữa, nhưng tạm thời comment/giữ lại do logic khác có thể gọi tới
     @Query("SELECT b FROM Book b WHERE " +
            "(:title IS NULL OR LOWER(b.title) LIKE LOWER(CONCAT('%', :title, '%'))) AND " +

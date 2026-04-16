@@ -120,3 +120,7 @@ export const returnBorrow = (token, borrowRecordId, returnNotes = '') =>
       returnNotes,
     },
   });
+
+export const fetchDashboardStats = (token) =>
+  apiRequest('/api/v1/analytics/dashboard', { token });
+
