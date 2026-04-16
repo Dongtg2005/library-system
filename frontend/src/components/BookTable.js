@@ -3,6 +3,7 @@ import { PencilSquareIcon, TrashIcon, BookOpenIcon, MagnifyingGlassIcon, PlusIco
 import Button from './Button';
 import Input from './Input';
 import Modal from './Modal';
+import BookCoverUpload from './BookCoverUpload';
 import { bookRows } from '../data/mockData';
 import { createBook, deleteBook, fetchBooks, searchBooks, updateBook } from '../lib/api';
 import { useAuth } from '../context/AuthContext';
@@ -234,6 +235,20 @@ const BookTable = () => {
           <Input label="Category" value={form.category} onChange={(e) => setForm((prev) => ({ ...prev, category: e.target.value }))} />
           <Input label="ISBN" value={form.isbn} onChange={(e) => setForm((prev) => ({ ...prev, isbn: e.target.value }))} />
           <Input label="Total quantity" type="number" min="1" value={form.totalQuantity} onChange={(e) => setForm((prev) => ({ ...prev, totalQuantity: e.target.value }))} />
+          
+          {selected && (
+            <div className="pt-2 border-t border-slate-100 dark:border-slate-800">
+              <BookCoverUpload 
+                bookId={selected.id} 
+                currentCoverUrl={selected.coverImageUrl} // Backend provides the full URL or null
+                onCoverUpdate={(url) => {
+                   // Cập nhật lại row trong state để reload UI
+                   setBooks(books.map(b => b.id === selected.id ? { ...b, coverImageUrl: url } : b));
+                }}
+              />
+            </div>
+          )}
+
           {formError && <p className="text-sm text-rose-500">{formError}</p>}
           <div className="flex justify-end gap-3">
             <Button variant="secondary" onClick={closeModal}>Cancel</Button>

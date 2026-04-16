@@ -103,11 +103,19 @@ const BookDetailPage = () => {
       />
     <div className="grid gap-6 lg:grid-cols-[0.4fr_0.6fr] page-fade">
       <div className="rounded-[2rem] border border-white/70 bg-white/85 p-6 dark:border-slate-800 dark:bg-slate-900/75">
-        <div className="flex h-[28rem] items-end rounded-[1.5rem] bg-[linear-gradient(145deg,#0f172a,#334155_55%,#fb923c_140%)] p-6 text-white">
-          <div>
-            <p className="text-xs uppercase tracking-[0.25em] text-white/70">{book.category || 'General'}</p>
-            <p className="mt-2 text-3xl font-black">{book.title?.slice(0, 1) || 'B'}</p>
-          </div>
+        <div className="flex h-[28rem] items-end rounded-[1.5rem] bg-[linear-gradient(145deg,#0f172a,#334155_55%,#fb923c_140%)] text-white overflow-hidden relative">
+          {book.coverImageUrl ? (
+            <img 
+              src={book.coverImageUrl} 
+              alt={book.title} 
+              className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 hover:scale-105"
+            />
+          ) : (
+            <div className="p-6">
+              <p className="text-xs uppercase tracking-[0.25em] text-white/70">{book.category || 'General'}</p>
+              <p className="mt-2 text-3xl font-black">{book.title?.slice(0, 1) || 'B'}</p>
+            </div>
+          )}
         </div>
       </div>
 

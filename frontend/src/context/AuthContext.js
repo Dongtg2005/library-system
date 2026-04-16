@@ -9,9 +9,10 @@ export const AuthProvider = ({ children }) => {
 
   const validateToken = useCallback(async (tokenToValidate) => {
     try {
-      const response = await fetch('/api/v1/auth/validate?token=' + tokenToValidate, {
+      const response = await fetch('/api/v1/auth/validate', {
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${tokenToValidate}`
         },
       });
       

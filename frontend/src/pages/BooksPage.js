@@ -255,7 +255,20 @@ const BooksPage = () => {
               {books.map((book) => {
                 const categoryNames = book.categories?.map(c => c.name).join(', ') || book.category || 'Uncategorized';
                 return (
-                <article key={book.id} className="rounded-3xl border border-slate-200 bg-white p-5 dark:border-slate-800 dark:bg-slate-950/90">
+                <article key={book.id} className="group relative overflow-hidden rounded-3xl border border-slate-200 bg-white p-4 transition-all hover:shadow-xl dark:border-slate-800 dark:bg-slate-950/90">
+                  <div className="relative mb-4 aspect-[2/3] overflow-hidden rounded-2xl bg-slate-100 dark:bg-slate-900">
+                    {book.coverImageUrl ? (
+                      <img 
+                        src={book.coverImageUrl} 
+                        alt={book.title} 
+                        className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
+                      />
+                    ) : (
+                      <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-slate-100 to-slate-200 dark:from-slate-800 dark:to-slate-900">
+                        <span className="text-4xl font-black text-slate-300 dark:text-slate-700">{book.title?.slice(0, 1)}</span>
+                      </div>
+                    )}
+                  </div>
                   <h3 className="text-lg font-bold text-slate-950 dark:text-white line-clamp-1">{book.title}</h3>
                   <p className="mt-1 text-sm text-slate-600 dark:text-slate-300 truncate">{book.author}</p>
                   <p className="mt-3 text-sm text-slate-500 dark:text-slate-400 truncate">{categoryNames}</p>
