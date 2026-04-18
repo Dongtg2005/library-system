@@ -1,11 +1,12 @@
-import React, { useEffect, useMemo, useState } from 'react';
-import { PencilSquareIcon, TrashIcon, BookOpenIcon, MagnifyingGlassIcon, PlusIcon } from '@heroicons/react/24/outline';
+import { PencilSquareIcon, TrashIcon, BookOpenIcon, MagnifyingGlassIcon, PlusIcon, ChevronUpDownIcon, CheckIcon, XMarkIcon as CloseIcon } from '@heroicons/react/24/outline';
+import { Listbox, Transition } from '@headlessui/react';
+import React, { useEffect, useMemo, useState, Fragment } from 'react';
 import Button from './Button';
 import Input from './Input';
 import Modal from './Modal';
 import BookCoverUpload from './BookCoverUpload';
-import { bookRows } from '../data/mockData';
-import { createBook, deleteBook, fetchBooks, searchBooks, updateBook } from '../lib/api';
+import { bookRows, PagedData } from '../data/mockData';
+import { createBook, deleteBook, fetchBooks, searchBooks, updateBook, fetchCategoriesTree } from '../lib/api';
 import { useAuth } from '../context/AuthContext';
 
 const pageSize = 6;
@@ -21,8 +22,9 @@ const BookTable = () => {
   const [error, setError] = useState('');
   const [selected, setSelected] = useState(null);
   const [creating, setCreating] = useState(false);
-  const [form, setForm] = useState({ title: '', author: '', category: '', isbn: '', totalQuantity: 1 });
+  const [form, setForm] = useState({ title: '', author: '', categoryIds: [], isbn: '', totalQuantity: 1 });
   const [formError, setFormError] = useState('');
+  const [categoryList, setCategoryList] = useState([]);
 
   const normalizedMockBooks = useMemo(
     () =>
@@ -68,6 +70,10 @@ const BookTable = () => {
 
   useEffect(() => {
     loadBooks();
+    // Load categories for the form dropdown
+    fetchCategoriesTree(token).then(data => {
+      if (Array.isArray(data)) setCategoryList(data);
+    }).catch(err => console.error('Failed to load categories', err));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [page, query, token]);
 
@@ -80,7 +86,7 @@ const BookTable = () => {
   const openCreate = () => {
     setCreating(true);
     setSelected(null);
-    setForm({ title: '', author: '', category: '', isbn: '', totalQuantity: 1 });
+    setForm({ title: '', author: '', categoryIds: [], isbn: '', totalQuantity: 1 });
     setFormError('');
   };
 
@@ -90,7 +96,7 @@ const BookTable = () => {
     setForm({
       title: row.title || '',
       author: row.author || '',
-      category: row.category || '',
+      categoryIds: row.categories && row.categories.length > 0 ? row.categories.map(c => c.id) : [],
       isbn: row.isbn || '',
       totalQuantity: Number(row.totalQuantity || 1),
     });
@@ -117,7 +123,7 @@ const BookTable = () => {
     const payload = {
       title: form.title.trim(),
       author: form.author.trim(),
-      category: form.category.trim(),
+      categoryIds: form.categoryIds,
       isbn: form.isbn.trim(),
       totalQuantity: Number(form.totalQuantity),
     };
@@ -127,7 +133,7 @@ const BookTable = () => {
         await updateBook(token, selected.id, {
           title: payload.title,
           author: payload.author,
-          category: payload.category,
+          categoryIds: payload.categoryIds,
           totalQuantity: payload.totalQuantity,
         });
       } else {
@@ -232,7 +238,91 @@ const BookTable = () => {
         <div className="space-y-4">
           <Input label="Title" value={form.title} onChange={(e) => setForm((prev) => ({ ...prev, title: e.target.value }))} />
           <Input label="Author" value={form.author} onChange={(e) => setForm((prev) => ({ ...prev, author: e.target.value }))} />
-          <Input label="Category" value={form.category} onChange={(e) => setForm((prev) => ({ ...prev, category: e.target.value }))} />
+          
+          <div className="space-y-1 relative">
+            <label className="mb-2 block text-sm font-bold text-slate-700 dark:text-slate-300">Categories</label>
+            <Listbox
+              value={form.categoryIds}
+              onChange={(values) => setForm(prev => ({ ...prev, categoryIds: values }))}
+              multiple
+            >
+              <div className="relative mt-1">
+                <Listbox.Button className="relative w-full cursor-default rounded-2xl border border-slate-200 bg-white py-2.5 pl-4 pr-10 text-left outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 dark:border-slate-800 dark:bg-slate-950 sm:text-sm transition-all shadow-sm">
+                  <span className="block truncate">
+                    {form.categoryIds.length === 0 
+                      ? <span className="text-slate-400">Select categories...</span>
+                      : categoryList.filter(c => form.categoryIds.includes(c.id)).map(c => c.name).join(', ')
+                    }
+                  </span>
+                  <span className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2">
+                    <ChevronUpDownIcon className="h-5 w-5 text-slate-400" aria-hidden="true" />
+                  </span>
+                </Listbox.Button>
+
+                <Transition
+                  as={Fragment}
+                  leave="transition ease-in duration-100"
+                  leaveFrom="opacity-100"
+                  leaveTo="opacity-0"
+                >
+                  <Listbox.Options className="absolute z-50 mt-1 max-h-60 w-full overflow-auto rounded-xl bg-white py-1 text-base shadow-2xl ring-1 ring-black/5 focus:outline-none dark:bg-slate-900 sm:text-sm">
+                    {categoryList.map((cat) => (
+                      <Listbox.Option
+                        key={cat.id}
+                        className={({ active }) =>
+                          `relative cursor-default select-none py-2.5 pl-10 pr-4 transition-colors ${
+                            active ? 'bg-primary/10 text-primary' : 'text-slate-900 dark:text-slate-100'
+                          }`
+                        }
+                        value={cat.id}
+                      >
+                        {({ selected }) => (
+                          <>
+                            <span className={`block truncate ${selected ? 'font-bold text-primary' : 'font-normal'}`}>
+                              {cat.name}
+                            </span>
+                            {selected ? (
+                              <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-primary">
+                                <CheckIcon className="h-5 w-5" aria-hidden="true" />
+                              </span>
+                            ) : null}
+                          </>
+                        )}
+                      </Listbox.Option>
+                    ))}
+                  </Listbox.Options>
+                </Transition>
+              </div>
+            </Listbox>
+            
+            {/* Selected Tags Display */}
+            {form.categoryIds.length > 0 && (
+              <div className="mt-3 flex flex-wrap gap-2">
+                {categoryList
+                  .filter(c => form.categoryIds.includes(c.id))
+                  .map(cat => (
+                    <span 
+                      key={cat.id} 
+                      className="inline-flex items-center gap-1.5 rounded-full bg-primary/10 px-3 py-1 text-xs font-bold text-primary animate-in fade-in zoom-in duration-200"
+                    >
+                      {cat.name}
+                      <button
+                        type="button"
+                        onClick={() => setForm(prev => ({ 
+                          ...prev, 
+                          categoryIds: prev.categoryIds.filter(id => id !== cat.id) 
+                        }))}
+                        className="hover:text-primary-focus p-0.5 rounded-full hover:bg-primary/20 transition-colors"
+                      >
+                        <CloseIcon className="h-3 w-3" />
+                      </button>
+                    </span>
+                  ))
+                }
+              </div>
+            )}
+          </div>
+
           <Input label="ISBN" value={form.isbn} onChange={(e) => setForm((prev) => ({ ...prev, isbn: e.target.value }))} />
           <Input label="Total quantity" type="number" min="1" value={form.totalQuantity} onChange={(e) => setForm((prev) => ({ ...prev, totalQuantity: e.target.value }))} />
           

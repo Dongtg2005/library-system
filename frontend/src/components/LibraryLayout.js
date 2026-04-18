@@ -1,5 +1,5 @@
 import React from 'react';
-import { NavLink, Outlet, useNavigate } from 'react-router-dom';
+import { NavLink, Outlet, useNavigate, Link } from 'react-router-dom';
 import {
   ArrowRightOnRectangleIcon,
   Bars3Icon,
@@ -84,15 +84,18 @@ const LibraryLayout = () => {
 
       <header className="sticky top-0 z-50 border-b border-white/60 bg-white/80 backdrop-blur-xl dark:border-slate-800 dark:bg-slate-950/80">
         <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-4 px-4 py-4 sm:px-6 lg:px-8">
-          <div className="flex items-center gap-3">
-            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-900 text-white dark:bg-white dark:text-slate-950">
+          <Link 
+            to="/" 
+            className="group relative z-[100] flex cursor-pointer items-center gap-3 rounded-2xl p-1 transition-all hover:bg-slate-50 active:scale-95 dark:hover:bg-slate-900"
+          >
+            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-900 text-white transition-all group-hover:bg-primary group-hover:shadow-lg group-hover:shadow-primary/30 dark:bg-white dark:text-slate-950 dark:group-hover:bg-primary dark:group-hover:text-white">
               <Bars3Icon className="h-6 w-6" />
             </div>
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.3em] text-slate-500 dark:text-slate-400">Library System</p>
-              <p className="text-lg font-black tracking-tight">Reader Portal</p>
+            <div className="select-none">
+              <p className="text-xs font-semibold uppercase tracking-[0.3em] text-slate-500 transition-colors group-hover:text-primary dark:text-slate-400">Library System</p>
+              <p className="text-lg font-black tracking-tight transition-colors group-hover:text-primary">Reader Portal</p>
             </div>
-          </div>
+          </Link>
 
           <nav className="flex flex-wrap items-center gap-2">
             {navItems.map(({ label, to, icon: Icon }) => (
@@ -117,7 +120,7 @@ const LibraryLayout = () => {
       <footer className="border-t border-slate-200/80 bg-white/70 dark:border-slate-800 dark:bg-slate-950/70">
         <div className="mx-auto grid max-w-7xl gap-8 px-4 py-10 text-sm text-slate-600 dark:text-slate-300 sm:px-6 lg:grid-cols-3 lg:px-8">
           <div>
-            <p className="text-base font-bold text-slate-900 dark:text-white">Library System</p>
+            <Link to="/" className="text-base font-bold text-slate-900 transition hover:text-primary dark:text-white">Library System</Link>
             <p className="mt-3 max-w-sm">A user-facing reading portal connected to your library services, borrow flow, and account history.</p>
           </div>
           <div>
