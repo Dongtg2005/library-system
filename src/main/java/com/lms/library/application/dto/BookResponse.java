@@ -18,7 +18,8 @@ public class BookResponse {
     private String isbn;
     private String title;
     private String author;
-    private String category;
+    private String category; // Kept for backwards compatibility
+    private java.util.List<CategoryResponse> categories;
     private Integer totalQuantity;
     private Integer availableQty;
     private Book.BookStatus status;
@@ -29,8 +30,10 @@ public class BookResponse {
     public static BookResponse from(Book book) {
         // Get first category name if available
         String categoryName = null;
+        java.util.List<CategoryResponse> catResponses = null;
         if (book.getCategories() != null && !book.getCategories().isEmpty()) {
-            categoryName = book.getCategories().get(0).getName();
+            categoryName = book.getCategories().stream().map(c -> c.getName()).collect(java.util.stream.Collectors.joining(", "));
+            catResponses = book.getCategories().stream().map(CategoryResponse::from).toList();
         }
         
         return BookResponse.builder()
@@ -39,6 +42,7 @@ public class BookResponse {
                 .title(book.getTitle())
                 .author(book.getAuthor())
                 .category(categoryName)
+                .categories(catResponses)
                 .coverImageUrl(book.getCoverImageUrl())
                 .totalQuantity(book.getTotalQuantity())
                 .availableQty(book.getAvailableQty())

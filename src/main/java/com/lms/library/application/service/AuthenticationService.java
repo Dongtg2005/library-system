@@ -5,6 +5,7 @@ import com.lms.library.application.dto.LoginRequest;
 import com.lms.library.application.dto.RegisterRequest;
 import com.lms.library.domain.entity.User;
 import com.lms.library.domain.repository.UserRepository;
+import com.lms.library.domain.repository.UserProfileRepository;
 import com.lms.library.infrastructure.security.JwtUtil;
 import com.lms.library.domain.exception.EmailAlreadyExistsException;
 import com.lms.library.domain.exception.InvalidCredentialsException;
@@ -23,6 +24,7 @@ import java.time.LocalDateTime;
 public class AuthenticationService {
     
     private final UserRepository userRepository;
+    private final UserProfileRepository userProfileRepository;
     private final UserManagementService userManagementService;
     private final PasswordEncoder passwordEncoder;
     private final JwtUtil jwtUtil;
@@ -46,6 +48,17 @@ public class AuthenticationService {
                 .build();
         
         User savedUser = userRepository.save(user);
+
+        com.lms.library.domain.entity.UserProfile userProfile = com.lms.library.domain.entity.UserProfile.builder()
+                .userId(savedUser.getId())
+                .cardExpiryDate(java.time.LocalDate.now().plusYears(1))
+                .membershipLevel(com.lms.library.domain.entity.UserProfile.MembershipLevel.BRONZE)
+                .outstandingFines(java.math.BigDecimal.ZERO)
+                .currentBooksBorrowed(0)
+                .points(0)
+                .build();
+        userProfileRepository.save(userProfile);
+        
         String token = jwtUtil.generateToken(savedUser);
         
         return AuthResponse.from(savedUser, token, jwtUtil.getExpirationTime());

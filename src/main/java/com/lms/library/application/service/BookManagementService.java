@@ -2,6 +2,7 @@ package com.lms.library.application.service;
 
 import com.lms.library.domain.entity.Book;
 import com.lms.library.domain.repository.BookRepository;
+import com.lms.library.domain.repository.CategoryRepository;
 import com.lms.library.application.dto.*;
 import com.lms.library.domain.exception.DuplicateResourceException;
 import com.lms.library.domain.exception.ResourceNotFoundException;
@@ -22,6 +23,7 @@ import java.util.UUID;
 public class BookManagementService {
     
     private final BookRepository bookRepository;
+    private final CategoryRepository categoryRepository;
     private final FileStorageService fileStorageService;
     
     @Transactional
@@ -41,6 +43,7 @@ public class BookManagementService {
                 .totalQuantity(request.getTotalQuantity())
                 .availableQty(request.getTotalQuantity())
                 .status(Book.BookStatus.AVAILABLE)
+                .categories(request.getCategoryIds() != null ? categoryRepository.findAllById(request.getCategoryIds()) : new java.util.ArrayList<>())
                 .build();
         
         Book savedBook = bookRepository.save(newBook);
@@ -109,10 +112,9 @@ public class BookManagementService {
         if (request.getAuthor() != null) {
             existingBook.setAuthor(request.getAuthor());
         }
-        // TODO: Handle category update with new categories list
-        // if (request.getCategory() != null) {
-        //     existingBook.setCategory(request.getCategory());
-        // }
+        if (request.getCategoryIds() != null) {
+             existingBook.setCategories(categoryRepository.findAllById(request.getCategoryIds()));
+        }
         if (request.getTotalQuantity() != null) {
             existingBook.setTotalQuantity(request.getTotalQuantity());
             // Adjust available quantity if needed

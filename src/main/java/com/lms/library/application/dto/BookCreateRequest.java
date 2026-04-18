@@ -20,8 +20,7 @@ public class BookCreateRequest {
     @Size(max = 150, message = "Author must be at most 150 characters")
     private String author;
     
-    @Size(max = 100, message = "Category must be at most 100 characters")
-    private String category;
+    private java.util.List<Long> categoryIds;
     
     @NotNull(message = "Total quantity is required")
     @Positive(message = "Total quantity must be positive")

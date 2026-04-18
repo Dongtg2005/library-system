@@ -39,8 +39,9 @@ public class SecurityConfig {
                 .requestMatchers("/uploads/**").permitAll()
                 // Auth endpoints: open for register, login, validate
                 .requestMatchers("/api/v1/auth/register", "/api/v1/auth/login", "/api/v1/auth/validate").permitAll()
-                // Book browsing: public read access (GET only)
+                // Book & Category browsing: public read access (GET only)
                 .requestMatchers(HttpMethod.GET, "/api/v1/books/**").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/v1/categories/**").permitAll()
                 // Auth endpoints that require authentication
                 .requestMatchers("/api/v1/auth/me", "/api/v1/auth/logout").authenticated()
                 // All other endpoints require authentication
