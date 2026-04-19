@@ -127,3 +127,13 @@ export const returnBorrow = (token, borrowRecordId, returnNotes = '') =>
 export const fetchDashboardStats = (token) =>
   apiRequest('/api/v1/analytics/dashboard', { token });
 
+export const fetchReviews = (bookId, params = {}) =>
+  apiRequest(withQuery(`/api/v1/books/${bookId}/reviews`, params));
+
+export const addReview = (token, bookId, payload) =>
+  apiRequest(`/api/v1/books/${bookId}/reviews`, {
+    method: 'POST',
+    token,
+    body: payload,
+  });
+
