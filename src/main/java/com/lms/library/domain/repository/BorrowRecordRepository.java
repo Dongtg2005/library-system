@@ -1,6 +1,8 @@
 package com.lms.library.domain.repository;
 
 import com.lms.library.domain.entity.BorrowRecord;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
@@ -29,6 +31,8 @@ public interface BorrowRecordRepository extends JpaRepository<BorrowRecord, UUID
     List<BorrowRecord> findOverdueRecords();
 
     List<BorrowRecord> findByBorrowStatus(BorrowRecord.BorrowStatus status);
+
+    Page<BorrowRecord> findByBorrowStatus(BorrowRecord.BorrowStatus status, Pageable pageable);
 
     Optional<BorrowRecord> findByMemberIdAndBookIdAndBorrowStatusIn(Long memberId, UUID bookId, Collection<BorrowRecord.BorrowStatus> statuses);
 }

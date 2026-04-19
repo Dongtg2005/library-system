@@ -21,6 +21,8 @@ import com.lms.library.domain.exception.BookNotAvailableException;
 import com.lms.library.domain.exception.BookAlreadyBorrowedException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -39,6 +41,18 @@ public class BorrowManagementService {
     private final FineRepository fineRepository;
     private final UserProfileRepository userProfileRepository;
     private final BookRepository bookRepository;
+    
+    @Transactional(readOnly = true)
+    public Page<BorrowResponse> getAllBorrows(BorrowRecord.BorrowStatus status, Pageable pageable) {
+        log.info("Fetching all borrows with status: {}", status);
+        Page<BorrowRecord> records;
+        if (status != null) {
+            records = borrowRecordRepository.findByBorrowStatus(status, pageable);
+        } else {
+            records = borrowRecordRepository.findAll(pageable);
+        }
+        return records.map(BorrowResponse::from);
+    }
     
     @Transactional
     public BorrowResponse createBorrowing(Long memberId, BorrowPolicy.MemberType memberType, CreateBorrowRequest request) {

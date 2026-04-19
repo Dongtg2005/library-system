@@ -11,6 +11,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import com.lms.library.domain.entity.BorrowRecord;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -25,6 +28,16 @@ public class BorrowController {
     
     private final BorrowManagementService borrowManagementService;
     private final AuthenticationService authenticationService;
+
+    @GetMapping
+    @PreAuthorize("hasRole('ADMIN') or hasRole('LIBRARIAN')")
+    public ResponseEntity<Page<BorrowResponse>> getAllBorrows(
+            @RequestParam(required = false) BorrowRecord.BorrowStatus status,
+            Pageable pageable) {
+        log.info("Librarian/Admin requesting all borrows with status: {}", status);
+        Page<BorrowResponse> response = borrowManagementService.getAllBorrows(status, pageable);
+        return ResponseEntity.ok(response);
+    }
     
     @io.swagger.v3.oas.annotations.Operation(summary = "Create a new borrowing record", 
                                              description = "Accepts a book borrowing request, validates policy, and creates a record.")
