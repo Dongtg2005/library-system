@@ -49,9 +49,12 @@ public class FileStorageService {
             String fileName = UUID.randomUUID().toString() + "." + extension;
             Path destinationUrl = Paths.get(this.uploadDir).resolve(fileName);
 
-            // Ensure directory exists again at runtime to be safe
+            // Ensure directory exists - create parent directories if needed
             File dir = new File(this.uploadDir);
-            if (!dir.exists()) dir.mkdirs();
+            if (!dir.exists()) {
+                boolean created = dir.mkdirs();
+                log.info("Upload directory created: {} (success: {})", this.uploadDir, created);
+            }
 
             // Resize and save using Thumbnailator
             Thumbnails.of(file.getInputStream())
@@ -63,8 +66,8 @@ public class FileStorageService {
             return "/uploads/covers/" + fileName;
 
         } catch (Exception e) {
-            log.error("Failed to store file", e);
-            throw new RuntimeException("Could not store image file", e);
+            log.error("Failed to store file. Upload dir: {}", this.uploadDir, e);
+            throw new RuntimeException("Could not store image file: " + e.getMessage(), e);
         }
     }
 

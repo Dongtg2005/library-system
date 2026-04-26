@@ -6,8 +6,8 @@ WORKDIR /app
 # Copy package files
 COPY package*.json ./
 
-# Install dependencies
-RUN npm install
+# Install dependencies using Taobao registry (faster in Asia/Vietnam)
+RUN npm install --registry=https://registry.npmmirror.com
 
 # Copy source code
 COPY . .

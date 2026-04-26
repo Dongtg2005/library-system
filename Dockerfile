@@ -30,8 +30,8 @@ WORKDIR /app
 # Copy the built jar from the build stage
 COPY --from=build /app/target/library-system-*.jar app.jar
 
-# Change ownership to appuser
-RUN chown -R appuser:appuser /app
+# Create uploads directory and change ownership to appuser
+RUN mkdir -p /app/uploads/covers && chown -R appuser:appuser /app
 
 # Switch to non-root user
 USER appuser
