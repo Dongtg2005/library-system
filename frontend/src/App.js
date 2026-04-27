@@ -20,6 +20,7 @@ import MyBorrowsPage from './pages/MyBorrowsPage';
 import ProfilePage from './pages/ProfilePage';
 import ReviewsPage from './pages/ReviewsPage';
 import UserPage from './pages/UserPage';
+import ReservationsPage from './pages/ReservationsPage';
 
 const LoadingScreen = () => (
   <div className="flex min-h-screen items-center justify-center bg-slate-100 text-slate-700 dark:bg-slate-950 dark:text-slate-100">
@@ -131,6 +132,14 @@ function AppRoutes() {
           element={
             <RequireRole roles={['ADMIN', 'LIBRARIAN']}>
               <BorrowPage />
+            </RequireRole>
+          }
+        />
+        <Route
+          path="admin/reservations"
+          element={
+            <RequireRole roles={['ADMIN', 'LIBRARIAN']}>
+              <ReservationsPage />
             </RequireRole>
           }
         />

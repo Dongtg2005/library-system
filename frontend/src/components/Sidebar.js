@@ -9,6 +9,7 @@ import {
   ShieldCheckIcon,
   SunIcon,
   MoonIcon,
+  BellIcon,
 } from '@heroicons/react/24/outline';
 import { useTheme } from '../context/ThemeContext';
 
@@ -17,6 +18,7 @@ const adminNavItems = [
   { to: '/users', label: 'User Management', icon: <UsersIcon className="h-5 w-5" /> },
   { to: '/admin/books', label: 'Book Service', icon: <BookOpenIcon className="h-5 w-5" /> },
   { to: '/admin/borrow', label: 'Borrow Service', icon: <ArrowPathIcon className="h-5 w-5" /> },
+  { to: '/admin/reservations', label: 'Reservations', icon: <BellIcon className="h-5 w-5" /> },
   { to: '/profile', label: 'Settings', icon: <ShieldCheckIcon className="h-5 w-5" /> },
 ];
 
@@ -24,6 +26,7 @@ const librarianNavItems = [
   { to: '/dashboard', label: 'Work Dashboard', icon: <Squares2X2Icon className="h-5 w-5" /> },
   { to: '/admin/borrow', label: 'Borrow Requests', icon: <ArrowPathIcon className="h-5 w-5" /> },
   { to: '/admin/books', label: 'Book Inventory', icon: <BookOpenIcon className="h-5 w-5" /> },
+  { to: '/admin/reservations', label: 'Reservations', icon: <BellIcon className="h-5 w-5" /> },
   { to: '/profile', label: 'Profile', icon: <ShieldCheckIcon className="h-5 w-5" /> },
 ];
 

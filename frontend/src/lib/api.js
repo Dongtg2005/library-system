@@ -137,3 +137,34 @@ export const addReview = (token, bookId, payload) =>
     body: payload,
   });
 
+export const createReservation = (token, payload) =>
+  apiRequest('/api/v1/reservations', {
+    method: 'POST',
+    token,
+    body: payload,
+  });
+
+export const cancelReservation = (token, reservationId) =>
+  apiRequest(`/api/v1/reservations/${reservationId}`, {
+    method: 'DELETE',
+    token,
+  });
+
+export const getMyReservations = (token) =>
+  apiRequest('/api/v1/reservations/my-reservations', { token });
+
+export const getBookReservations = (token, bookId) =>
+  apiRequest(`/api/v1/reservations/book/${bookId}`, { token });
+
+export const getAllReservations = (token, params = {}) =>
+  apiRequest(withQuery('/api/v1/reservations', params), { token });
+
+export const fulfillReservation = (token, reservationId) =>
+  apiRequest(`/api/v1/reservations/${reservationId}/fulfill`, {
+    method: 'POST',
+    token,
+  });
+
+export const getReservationCount = (token, bookId) =>
+  apiRequest(`/api/v1/reservations/book/${bookId}/count`, { token });
+

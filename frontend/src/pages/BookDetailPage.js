@@ -3,7 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import Button from '../components/Button';
 import BorrowConfirmModal from '../components/BorrowConfirmModal';
 import { useAuth } from '../context/AuthContext';
-import { createBorrow, fetchBookById, fetchReviews, addReview } from '../lib/api';
+import { createBorrow, fetchBookById, fetchReviews, addReview, createReservation, getReservationCount } from '../lib/api';
 import { useToast } from '../context/ToastContext';
 import {
   ArrowLeftIcon,
@@ -20,6 +20,7 @@ import {
   ClockIcon,
   ChatBubbleBottomCenterTextIcon,
   PaperAirplaneIcon,
+  BellIcon,
 } from '@heroicons/react/24/outline';
 import { HeartIcon as HeartSolid, StarIcon as StarSolid } from '@heroicons/react/24/solid';
 
@@ -124,6 +125,8 @@ const BookDetailPage = () => {
   const [favorite, setFavorite] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [imgError, setImgError] = useState(false);
+  const [reservationCount, setReservationCount] = useState(0);
+  const [reserving, setReserving] = useState(false);
 
   // Review Form state
   const [newRating, setNewRating] = useState(5);
@@ -141,6 +144,16 @@ const BookDetailPage = () => {
       ]);
       setBook(bookData);
       setReviews(reviewData.content || []);
+      
+      // Load reservation count if authenticated
+      if (isAuthenticated && token) {
+        try {
+          const count = await getReservationCount(token, id);
+          setReservationCount(count);
+        } catch (err) {
+          console.error('Failed to load reservation count:', err);
+        }
+      }
     } catch (err) {
       setError(err.message || 'Failed to load book data');
     } finally {
@@ -171,10 +184,25 @@ const BookDetailPage = () => {
       await createBorrow(token, book.id);
       setShowModal(false);
       toast?.addToast({ type: 'success', title: '📚 Request sent!', message: 'Borrow request submitted for approval.' });
+      loadData(); // Reload to update availability
     } catch (err) {
       toast?.addToast({ type: 'error', title: 'Borrow failed', message: err.message });
     } finally {
       setBorrowing(false);
+    }
+  };
+
+  const handleReserve = async () => {
+    if (!isAuthenticated || !token) { navigate('/login'); return; }
+    setReserving(true);
+    try {
+      await createReservation(token, { bookId: book.id, priority: 1 });
+      toast?.addToast({ type: 'success', title: '🔔 Reserved!', message: 'You will be notified when the book is available.' });
+      setReservationCount(prev => prev + 1);
+    } catch (err) {
+      toast?.addToast({ type: 'error', title: 'Reservation failed', message: err.message });
+    } finally {
+      setReserving(false);
     }
   };
 
@@ -292,9 +320,24 @@ const BookDetailPage = () => {
 
           <div className="mt-auto">
             {role === 'USER' && (
-              <button onClick={handleBorrow} disabled={!isAvailable || borrowing} className={`w-full rounded-2xl py-4 text-lg font-black transition-all ${isAvailable ? 'bg-primary text-white shadow-xl shadow-primary/20 hover:scale-[1.02]' : 'bg-slate-200 text-slate-400'}`}>
-                {borrowing ? 'Processing...' : isAvailable ? 'BORROW NOW' : 'OUT OF STOCK'}
-              </button>
+              <>
+                {isAvailable ? (
+                  <button onClick={handleBorrow} disabled={borrowing} className={`w-full rounded-2xl py-4 text-lg font-black transition-all bg-primary text-white shadow-xl shadow-primary/20 hover:scale-[1.02] ${borrowing ? 'opacity-50' : ''}`}>
+                    {borrowing ? 'Processing...' : 'BORROW NOW'}
+                  </button>
+                ) : (
+                  <div className="space-y-3">
+                    <button onClick={handleReserve} disabled={reserving} className={`w-full rounded-2xl py-4 text-lg font-black transition-all bg-amber-500 text-white shadow-xl shadow-amber-500/20 hover:scale-[1.02] ${reserving ? 'opacity-50' : ''}`}>
+                      {reserving ? 'Processing...' : <><BellIcon className="h-5 w-5 inline mr-2" /> RESERVE BOOK</>}
+                    </button>
+                    {reservationCount > 0 && (
+                      <p className="text-center text-sm text-slate-500 dark:text-slate-400">
+                        {reservationCount} people in queue
+                      </p>
+                    )}
+                  </div>
+                )}
+              </>
             )}
           </div>
         </div>

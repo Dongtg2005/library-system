@@ -14,6 +14,7 @@ const titleMap = {
   '/users': 'User Service',
   '/admin/books': 'Book Service',
   '/admin/borrow': 'Borrow Service',
+  '/admin/reservations': 'Reservations',
 };
 
 const DashboardLayout = () => {

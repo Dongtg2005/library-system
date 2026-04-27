@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import DashboardCards from '../components/DashboardCards';
-import { BookOpenIcon, UsersIcon, ArrowPathIcon, ShieldCheckIcon } from '@heroicons/react/24/outline';
+import { BookOpenIcon, UsersIcon, ArrowPathIcon, ShieldCheckIcon, BellIcon } from '@heroicons/react/24/outline';
 import Button from '../components/Button';
 
 const AdminDashboard = () => {
@@ -62,6 +62,13 @@ const AdminDashboard = () => {
       icon: ArrowPathIcon,
       path: '/admin/borrow',
       color: 'from-amber-500 to-orange-500',
+    },
+    {
+      title: 'Reservations',
+      description: 'Manage book reservations and waiting list',
+      icon: BellIcon,
+      path: '/admin/reservations',
+      color: 'from-purple-500 to-violet-500',
     },
     {
       title: 'System Settings',
