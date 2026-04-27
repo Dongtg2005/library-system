@@ -116,10 +116,17 @@ public class BookManagementService {
              existingBook.setCategories(categoryRepository.findAllById(request.getCategoryIds()));
         }
         if (request.getTotalQuantity() != null) {
+            int oldTotal = existingBook.getTotalQuantity();
+            int oldAvailable = existingBook.getAvailableQty();
+            int borrowed = oldTotal - oldAvailable; // Books currently borrowed
+
             existingBook.setTotalQuantity(request.getTotalQuantity());
-            // Adjust available quantity if needed
-            if (request.getTotalQuantity() < existingBook.getAvailableQty()) {
-                existingBook.setAvailableQty(request.getTotalQuantity());
+            // Recalculate available: newTotal - borrowed
+            existingBook.setAvailableQty(request.getTotalQuantity() - borrowed);
+
+            // Update status if book is now available
+            if (existingBook.getAvailableQty() > 0) {
+                existingBook.setStatus(Book.BookStatus.AVAILABLE);
             }
         }
         
