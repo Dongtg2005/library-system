@@ -52,6 +52,8 @@ public class AuthenticationService {
 
         com.lms.library.domain.entity.UserProfile userProfile = com.lms.library.domain.entity.UserProfile.builder()
                 .userId(savedUser.getId())
+                .email(savedUser.getEmail())
+                .fullName(savedUser.getFullName())
                 .cardExpiryDate(java.time.LocalDate.now().plusYears(1))
                 .membershipLevel(com.lms.library.domain.entity.UserProfile.MembershipLevel.BRONZE)
                 .outstandingFines(java.math.BigDecimal.ZERO)
