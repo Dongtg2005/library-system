@@ -25,6 +25,7 @@ public class BookManagementService {
     private final BookRepository bookRepository;
     private final CategoryRepository categoryRepository;
     private final FileStorageService fileStorageService;
+    private final ReservationService reservationService;
     
     @Transactional
     public BookResponse createBook(BookCreateRequest request) {
@@ -128,6 +129,11 @@ public class BookManagementService {
             if (existingBook.getAvailableQty() > 0) {
                 existingBook.setStatus(Book.BookStatus.AVAILABLE);
             }
+        }
+
+        // Auto-fulfill reservation if book is now available
+        if (existingBook.isAvailable()) {
+            reservationService.autoFulfillFirstReservation(existingBook.getId());
         }
         
         Book savedBook = bookRepository.save(existingBook);

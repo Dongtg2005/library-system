@@ -4,6 +4,7 @@ import com.lms.library.domain.entity.Book;
 import com.lms.library.domain.entity.BorrowPolicy;
 import com.lms.library.domain.entity.BorrowRecord;
 import com.lms.library.domain.entity.Fine;
+import com.lms.library.domain.entity.Reservation;
 import com.lms.library.domain.entity.UserProfile;
 import com.lms.library.domain.repository.BookRepository;
 import com.lms.library.domain.repository.BorrowPolicyRepository;
@@ -41,6 +42,7 @@ public class BorrowManagementService {
     private final FineRepository fineRepository;
     private final UserProfileRepository userProfileRepository;
     private final BookRepository bookRepository;
+    private final ReservationService reservationService;
     
     @Transactional(readOnly = true)
     public Page<BorrowResponse> getAllBorrows(BorrowRecord.BorrowStatus status, Pageable pageable) {
@@ -218,6 +220,11 @@ public class BorrowManagementService {
                 .orElseThrow(() -> new ResourceNotFoundException("Book not found"));
         book.returnBook();
         bookRepository.save(book);
+
+        // Auto-fulfill first reservation if available
+        if (book.isAvailable()) {
+            reservationService.autoFulfillFirstReservation(book.getId());
+        }
 
         // Decrement user's borrowed count
         UserProfile userProfile = userProfileRepository.findByUserId(memberId)

@@ -2,11 +2,15 @@ package com.lms.library.application.service;
 
 import com.lms.library.application.dto.ReservationResponse;
 import com.lms.library.domain.entity.Book;
+import com.lms.library.domain.entity.BorrowPolicy;
+import com.lms.library.domain.entity.BorrowRecord;
 import com.lms.library.domain.entity.Reservation;
 import com.lms.library.domain.entity.UserProfile;
 import com.lms.library.domain.exception.BookNotAvailableException;
 import com.lms.library.domain.exception.ResourceNotFoundException;
 import com.lms.library.domain.repository.BookRepository;
+import com.lms.library.domain.repository.BorrowPolicyRepository;
+import com.lms.library.domain.repository.BorrowRecordRepository;
 import com.lms.library.domain.repository.ReservationRepository;
 import com.lms.library.domain.repository.UserProfileRepository;
 import lombok.RequiredArgsConstructor;
@@ -16,7 +20,9 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.UUID;
 
@@ -28,6 +34,8 @@ public class ReservationService {
     private final ReservationRepository reservationRepository;
     private final BookRepository bookRepository;
     private final UserProfileRepository userProfileRepository;
+    private final BorrowRecordRepository borrowRecordRepository;
+    private final BorrowPolicyRepository borrowPolicyRepository;
 
     private static final int RESERVATION_EXPIRY_DAYS = 7;
 
@@ -156,6 +164,80 @@ public class ReservationService {
         reservationRepository.save(reservation);
 
         log.info("Reservation fulfilled successfully: {}", reservationId);
+    }
+
+    @Transactional
+    public void autoFulfillFirstReservation(UUID bookId) {
+        log.info("Auto-fulfilling first reservation for book: {}", bookId);
+
+        // Find first active reservation ordered by priority and reserved time
+        List<Reservation> reservations = reservationRepository.findActiveReservationsByBookIdOrdered(bookId);
+
+        if (reservations.isEmpty()) {
+            log.info("No active reservations found for book: {}", bookId);
+            return;
+        }
+
+        Reservation firstReservation = reservations.get(0);
+
+        // Check if reservation can be fulfilled (not expired)
+        if (!firstReservation.canBeFulfilled()) {
+            log.info("First reservation {} cannot be fulfilled", firstReservation.getId());
+            return;
+        }
+
+        // Get book and reserve it (decrease availableQty to hold for this user)
+        Book book = bookRepository.findById(bookId)
+                .orElseThrow(() -> new ResourceNotFoundException("Book not found"));
+        
+        if (book.isAvailable()) {
+            // Reserve the book by borrowing it (decreases availableQty)
+            book.borrowBook();
+            bookRepository.save(book);
+            log.info("Book {} reserved for user {}", bookId, firstReservation.getUserId());
+        } else {
+            log.info("Book {} not available to reserve", bookId);
+            return;
+        }
+
+        // Create pending borrow record for the user
+        UserProfile userProfile = userProfileRepository.findByUserId(firstReservation.getUserId())
+                .orElseThrow(() -> new ResourceNotFoundException("User profile not found"));
+        
+        BorrowPolicy policy = borrowPolicyRepository.findAllByMemberTypeOrderByCreatedAtDesc(BorrowPolicy.MemberType.USER)
+                .stream()
+                .findFirst()
+                .orElse(null);
+        
+        int loanPeriodDays = (policy != null) ? policy.getLoanPeriodDays() : 14;
+        int maxExtensions = (policy != null) ? policy.getMaxExtensions() : 2;
+        
+        LocalDate now = LocalDate.now();
+        BorrowRecord borrowRecord = BorrowRecord.builder()
+                .memberId(firstReservation.getUserId())
+                .bookId(bookId)
+                .reservationId(firstReservation.getId())
+                .borrowDate(now)
+                .borrowTime(ZonedDateTime.now())
+                .dueDate(now.plusDays(loanPeriodDays))
+                .maxExtensions(maxExtensions)
+                .borrowStatus(BorrowRecord.BorrowStatus.PENDING_APPROVAL)
+                .notes("Auto-created from reservation")
+                .build();
+        
+        borrowRecordRepository.save(borrowRecord);
+        log.info("Created pending borrow record {} for user {}", borrowRecord.getId(), firstReservation.getUserId());
+
+        // Update user profile borrowed count
+        userProfile.incrementBorrowedCount();
+        userProfileRepository.save(userProfile);
+
+        // Mark as fulfilled
+        firstReservation.setStatus(Reservation.ReservationStatus.FULFILLED);
+        firstReservation.setFulfilledAt(LocalDateTime.now());
+        reservationRepository.save(firstReservation);
+
+        log.info("Auto-fulfilled reservation {} for book {}", firstReservation.getId(), bookId);
     }
 
     @Transactional

@@ -183,7 +183,7 @@ const BookDetailPage = () => {
     try {
       await createBorrow(token, book.id);
       setShowModal(false);
-      toast?.addToast({ type: 'success', title: '📚 Request sent!', message: 'Borrow request submitted for approval.' });
+      toast?.addToast({ type: 'success', title: '📚 Book reserved!', message: 'Your book is ready for pickup at the library within 48 hours. Please bring your ID.' });
       loadData(); // Reload to update availability
     } catch (err) {
       toast?.addToast({ type: 'error', title: 'Borrow failed', message: err.message });

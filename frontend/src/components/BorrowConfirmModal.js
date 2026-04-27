@@ -86,10 +86,10 @@ const BorrowConfirmModal = ({ isOpen, onClose, onConfirm, book, loading }) => {
         </div>
 
         {/* Notice */}
-        <div className="mx-6 mt-4 rounded-2xl border border-amber-200 bg-amber-50/70 p-3 dark:border-amber-800/30 dark:bg-amber-900/10">
-          <p className="text-xs leading-relaxed text-amber-700 dark:text-amber-400">
-            ⏳ Your request will be reviewed by a librarian before the book is confirmed.
-            Late returns may incur overdue fines.
+        <div className="mx-6 mt-4 rounded-2xl border border-green-200 bg-green-50/70 p-3 dark:border-green-800/30 dark:bg-green-900/10">
+          <p className="text-xs leading-relaxed text-green-700 dark:text-green-400">
+            ✅ Book reserved! Ready for pickup at the library within 48 hours.
+            Please bring your ID to confirm and collect your book. Late returns may incur overdue fines.
           </p>
         </div>
 
