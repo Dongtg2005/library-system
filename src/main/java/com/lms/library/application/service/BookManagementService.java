@@ -118,12 +118,13 @@ public class BookManagementService {
         }
         if (request.getTotalQuantity() != null) {
             int oldTotal = existingBook.getTotalQuantity();
-            int oldAvailable = existingBook.getAvailableQty();
-            int borrowed = oldTotal - oldAvailable; // Books currently borrowed
+            // Use borrowedQuantity field directly instead of calculating (fixes corrupted data)
+            int borrowed = existingBook.getBorrowedQuantity() != null ? existingBook.getBorrowedQuantity() : 0;
 
             existingBook.setTotalQuantity(request.getTotalQuantity());
-            // Recalculate available: newTotal - borrowed
-            existingBook.setAvailableQty(request.getTotalQuantity() - borrowed);
+            // Recalculate available: newTotal - borrowed (ensures non-negative)
+            int newAvailable = request.getTotalQuantity() - borrowed;
+            existingBook.setAvailableQty(Math.max(0, newAvailable));
 
             // Update status if book is now available
             if (existingBook.getAvailableQty() > 0) {
@@ -131,12 +132,16 @@ public class BookManagementService {
             }
         }
 
-        // Auto-fulfill reservation if book is now available
-        if (existingBook.isAvailable()) {
-            reservationService.autoFulfillFirstReservation(existingBook.getId());
+        // Save book first to ensure quantity changes are persisted
+        Book savedBook = bookRepository.save(existingBook);
+        
+        // Auto-fulfill reservation if book is now available (after saving)
+        if (savedBook.isAvailable()) {
+            reservationService.autoFulfillFirstReservation(savedBook.getId());
+            // Reload book after auto-fulfill to get updated quantities
+            savedBook = bookRepository.findById(savedBook.getId()).orElse(savedBook);
         }
         
-        Book savedBook = bookRepository.save(existingBook);
         return BookResponse.from(savedBook);
     }
     
