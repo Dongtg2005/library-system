@@ -53,7 +53,7 @@ public class BorrowManagementService {
         } else {
             records = borrowRecordRepository.findAll(pageable);
         }
-        return records.map(BorrowResponse::from);
+        return records.map(this::toBorrowResponse);
     }
     
     @Transactional
@@ -145,7 +145,7 @@ public class BorrowManagementService {
         calculateOverdueFines(memberId);
 
         log.info("Borrow request created with ID: {}, Status: PENDING_APPROVAL", record.getId());
-        return BorrowResponse.from(record);
+        return toBorrowResponse(record);
     }
 
     @Transactional
@@ -164,7 +164,7 @@ public class BorrowManagementService {
         record = borrowRecordRepository.save(record);
 
         log.info("Borrow request {} approved", borrowRecordId);
-        return BorrowResponse.from(record);
+        return toBorrowResponse(record);
     }
 
     @Transactional
@@ -198,7 +198,7 @@ public class BorrowManagementService {
         record = borrowRecordRepository.save(record);
 
         log.info("Borrow request {} rejected with reason: {}", borrowRecordId, reason);
-        return BorrowResponse.from(record);
+        return toBorrowResponse(record);
     }
     
     @Transactional
@@ -285,15 +285,22 @@ public class BorrowManagementService {
         record.extendLoan(7); // Extend by 7 days
         borrowRecordRepository.save(record);
         
-        return BorrowResponse.from(record);
+        return toBorrowResponse(record);
     }
     
     @Transactional(readOnly = true)
     public List<BorrowResponse> getMemberBorrowHistory(Long memberId) {
         List<BorrowRecord> records = borrowRecordRepository.findByMemberId(memberId);
         return records.stream()
-                .map(BorrowResponse::from)
+                .map(this::toBorrowResponse)
                 .toList();
+    }
+
+    private BorrowResponse toBorrowResponse(BorrowRecord record) {
+        String memberName = userProfileRepository.findByUserId(record.getMemberId())
+                .map(UserProfile::getFullName)
+                .orElse("Member #" + record.getMemberId());
+        return BorrowResponse.from(record, memberName);
     }
     
     private void calculateOverdueFines(Long memberId) {

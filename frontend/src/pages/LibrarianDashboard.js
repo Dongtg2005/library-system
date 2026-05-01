@@ -234,7 +234,7 @@ const LibrarianDashboard = () => {
                 {pendingRequests.map((req) => (
                   <tr key={req.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/30">
                     <td className="px-4 py-3">
-                      <p className="font-medium text-slate-900 dark:text-white">User #{req.memberId}</p>
+                      <p className="font-medium text-slate-900 dark:text-white">{req.memberName || req.userName || req.fullName || `User #${req.memberId}`}</p>
                     </td>
                     <td className="px-4 py-3">
                       <p className="text-slate-600 dark:text-slate-300">Book #{req.bookId?.slice(0, 8)}</p>
@@ -314,7 +314,7 @@ const LibrarianDashboard = () => {
                 <div key={book.id} className="flex items-center justify-between border-b border-teal-100 p-4 last:border-0 dark:border-teal-900/20">
                   <div>
                     <p className="font-medium text-teal-900 dark:text-teal-400">Book #{book.bookId?.slice(0, 8)}</p>
-                    <p className="text-sm text-teal-700 dark:text-teal-500">User #{book.memberId}</p>
+                    <p className="text-sm text-teal-700 dark:text-teal-500">{book.memberName || book.userName || book.fullName || `User #${book.memberId}`}</p>
                   </div>
                   <Button size="sm" variant="secondary" onClick={() => handleConfirmReturn(book.id)}>
                     Received

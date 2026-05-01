@@ -17,6 +17,7 @@ import java.util.UUID;
 public class BorrowResponse {
     private UUID id;
     private Long memberId;
+    private String memberName;
     private UUID bookId;
     private LocalDate borrowDate;
     private ZonedDateTime borrowTime;
@@ -34,9 +35,14 @@ public class BorrowResponse {
     private String rejectionReason;
 
     public static BorrowResponse from(BorrowRecord record) {
+        return from(record, null);
+    }
+
+    public static BorrowResponse from(BorrowRecord record, String memberName) {
         return BorrowResponse.builder()
                 .id(record.getId())
                 .memberId(record.getMemberId())
+                .memberName(memberName)
                 .bookId(record.getBookId())
                 .borrowDate(record.getBorrowDate())
                 .borrowTime(record.getBorrowTime())

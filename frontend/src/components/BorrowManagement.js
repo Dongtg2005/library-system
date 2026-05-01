@@ -26,7 +26,7 @@ const BorrowManagement = () => {
       const items = payload?.content ?? (Array.isArray(payload) ? payload : []);
       const mapped = items.map((item) => ({
         id: item.id,
-        user: `Member #${item.memberId}`,
+        user: item.memberName || item.userName || item.fullName || `Member #${item.memberId}`,
         book: item.bookId ? `Book #${String(item.bookId).slice(0, 8)}` : '-',
         borrowDate: item.borrowDate || '-',
         dueDate: item.dueDate || '-',
