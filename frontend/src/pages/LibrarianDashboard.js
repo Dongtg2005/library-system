@@ -148,7 +148,7 @@ const LibrarianDashboard = () => {
       title: 'Due Today', 
       count: stats.todayReturnCount, 
       icon: ClockIcon,
-      color: 'bg-blue-500',
+      color: 'bg-teal-500',
       urgent: false 
     },
     { 
@@ -299,22 +299,22 @@ const LibrarianDashboard = () => {
         </div>
 
         {/* Today's Returns */}
-        <div className="rounded-2xl border border-blue-200 bg-blue-50/50 shadow-sm dark:border-blue-900/30 dark:bg-blue-900/10">
-          <div className="border-b border-blue-200 p-5 dark:border-blue-900/30">
-            <h3 className="text-lg font-bold text-blue-900 dark:text-blue-400">📅 Due Today</h3>
-            <p className="text-sm text-blue-700 dark:text-blue-500">Books expected to be returned today</p>
+        <div className="rounded-2xl border border-teal-200 bg-teal-50/50 shadow-sm dark:border-teal-900/30 dark:bg-teal-900/10">
+          <div className="border-b border-teal-200 p-5 dark:border-teal-900/30">
+            <h3 className="text-lg font-bold text-teal-900 dark:text-teal-400">📅 Due Today</h3>
+            <p className="text-sm text-teal-700 dark:text-teal-500">Books expected to be returned today</p>
           </div>
           {todayReturns.length === 0 ? (
-            <div className="p-6 text-center text-blue-600/60 dark:text-blue-500/60">
+            <div className="p-6 text-center text-teal-600/60 dark:text-teal-500/60">
               <p>No books due today</p>
             </div>
           ) : (
             <div className="max-h-64 overflow-y-auto">
               {todayReturns.map((book) => (
-                <div key={book.id} className="flex items-center justify-between border-b border-blue-100 p-4 last:border-0 dark:border-blue-900/20">
+                <div key={book.id} className="flex items-center justify-between border-b border-teal-100 p-4 last:border-0 dark:border-teal-900/20">
                   <div>
-                    <p className="font-medium text-blue-900 dark:text-blue-400">Book #{book.bookId?.slice(0, 8)}</p>
-                    <p className="text-sm text-blue-700 dark:text-blue-500">User #{book.memberId}</p>
+                    <p className="font-medium text-teal-900 dark:text-teal-400">Book #{book.bookId?.slice(0, 8)}</p>
+                    <p className="text-sm text-teal-700 dark:text-teal-500">User #{book.memberId}</p>
                   </div>
                   <Button size="sm" variant="secondary" onClick={() => handleConfirmReturn(book.id)}>
                     Received

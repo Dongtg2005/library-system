@@ -29,7 +29,7 @@ const BorrowConfirmModal = ({ isOpen, onClose, onConfirm, book, loading }) => {
       <div className="w-full max-w-md overflow-hidden rounded-t-[2rem] bg-white shadow-2xl dark:bg-slate-900 sm:rounded-[2rem]">
 
         {/* Header */}
-        <div className="relative flex items-center justify-between bg-gradient-to-r from-primary to-indigo-600 px-6 py-5 text-white">
+        <div className="relative flex items-center justify-between bg-gradient-to-r from-primary to-accent px-6 py-5 text-white">
           <div className="flex items-center gap-3">
             <div className="rounded-xl bg-white/20 p-2">
               <BookOpenIcon className="h-6 w-6" />
@@ -53,7 +53,7 @@ const BorrowConfirmModal = ({ isOpen, onClose, onConfirm, book, loading }) => {
         <div className="px-6 pt-5">
           <div className="flex gap-4 rounded-2xl border border-slate-100 bg-slate-50 p-4 dark:border-slate-800 dark:bg-slate-800/60">
             {/* Mini cover */}
-            <div className="flex h-16 w-12 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-primary to-indigo-600 text-white">
+            <div className="flex h-16 w-12 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-primary to-accent text-white">
               <BookOpenIcon className="h-6 w-6 opacity-80" />
             </div>
             <div className="min-w-0">
@@ -78,10 +78,10 @@ const BorrowConfirmModal = ({ isOpen, onClose, onConfirm, book, loading }) => {
             <p className="text-xs text-orange-400">Due</p>
             <p className="text-xs font-bold text-orange-600 dark:text-orange-400">{fmt(dueDate)}</p>
           </div>
-          <div className="flex flex-col items-center gap-1.5 rounded-2xl bg-blue-50 p-3 text-center dark:bg-blue-900/20">
-            <ArrowPathIcon className="h-5 w-5 text-blue-500" />
-            <p className="text-xs text-blue-400">Extensions</p>
-            <p className="text-xs font-bold text-blue-600 dark:text-blue-400">Up to 2</p>
+          <div className="flex flex-col items-center gap-1.5 rounded-2xl bg-teal-50 p-3 text-center dark:bg-teal-900/20">
+            <ArrowPathIcon className="h-5 w-5 text-teal-500" />
+            <p className="text-xs text-teal-400">Extensions</p>
+            <p className="text-xs font-bold text-teal-600 dark:text-teal-400">Up to 2</p>
           </div>
         </div>
 

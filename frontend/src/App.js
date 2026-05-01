@@ -23,8 +23,8 @@ import UserPage from './pages/UserPage';
 import ReservationsPage from './pages/ReservationsPage';
 
 const LoadingScreen = () => (
-  <div className="flex min-h-screen items-center justify-center bg-slate-100 text-slate-700 dark:bg-slate-950 dark:text-slate-100">
-    <div className="rounded-3xl border border-slate-200 bg-white px-6 py-4 text-sm font-semibold shadow dark:border-slate-800 dark:bg-slate-900">
+  <div className="flex min-h-screen items-center justify-center bg-teal-50 text-slate-700 dark:bg-slate-950 dark:text-slate-100">
+    <div className="rounded-3xl border border-teal-100 bg-white px-6 py-4 text-sm font-semibold shadow-lg shadow-teal-500/10 dark:border-slate-800 dark:bg-slate-900">
       Loading Library System...
     </div>
   </div>

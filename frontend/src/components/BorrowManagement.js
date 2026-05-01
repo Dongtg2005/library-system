@@ -112,7 +112,7 @@ const BorrowManagement = () => {
   const statusBadge = (status) => {
     const s = status.toLowerCase();
     if (s.includes('pending')) return 'bg-amber-500/10 text-amber-600';
-    if (s === 'active') return 'bg-blue-500/10 text-blue-600';
+    if (s === 'active') return 'bg-teal-500/10 text-teal-600';
     if (s.includes('return') || s === 'returned') return 'bg-emerald-500/10 text-emerald-600';
     if (s.includes('overdue')) return 'bg-rose-500/10 text-rose-600';
     if (s === 'cancelled') return 'bg-slate-500/10 text-slate-500';

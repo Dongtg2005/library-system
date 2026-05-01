@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Upload, Link as LinkIcon, Trash2, Image as ImageIcon, AlertCircle } from 'lucide-react';
+import { Upload, Link as LinkIcon, Trash2, Image as ImageIcon } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
 export default function BookCoverUpload({ bookId, currentCoverUrl, onCoverUpdate }) {
@@ -173,7 +173,7 @@ export default function BookCoverUpload({ bookId, currentCoverUrl, onCoverUpdate
       <div className="relative shrink-0 w-[160px] h-[220px] bg-gray-100 rounded-md shadow-md border 2 overflow-hidden flex flex-col items-center justify-center">
         {isUploading && (
           <div className="absolute inset-0 bg-white/70 z-10 flex items-center justify-center">
-            <span className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></span>
+            <span className="animate-spin rounded-full h-8 w-8 border-b-2 border-teal-600"></span>
           </div>
         )}
         
@@ -198,9 +198,9 @@ export default function BookCoverUpload({ bookId, currentCoverUrl, onCoverUpdate
           onDragLeave={() => setIsDragOver(false)}
           onDrop={handleDrop}
           onClick={() => fileInputRef.current?.click()}
-          className={`border-2 border-dashed rounded-lg p-4 flex flex-col items-center justify-center cursor-pointer transition-colors ${isDragOver ? 'border-indigo-500 bg-indigo-50' : 'border-gray-300 hover:bg-gray-50'}`}
+          className={`border-2 border-dashed rounded-lg p-4 flex flex-col items-center justify-center cursor-pointer transition-colors ${isDragOver ? 'border-teal-500 bg-teal-50' : 'border-gray-300 hover:bg-gray-50'}`}
         >
-          <Upload className="w-6 h-6 text-indigo-600 mb-2" />
+          <Upload className="w-6 h-6 text-teal-600 mb-2" />
           <p className="text-sm font-medium text-gray-700">Kéo thả hoặc Nhấn chọn file</p>
           <p className="text-xs text-gray-500 mt-1">JPG, PNG, WEBP lên tới 2MB</p>
           <input 
@@ -217,7 +217,7 @@ export default function BookCoverUpload({ bookId, currentCoverUrl, onCoverUpdate
             <button 
               type="button"
               onClick={() => setShowUrlInput(true)}
-              className="text-sm text-indigo-600 hover:text-indigo-700 flex items-center font-medium transition-colors"
+              className="text-sm text-teal-600 hover:text-teal-700 flex items-center font-medium transition-colors"
             >
               <LinkIcon className="w-4 h-4 mr-1" /> Nhập URL tải xuống
             </button>
@@ -227,7 +227,7 @@ export default function BookCoverUpload({ bookId, currentCoverUrl, onCoverUpdate
                  autoFocus
                  type="text" 
                  placeholder="https://..." 
-                 className="flex-1 text-sm border-gray-300 rounded-md shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                 className="flex-1 text-sm border-gray-300 rounded-md shadow-sm focus:border-teal-500 focus:ring-teal-500"
                  value={urlInput}
                  onChange={e => setUrlInput(e.target.value)}
                  onKeyDown={(e) => e.key === 'Enter' && handleUrlUpload()}
@@ -236,7 +236,7 @@ export default function BookCoverUpload({ bookId, currentCoverUrl, onCoverUpdate
                 type="button" 
                 onClick={handleUrlUpload}
                 disabled={isUploading || !urlInput.trim()}
-                className="bg-indigo-600 text-white text-sm px-3 py-1.5 rounded-md hover:bg-indigo-700 disabled:opacity-50"
+                className="bg-teal-600 text-white text-sm px-3 py-1.5 rounded-md hover:bg-teal-700 disabled:opacity-50"
                >
                  Tải
                </button>

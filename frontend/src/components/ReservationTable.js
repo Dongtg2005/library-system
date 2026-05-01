@@ -5,7 +5,7 @@ import { getAllReservations, cancelReservation, fulfillReservation } from '../li
 import { useAuth } from '../context/AuthContext';
 
 const statusColors = {
-  ACTIVE: 'bg-blue-100 text-blue-700 dark:bg-blue-500/15 dark:text-blue-200',
+  ACTIVE: 'bg-teal-100 text-teal-700 dark:bg-teal-500/15 dark:text-teal-200',
   FULFILLED: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-200',
   CANCELLED: 'bg-slate-200 text-slate-700 dark:bg-slate-700 dark:text-slate-200',
   EXPIRED: 'bg-rose-100 text-rose-700 dark:bg-rose-500/15 dark:text-rose-200',

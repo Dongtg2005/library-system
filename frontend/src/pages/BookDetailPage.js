@@ -26,12 +26,12 @@ import { HeartIcon as HeartSolid, StarIcon as StarSolid } from '@heroicons/react
 
 /* ── Palette of gradient covers ── */
 const COVER_GRADIENTS = [
-  'from-violet-600 via-purple-600 to-indigo-700',
-  'from-rose-500 via-pink-600 to-purple-700',
-  'from-amber-500 via-orange-500 to-red-600',
-  'from-emerald-500 via-teal-500 to-cyan-600',
-  'from-blue-600 via-indigo-600 to-violet-700',
-  'from-fuchsia-500 via-pink-500 to-rose-600',
+  'from-teal-600 via-cyan-500 to-sky-600',
+  'from-emerald-500 via-teal-500 to-cyan-500',
+  'from-cyan-500 via-teal-500 to-emerald-600',
+  'from-teal-700 via-slate-700 to-cyan-600',
+  'from-sky-600 via-cyan-500 to-teal-500',
+  'from-emerald-600 via-cyan-500 to-teal-700',
 ];
 
 function pickGradient(title = '') {

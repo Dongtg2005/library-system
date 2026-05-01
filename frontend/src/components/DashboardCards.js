@@ -4,10 +4,10 @@ import { fetchDashboardStats } from '../lib/api';
 import { useAuth } from '../context/AuthContext';
 
 const toneMap = {
-  primary: 'from-primary/90 to-indigo-500',
+  primary: 'from-primary/90 to-cyan-500',
   amber: 'from-amber-500 to-yellow-400',
-  cyan: 'from-cyan-500 to-sky-500',
-  rose: 'from-rose-500 to-fuchsia-500',
+  cyan: 'from-cyan-500 to-teal-500',
+  rose: 'from-emerald-500 to-teal-500',
 };
 
 const DashboardCards = () => {
@@ -95,12 +95,12 @@ const DashboardCards = () => {
               <AreaChart data={stats.weeklyActivities}>
                 <defs>
                   <linearGradient id="usersGradient" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#4f46e5" stopOpacity={0.35} />
-                    <stop offset="95%" stopColor="#4f46e5" stopOpacity={0} />
+                    <stop offset="5%" stopColor="#0f766e" stopOpacity={0.35} />
+                    <stop offset="95%" stopColor="#0f766e" stopOpacity={0} />
                   </linearGradient>
                   <linearGradient id="borrowsGradient" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#06b6d4" stopOpacity={0.35} />
-                    <stop offset="95%" stopColor="#06b6d4" stopOpacity={0} />
+                    <stop offset="5%" stopColor="#14b8a6" stopOpacity={0.35} />
+                    <stop offset="95%" stopColor="#14b8a6" stopOpacity={0} />
                   </linearGradient>
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" vertical={false} />
@@ -109,8 +109,8 @@ const DashboardCards = () => {
                 <Tooltip 
                   contentStyle={{ borderRadius: '16px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }}
                 />
-                <Area type="monotone" dataKey="users" stroke="#4f46e5" fill="url(#usersGradient)" strokeWidth={3} />
-                <Area type="monotone" dataKey="borrows" stroke="#06b6d4" fill="url(#borrowsGradient)" strokeWidth={3} />
+                <Area type="monotone" dataKey="users" stroke="#0f766e" fill="url(#usersGradient)" strokeWidth={3} />
+                <Area type="monotone" dataKey="borrows" stroke="#14b8a6" fill="url(#borrowsGradient)" strokeWidth={3} />
               </AreaChart>
             </ResponsiveContainer>
           </div>
@@ -130,7 +130,7 @@ const DashboardCards = () => {
                 <Tooltip 
                    contentStyle={{ borderRadius: '16px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }}
                 />
-                <Bar dataKey="books" fill="#facc15" radius={[10, 10, 0, 0]} />
+                <Bar dataKey="books" fill="#14b8a6" radius={[10, 10, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           </div>

@@ -79,7 +79,7 @@ const LibraryLayout = () => {
     <div className="min-h-screen bg-slate-100 text-slate-900 transition dark:bg-slate-950 dark:text-slate-100">
       <Toast />
       <div className="absolute inset-x-0 top-0 -z-10 overflow-hidden">
-        <div className="mx-auto h-[32rem] max-w-7xl rounded-b-[3rem] bg-[radial-gradient(circle_at_top_left,_rgba(59,130,246,0.22),_transparent_34%),radial-gradient(circle_at_top_right,_rgba(249,115,22,0.2),_transparent_28%),linear-gradient(180deg,_rgba(255,255,255,0.85),_rgba(241,245,249,0.4))] dark:bg-[radial-gradient(circle_at_top_left,_rgba(56,189,248,0.18),_transparent_32%),radial-gradient(circle_at_top_right,_rgba(251,146,60,0.16),_transparent_30%),linear-gradient(180deg,_rgba(15,23,42,0.95),_rgba(2,6,23,0.75))]" />
+        <div className="mx-auto h-[32rem] max-w-7xl rounded-b-[3rem] bg-[radial-gradient(circle_at_top_left,_rgba(20,184,166,0.22),_transparent_34%),radial-gradient(circle_at_top_right,_rgba(249,115,22,0.2),_transparent_28%),linear-gradient(180deg,_rgba(255,255,255,0.85),_rgba(241,245,249,0.4))] dark:bg-[radial-gradient(circle_at_top_left,_rgba(6,182,212,0.18),_transparent_32%),radial-gradient(circle_at_top_right,_rgba(251,146,60,0.16),_transparent_30%),linear-gradient(180deg,_rgba(15,23,42,0.95),_rgba(2,6,23,0.75))]" />
       </div>
 
       <header className="sticky top-0 z-50 border-b border-white/60 bg-white/80 backdrop-blur-xl dark:border-slate-800 dark:bg-slate-950/80">

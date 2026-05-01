@@ -4,16 +4,16 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        primary: '#4f46e5',
-        accent: '#facc15',
+        primary: '#14b8a6',
+        accent: '#06b6d4',
         neutral: '#f3f4f6',
       },
       boxShadow: {
-        glow: '0 20px 60px rgba(79, 70, 229, 0.15)',
+        glow: '0 20px 60px rgba(20, 184, 166, 0.15)',
       },
       backgroundImage: {
-        'dashboard-gradient': 'linear-gradient(135deg, #4f46e5 0%, #7c3aed 45%, #06b6d4 100%)',
-        'card-gradient': 'linear-gradient(135deg, rgba(79,70,229,0.12), rgba(250,204,21,0.12))',
+        'dashboard-gradient': 'linear-gradient(135deg, #0f766e 0%, #14b8a6 45%, #06b6d4 100%)',
+        'card-gradient': 'linear-gradient(135deg, rgba(20,184,166,0.12), rgba(6,182,212,0.12))',
       },
       keyframes: {
         float: {

@@ -47,7 +47,7 @@ const AdminDashboard = () => {
       description: 'Add, edit, delete books and manage inventory',
       icon: BookOpenIcon,
       path: '/admin/books',
-      color: 'from-blue-500 to-indigo-500',
+      color: 'from-teal-500 to-cyan-500',
     },
     {
       title: 'User Management',
@@ -68,14 +68,14 @@ const AdminDashboard = () => {
       description: 'Manage book reservations and waiting list',
       icon: BellIcon,
       path: '/admin/reservations',
-      color: 'from-purple-500 to-violet-500',
+      color: 'from-cyan-500 to-teal-500',
     },
     {
       title: 'System Settings',
       description: 'Configure policies, fines and notifications',
       icon: ShieldCheckIcon,
       path: '/profile',
-      color: 'from-rose-500 to-pink-500',
+      color: 'from-emerald-500 to-teal-500',
     },
   ];
 

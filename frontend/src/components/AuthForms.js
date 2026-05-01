@@ -56,7 +56,7 @@ const AuthForms = ({ initialMode = 'login' }) => {
 
   return (
     <div className="grid gap-8 lg:grid-cols-[1.1fr_0.9fr]">
-      <div className="rounded-[32px] bg-[linear-gradient(140deg,#0f172a,#1d4ed8_55%,#f97316_130%)] p-8 text-white shadow-2xl lg:p-10">
+      <div className="rounded-[32px] bg-[linear-gradient(140deg,#042f2e,#14b8a6_52%,#06b6d4_100%)] p-8 text-white shadow-2xl lg:p-10">
         <div className="inline-flex items-center gap-2 rounded-full bg-white/15 px-4 py-2 text-sm font-semibold backdrop-blur">
           <ShieldCheckIcon className="h-5 w-5" /> JWT Authentication
         </div>
