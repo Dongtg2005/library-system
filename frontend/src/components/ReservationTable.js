@@ -88,7 +88,8 @@ const ReservationTable = () => {
       {error && <p className="text-sm text-rose-600">{error}</p>}
 
       <div className="overflow-hidden rounded-[28px] border border-slate-200 bg-white shadow-xl dark:border-slate-800 dark:bg-slate-950">
-        <table className="min-w-full divide-y divide-slate-200 dark:divide-slate-800">
+        <div className="overflow-x-auto">
+        <table className="min-w-[860px] w-full divide-y divide-slate-200 dark:divide-slate-800">
           <thead className="bg-slate-50 dark:bg-slate-900">
             <tr>
               <th className="px-5 py-4 text-left text-xs font-bold uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">Book</th>
@@ -153,6 +154,7 @@ const ReservationTable = () => {
             )}
           </tbody>
         </table>
+        </div>
       </div>
     </div>
   );

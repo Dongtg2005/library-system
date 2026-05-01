@@ -179,7 +179,8 @@ const BookTable = () => {
       {error && <p className="text-sm text-amber-600">{error}</p>}
 
       <div className="overflow-hidden rounded-[28px] border border-slate-200 bg-white shadow-xl dark:border-slate-800 dark:bg-slate-950">
-        <table className="min-w-full divide-y divide-slate-200 dark:divide-slate-800">
+        <div className="overflow-x-auto">
+        <table className="min-w-[840px] w-full divide-y divide-slate-200 dark:divide-slate-800">
           <thead className="bg-slate-50 dark:bg-slate-900">
             <tr>
               {['Title', 'Author', 'Category', 'ISBN', 'Stock', 'Status', 'Actions'].map((head) => (
@@ -224,11 +225,12 @@ const BookTable = () => {
             )}
           </tbody>
         </table>
+        </div>
       </div>
 
-      <div className="flex items-center justify-between gap-3">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <p className="text-sm text-slate-500 dark:text-slate-400">Showing {sortedRows.length} of {totalItems} books</p>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           <Button variant="secondary" size="sm" disabled={page === 1 || loading} onClick={() => setPage((p) => Math.max(1, p - 1))}>Prev</Button>
           <Button variant="secondary" size="sm" disabled={page === totalPages || loading} onClick={() => setPage((p) => Math.min(totalPages, p + 1))}>Next</Button>
         </div>

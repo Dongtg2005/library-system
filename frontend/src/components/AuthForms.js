@@ -56,11 +56,11 @@ const AuthForms = ({ initialMode = 'login' }) => {
 
   return (
     <div className="grid gap-8 lg:grid-cols-[1.1fr_0.9fr]">
-      <div className="rounded-[32px] bg-[linear-gradient(140deg,#042f2e,#14b8a6_52%,#06b6d4_100%)] p-8 text-white shadow-2xl lg:p-10">
+      <div className="rounded-[32px] bg-[linear-gradient(140deg,#042f2e,#14b8a6_52%,#06b6d4_100%)] p-6 text-white shadow-2xl sm:p-8 lg:p-10">
         <div className="inline-flex items-center gap-2 rounded-full bg-white/15 px-4 py-2 text-sm font-semibold backdrop-blur">
           <ShieldCheckIcon className="h-5 w-5" /> JWT Authentication
         </div>
-        <h2 className="mt-6 text-4xl font-black leading-tight tracking-tight">Library access for users, librarians, and admins.</h2>
+        <h2 className="mt-6 text-3xl font-black leading-tight tracking-tight sm:text-4xl">Library access for users, librarians, and admins.</h2>
         <p className="mt-4 max-w-xl text-base text-white/85">
           Secure authentication with role-aware navigation and real backend integration.
         </p>
@@ -78,7 +78,7 @@ const AuthForms = ({ initialMode = 'login' }) => {
         </div>
       </div>
 
-      <div className="rounded-[32px] border border-slate-200 bg-white/95 p-6 shadow-2xl shadow-slate-200/40 backdrop-blur-xl dark:border-slate-800 dark:bg-slate-950/80 dark:shadow-slate-950/30 sm:p-8">
+      <div className="rounded-[32px] border border-slate-200 bg-white/95 p-5 shadow-2xl shadow-slate-200/40 backdrop-blur-xl dark:border-slate-800 dark:bg-slate-950/80 dark:shadow-slate-950/30 sm:p-8">
         <div className="flex items-center justify-between gap-4">
           <div>
             <p className="text-sm font-semibold uppercase tracking-[0.2em] text-slate-500">Secure access</p>

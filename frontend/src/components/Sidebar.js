@@ -37,7 +37,7 @@ const Sidebar = ({ collapsed, onToggle, user }) => {
   const title = role === 'LIBRARIAN' ? 'Librarian Suite' : 'Admin Suite';
 
   return (
-    <aside className={`sticky top-0 flex h-screen flex-col border-r border-slate-200 bg-white/95 backdrop-blur-xl transition-all duration-300 dark:border-slate-800 dark:bg-slate-950/95 ${collapsed ? 'w-24' : 'w-72'}`}>
+    <aside className={`flex w-full flex-col border-b border-slate-200 bg-white/95 backdrop-blur-xl transition-all duration-300 dark:border-slate-800 dark:bg-slate-950/95 lg:sticky lg:top-0 lg:h-screen lg:border-b-0 lg:border-r ${collapsed ? 'lg:w-24' : 'lg:w-72'}`}>
       <div className="flex items-center justify-between gap-3 border-b border-slate-200 px-5 py-5 dark:border-slate-800">
         <div className="flex items-center gap-3 overflow-hidden">
           <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-dashboard-gradient text-white shadow-lg shadow-primary/25">
@@ -58,8 +58,8 @@ const Sidebar = ({ collapsed, onToggle, user }) => {
         </button>
       </div>
 
-      <div className="flex-1 space-y-6 overflow-y-auto px-3 py-4">
-        <nav className="space-y-1">
+      <div className="flex-1 space-y-6 overflow-y-auto px-3 py-4 lg:overflow-y-auto">
+        <nav className="grid gap-2 sm:grid-cols-2 lg:grid-cols-1 lg:space-y-1 lg:gap-0">
           {navItems.map((item) => (
             <NavLink
               key={item.to}
@@ -89,7 +89,7 @@ const Sidebar = ({ collapsed, onToggle, user }) => {
           className="flex w-full items-center justify-center gap-3 rounded-2xl bg-slate-100 px-4 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
         >
           {darkMode ? <SunIcon className="h-5 w-5" /> : <MoonIcon className="h-5 w-5" />}
-          {!collapsed && <span>{darkMode ? 'Light Mode' : 'Dark Mode'}</span>}
+          <span className="hidden sm:inline">{darkMode ? 'Light Mode' : 'Dark Mode'}</span>
         </button>
       </div>
     </aside>
