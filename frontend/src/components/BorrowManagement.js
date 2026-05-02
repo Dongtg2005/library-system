@@ -5,12 +5,14 @@ import Input from './Input';
 import { apiRequest } from '../lib/api';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
+import { useTranslation } from '../context/LanguageContext';
 
 const isUuid = (value) => typeof value === 'string' && /^[0-9a-fA-F-]{36}$/.test(value);
 
 const BorrowManagement = () => {
   const { token } = useAuth();
   const toast = useToast();
+  const { t } = useTranslation();
   const [rows, setRows] = useState([]);
   const [query, setQuery] = useState('');
   const [filter, setFilter] = useState('All');
@@ -21,7 +23,6 @@ const BorrowManagement = () => {
     setLoading(true);
     setError('');
     try {
-      // Admin/Librarian endpoint – returns all borrow records paginated
       const payload = await apiRequest('/api/v1/borrows?size=200', { token });
       const items = payload?.content ?? (Array.isArray(payload) ? payload : []);
       const mapped = items.map((item) => ({
@@ -36,7 +37,7 @@ const BorrowManagement = () => {
       }));
       setRows(mapped);
     } catch (apiError) {
-      setError(apiError.message || 'Unable to load borrow records.');
+      setError(apiError.message || t('borrowManagement.unableToLoad'));
     } finally {
       setLoading(false);
     }
@@ -67,21 +68,21 @@ const BorrowManagement = () => {
   const handleApprove = async (id) => {
     try {
       await apiRequest(`/api/v1/borrows/${id}/approve`, { method: 'PUT', token });
-      toast?.addToast({ type: 'success', title: 'Approved', message: 'Borrow request approved!' });
+      toast?.addToast({ type: 'success', title: t('borrowManagement.approved'), message: t('borrowManagement.approvedMessage') });
       loadRows();
     } catch (e) {
-      toast?.addToast({ type: 'error', title: 'Error', message: e.message });
+      toast?.addToast({ type: 'error', title: t('borrowManagement.error'), message: e.message });
     }
   };
 
   const handleReject = async (id) => {
-    const reason = prompt('Lý do từ chối (tuỳ chọn):') || '';
+    const reason = prompt(t('borrowManagement.rejectReason')) || '';
     try {
       await apiRequest(`/api/v1/borrows/${id}/reject?reason=${encodeURIComponent(reason)}`, { method: 'PUT', token });
-      toast?.addToast({ type: 'success', title: 'Rejected', message: 'Borrow request rejected.' });
+      toast?.addToast({ type: 'success', title: t('borrowManagement.rejected'), message: t('borrowManagement.rejectedMessage') });
       loadRows();
     } catch (e) {
-      toast?.addToast({ type: 'error', title: 'Error', message: e.message });
+      toast?.addToast({ type: 'error', title: t('borrowManagement.error'), message: e.message });
     }
   };
 
@@ -92,20 +93,20 @@ const BorrowManagement = () => {
         token,
         body: { borrowRecordId: id, conditionOnReturn: 'GOOD', returnNotes: 'Returned via admin panel' },
       });
-      toast?.addToast({ type: 'success', title: 'Returned', message: 'Book returned successfully.' });
+      toast?.addToast({ type: 'success', title: t('borrowManagement.returned'), message: t('borrowManagement.returnedMessage') });
       loadRows();
     } catch (e) {
-      toast?.addToast({ type: 'error', title: 'Error', message: e.message });
+      toast?.addToast({ type: 'error', title: t('borrowManagement.error'), message: e.message });
     }
   };
 
   const handleExtend = async (id) => {
     try {
       await apiRequest(`/api/v1/borrows/${id}/extend`, { method: 'POST', token });
-      toast?.addToast({ type: 'success', title: 'Extended', message: 'Loan extended by 7 days.' });
+      toast?.addToast({ type: 'success', title: t('borrowManagement.extended'), message: t('borrowManagement.extendedMessage') });
       loadRows();
     } catch (e) {
-      toast?.addToast({ type: 'error', title: 'Error', message: e.message });
+      toast?.addToast({ type: 'error', title: t('borrowManagement.error'), message: e.message });
     }
   };
 
@@ -119,10 +120,18 @@ const BorrowManagement = () => {
     return 'bg-slate-200/60 text-slate-600';
   };
 
+  const filterOptions = [
+    { value: 'All', label: t('borrowManagement.all') },
+    { value: 'Pending', label: t('borrowManagement.pending') },
+    { value: 'Borrowed', label: t('borrowManagement.borrowed') },
+    { value: 'Returned', label: t('borrowManagement.returned') },
+    { value: 'Overdue', label: t('borrowManagement.overdue') },
+  ];
+
   const summary = [
-    { label: 'Active borrows', value: rows.filter((r) => r.status === 'ACTIVE').length, icon: <ArrowPathIcon className="h-5 w-5" /> },
-    { label: 'Overdue items', value: rows.filter((r) => r.status === 'OVERDUE').length, icon: <ExclamationTriangleIcon className="h-5 w-5" /> },
-    { label: 'Returned items', value: rows.filter((r) => r.status === 'RETURNED').length, icon: <ClockIcon className="h-5 w-5" /> },
+    { label: t('borrowManagement.activeBorrows'), value: rows.filter((r) => r.status === 'ACTIVE').length, icon: <ArrowPathIcon className="h-5 w-5" /> },
+    { label: t('borrowManagement.overdueItems'), value: rows.filter((r) => r.status === 'OVERDUE').length, icon: <ExclamationTriangleIcon className="h-5 w-5" /> },
+    { label: t('borrowManagement.returnedItems'), value: rows.filter((r) => r.status === 'RETURNED').length, icon: <ClockIcon className="h-5 w-5" /> },
   ];
 
   return (
@@ -137,37 +146,37 @@ const BorrowManagement = () => {
       </div>
 
       <div className="grid gap-4 lg:grid-cols-[1fr_auto]">
-        <Input label="Search borrowing records" value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search user, book or status" />
+        <Input label={t('borrowManagement.searchRecords')} value={query} onChange={(e) => setQuery(e.target.value)} placeholder={t('borrowManagement.searchPlaceholder')} />
         <div className="lg:mt-7 flex gap-2 flex-wrap">
-          {['All', 'Pending', 'Borrowed', 'Returned', 'Overdue'].map((item) => (
-            <Button key={item} variant={filter === item ? 'primary' : 'secondary'} size="sm" onClick={() => setFilter(item)}>{item}</Button>
+          {filterOptions.map((item) => (
+            <Button key={item.value} variant={filter === item.value ? 'primary' : 'secondary'} size="sm" onClick={() => setFilter(item.value)}>{item.label}</Button>
           ))}
         </div>
       </div>
 
       {error && <p className="text-sm text-rose-600">{error}</p>}
-      {loading && <p className="text-sm text-slate-500">Loading borrow records...</p>}
+      {loading && <p className="text-sm text-slate-500">{t('borrowManagement.loading')}</p>}
 
       <div className="grid gap-4">
         {filtered.length === 0 && !loading && (
           <div className="rounded-[28px] border border-slate-200 bg-white p-8 text-center text-slate-400 dark:border-slate-800 dark:bg-slate-950">
-            No records found.
+            {t('borrowManagement.noRecords')}
           </div>
         )}
         {filtered.map((row) => (
           <div key={row.id} className="rounded-[28px] border border-slate-200 bg-white p-5 shadow-lg transition hover:-translate-y-1 dark:border-slate-800 dark:bg-slate-950">
             <div className="grid gap-4 md:grid-cols-[1.3fr_1fr_1fr_auto] md:items-center">
               <div>
-                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">Borrower</p>
+                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">{t('borrowManagement.borrower')}</p>
                 <h4 className="mt-2 text-lg font-bold text-slate-900 dark:text-white">{row.user}</h4>
                 <p className="text-sm text-slate-500 dark:text-slate-400">{row.book}</p>
               </div>
               <div>
-                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">Borrow date</p>
+                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">{t('borrowManagement.borrowDate')}</p>
                 <p className="mt-2 font-semibold text-slate-700 dark:text-slate-200">{row.borrowDate}</p>
               </div>
               <div>
-                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">Due date</p>
+                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">{t('borrowManagement.dueDate')}</p>
                 <p className="mt-2 font-semibold text-slate-700 dark:text-slate-200">{row.dueDate}</p>
               </div>
               <div className="flex flex-wrap gap-2 items-center">
@@ -177,17 +186,17 @@ const BorrowManagement = () => {
                 {row.status === 'PENDING_APPROVAL' && (
                   <>
                     <Button variant="primary" size="sm" onClick={() => handleApprove(row.id)}>
-                      <CheckIcon className="h-4 w-4 mr-1" />Approve
+                      <CheckIcon className="h-4 w-4 mr-1" />{t('borrowManagement.approve')}
                     </Button>
                     <Button variant="secondary" size="sm" onClick={() => handleReject(row.id)} className="text-rose-600">
-                      <XMarkIcon className="h-4 w-4 mr-1" />Reject
+                      <XMarkIcon className="h-4 w-4 mr-1" />{t('borrowManagement.reject')}
                     </Button>
                   </>
                 )}
                 {row.status === 'ACTIVE' && (
                   <>
-                    <Button variant="secondary" size="sm" onClick={() => handleReturn(row.id)}>Return</Button>
-                    <Button variant="ghost" size="sm" onClick={() => handleExtend(row.id)}>Extend</Button>
+                    <Button variant="secondary" size="sm" onClick={() => handleReturn(row.id)}>{t('borrowManagement.return')}</Button>
+                    <Button variant="ghost" size="sm" onClick={() => handleExtend(row.id)}>{t('borrowManagement.extend')}</Button>
                   </>
                 )}
               </div>

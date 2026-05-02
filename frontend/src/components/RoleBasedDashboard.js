@@ -1,11 +1,13 @@
 import React from 'react';
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { useTranslation } from '../context/LanguageContext';
 import AdminDashboard from '../pages/AdminDashboard';
 import LibrarianDashboard from '../pages/LibrarianDashboard';
 
 const RoleBasedDashboard = () => {
   const { user } = useAuth();
+  const { t } = useTranslation();
   const role = (user?.role || '').toUpperCase();
 
   if (role === 'ADMIN') {

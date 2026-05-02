@@ -6,11 +6,13 @@ import Modal from './Modal';
 import Dropdown from './Dropdown';
 import { useAuth } from '../context/AuthContext';
 import { createUser, deleteUser, fetchUsers, updateUser } from '../lib/api';
+import { useTranslation } from '../context/LanguageContext';
 
 const pageSize = 6;
 
 const UserTable = () => {
   const { token } = useAuth();
+  const { t } = useTranslation();
   const [query, setQuery] = useState('');
   const [page, setPage] = useState(1);
   const [sortKey, setSortKey] = useState('fullName');
@@ -52,7 +54,7 @@ const UserTable = () => {
       setUsers(normalized);
       setTotalItems(Number(payload?.totalElements || normalized.length));
     } catch (apiError) {
-      setError(apiError.message || 'Unable to load users.');
+      setError(apiError.message || t('userTable.loadFailed'));
       setUsers([]);
       setTotalItems(0);
     } finally {
@@ -100,12 +102,12 @@ const UserTable = () => {
 
   const handleSave = async () => {
     if (!form.fullName.trim() || !form.email.trim()) {
-      setFormError('Full name and email are required.');
+      setFormError(t('userTable.fullNameEmailRequired'));
       return;
     }
 
     if (creating && !form.password.trim()) {
-      setFormError('Password is required when creating user.');
+      setFormError(t('userTable.passwordRequiredCreate'));
       return;
     }
 
@@ -136,7 +138,7 @@ const UserTable = () => {
       closeModal();
       loadUsers();
     } catch (saveError) {
-      setFormError(saveError.message || 'Unable to save user.');
+      setFormError(saveError.message || t('userTable.saveFailed'));
     }
   };
 
@@ -146,7 +148,7 @@ const UserTable = () => {
       if (selected?.id === id) closeModal();
       loadUsers();
     } catch (deleteError) {
-      setError(deleteError.message || 'Unable to delete user.');
+      setError(deleteError.message || t('userTable.deleteFailed'));
     }
   };
 
@@ -154,19 +156,19 @@ const UserTable = () => {
     <div className="space-y-5">
       <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
         <Input
-          label="Search users"
+          label={t('userTable.searchUsers')}
           value={query}
           onChange={(e) => {
             setQuery(e.target.value);
             setPage(1);
           }}
-          placeholder="Search name, email"
+          placeholder={t('userTable.searchNameEmail')}
         />
         <div className="flex flex-wrap gap-3 lg:justify-end">
           <Dropdown
             button={
               <Button variant="secondary" className="w-full lg:w-auto">
-                Status: {statusFilter}
+                {t('userTable.status')}: {statusFilter}
               </Button>
             }
             items={['All', 'ACTIVE', 'INACTIVE', 'SUSPENDED'].map((status) => ({
@@ -178,7 +180,7 @@ const UserTable = () => {
             }))}
           />
           <Button className="w-full lg:w-auto" onClick={openCreate}>
-            <PlusIcon className="h-4 w-4" />Add User
+            <PlusIcon className="h-4 w-4" />{t('userTable.addUserButton')}
           </Button>
         </div>
       </div>
@@ -190,14 +192,21 @@ const UserTable = () => {
         <table className="min-w-[720px] w-full divide-y divide-slate-200 dark:divide-slate-800">
           <thead className="bg-slate-50 dark:bg-slate-900">
             <tr>
-              {['Full Name', 'Email', 'Role', 'Status', 'Last Login', 'Actions'].map((head) => (
-                <th key={head} className="px-5 py-4 text-left text-xs font-bold uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">
+              {[
+                { label: t('userTable.fullNameHeader'), sort: 'fullName' },
+                { label: t('userTable.emailHeader'), sort: 'email' },
+                { label: t('userTable.roleHeader'), sort: 'role' },
+                { label: t('userTable.statusHeader'), sort: 'status' },
+                { label: t('userTable.lastLoginHeader'), sort: 'lastLogin' },
+                { label: t('userTable.actionsHeader') },
+              ].map((head) => (
+                <th key={head.label} className="px-5 py-4 text-left text-xs font-bold uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">
                   <button
                     className="inline-flex items-center gap-2"
-                    onClick={() => head !== 'Actions' && setSortKey(head === 'Full Name' ? 'fullName' : head === 'Last Login' ? 'lastLogin' : head.toLowerCase())}
+                    onClick={() => head.sort && setSortKey(head.sort)}
                   >
-                    {head}
-                    {head !== 'Actions' && <MagnifyingGlassIcon className="h-3.5 w-3.5 opacity-30" />}
+                    {head.label}
+                    {head.sort && <MagnifyingGlassIcon className="h-3.5 w-3.5 opacity-30" />}
                   </button>
                 </th>
               ))}
@@ -206,7 +215,7 @@ const UserTable = () => {
           <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
             {loading ? (
               <tr>
-                <td colSpan={6} className="px-5 py-6 text-sm text-slate-500">Loading users...</td>
+                <td colSpan={6} className="px-5 py-6 text-sm text-slate-500">{t('userTable.loadingUsers')}</td>
               </tr>
             ) : (
               sortedRows.map((row) => (
@@ -222,8 +231,8 @@ const UserTable = () => {
                   <td className="px-5 py-4 text-slate-600 dark:text-slate-300">{row.lastLogin}</td>
                   <td className="px-5 py-4">
                     <div className="flex items-center gap-2">
-                      <Button variant="ghost" size="sm" onClick={() => openEdit(row)}><PencilSquareIcon className="h-4 w-4" />Edit</Button>
-                      <Button variant="ghost" size="sm" className="text-rose-500 hover:bg-rose-500/10" onClick={() => handleDelete(row.id)}><TrashIcon className="h-4 w-4" />Delete</Button>
+                      <Button variant="ghost" size="sm" onClick={() => openEdit(row)}><PencilSquareIcon className="h-4 w-4" />{t('userTable.editButton')}</Button>
+                      <Button variant="ghost" size="sm" className="text-rose-500 hover:bg-rose-500/10" onClick={() => handleDelete(row.id)}><TrashIcon className="h-4 w-4" />{t('userTable.deleteButton')}</Button>
                     </div>
                   </td>
                 </tr>
@@ -235,53 +244,53 @@ const UserTable = () => {
       </div>
 
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <p className="text-sm text-slate-500 dark:text-slate-400">Showing {sortedRows.length} of {totalItems} users</p>
+        <p className="text-sm text-slate-500 dark:text-slate-400">{t('userTable.showing', { count: sortedRows.length, total: totalItems })}</p>
         <div className="flex flex-wrap gap-2">
-          <Button variant="secondary" size="sm" disabled={page === 1 || loading} onClick={() => setPage((p) => Math.max(1, p - 1))}>Prev</Button>
-          <Button variant="secondary" size="sm" disabled={page === totalPages || loading} onClick={() => setPage((p) => Math.min(totalPages, p + 1))}>Next</Button>
+          <Button variant="secondary" size="sm" disabled={page === 1 || loading} onClick={() => setPage((p) => Math.max(1, p - 1))}>{t('bookTable.prev')}</Button>
+          <Button variant="secondary" size="sm" disabled={page === totalPages || loading} onClick={() => setPage((p) => Math.min(totalPages, p + 1))}>{t('bookTable.next')}</Button>
         </div>
       </div>
 
-      <Modal open={creating || !!selected} onClose={closeModal} title={creating ? 'Add User' : 'Edit User'}>
+      <Modal open={creating || !!selected} onClose={closeModal} title={creating ? t('userTable.addUserTitle') : t('userTable.editUserTitle')}>
         <div className="space-y-4">
-          <Input label="Full name" value={form.fullName} onChange={(e) => setForm((prev) => ({ ...prev, fullName: e.target.value }))} />
-          <Input label="Email" value={form.email} onChange={(e) => setForm((prev) => ({ ...prev, email: e.target.value }))} />
+          <Input label={t('auth.fullName')} value={form.fullName} onChange={(e) => setForm((prev) => ({ ...prev, fullName: e.target.value }))} />
+          <Input label={t('auth.email')} value={form.email} onChange={(e) => setForm((prev) => ({ ...prev, email: e.target.value }))} />
           <Input
-            label={creating ? 'Password' : 'Password (leave blank to keep current)'}
+            label={creating ? t('auth.password') : t('userTable.passwordOptional')}
             type="password"
             value={form.password}
             onChange={(e) => setForm((prev) => ({ ...prev, password: e.target.value }))}
           />
           <div className="grid gap-4 md:grid-cols-2">
             <label className="block">
-              <span className="mb-2 block text-sm font-medium text-slate-600 dark:text-slate-300">Role</span>
+              <span className="mb-2 block text-sm font-medium text-slate-600 dark:text-slate-300">{t('auth.role')}</span>
               <select
                 className="w-full rounded-2xl border border-slate-200 bg-white/80 px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-primary focus:ring-4 focus:ring-primary/10 dark:border-slate-700 dark:bg-slate-900/70 dark:text-white"
                 value={form.role}
                 onChange={(e) => setForm((prev) => ({ ...prev, role: e.target.value }))}
               >
-                <option value="ADMIN">ADMIN</option>
-                <option value="LIBRARIAN">LIBRARIAN</option>
-                <option value="USER">USER</option>
+                <option value="ADMIN">{t('role.admin')}</option>
+                <option value="LIBRARIAN">{t('role.librarian')}</option>
+                <option value="USER">{t('role.user')}</option>
               </select>
             </label>
             <label className="block">
-              <span className="mb-2 block text-sm font-medium text-slate-600 dark:text-slate-300">Status</span>
+              <span className="mb-2 block text-sm font-medium text-slate-600 dark:text-slate-300">{t('common.status')}</span>
               <select
                 className="w-full rounded-2xl border border-slate-200 bg-white/80 px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-primary focus:ring-4 focus:ring-primary/10 dark:border-slate-700 dark:bg-slate-900/70 dark:text-white"
                 value={form.status}
                 onChange={(e) => setForm((prev) => ({ ...prev, status: e.target.value }))}
               >
-                <option value="ACTIVE">ACTIVE</option>
-                <option value="INACTIVE">INACTIVE</option>
-                <option value="SUSPENDED">SUSPENDED</option>
+                <option value="ACTIVE">{t('status.active')}</option>
+                <option value="INACTIVE">{t('status.inactive')}</option>
+                <option value="SUSPENDED">{t('status.suspended')}</option>
               </select>
             </label>
           </div>
           {formError && <p className="text-sm text-rose-500">{formError}</p>}
           <div className="flex justify-end gap-3">
-            <Button variant="secondary" onClick={closeModal}>Cancel</Button>
-            <Button onClick={handleSave}>Save</Button>
+            <Button variant="secondary" onClick={closeModal}>{t('common.cancel')}</Button>
+            <Button onClick={handleSave}>{t('userTable.saveUser')}</Button>
           </div>
         </div>
       </Modal>

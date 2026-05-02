@@ -7,8 +7,11 @@ import {
   ArrowPathIcon,
   XMarkIcon,
 } from '@heroicons/react/24/outline';
+import { useTranslation } from '../context/LanguageContext';
 
 const BorrowConfirmModal = ({ isOpen, onClose, onConfirm, book, loading }) => {
+  const { t } = useTranslation();
+  
   if (!isOpen || !book) return null;
 
   const loanDays = 14;
@@ -35,14 +38,15 @@ const BorrowConfirmModal = ({ isOpen, onClose, onConfirm, book, loading }) => {
               <BookOpenIcon className="h-6 w-6" />
             </div>
             <div>
-              <p className="text-xs font-semibold uppercase tracking-widest opacity-75">Confirm Request</p>
-              <h2 className="text-lg font-black">Borrow this book</h2>
+              <p className="text-xs font-semibold uppercase tracking-widest opacity-75">{t('borrowConfirm.title')}</p>
+              <h2 className="text-lg font-black">{t('borrowConfirm.confirmBorrow')}</h2>
             </div>
           </div>
           {!loading && (
             <button
               onClick={onClose}
               className="rounded-xl p-2 transition hover:bg-white/20"
+              title={t('common.close')}
             >
               <XMarkIcon className="h-5 w-5" />
             </button>
@@ -70,26 +74,26 @@ const BorrowConfirmModal = ({ isOpen, onClose, onConfirm, book, loading }) => {
         <div className="grid grid-cols-3 gap-3 px-6 pt-4">
           <div className="flex flex-col items-center gap-1.5 rounded-2xl bg-slate-50 p-3 text-center dark:bg-slate-800/60">
             <CalendarIcon className="h-5 w-5 text-slate-400" />
-            <p className="text-xs text-slate-400 dark:text-slate-500">Borrow</p>
+            <p className="text-xs text-slate-400 dark:text-slate-500">{t('borrowConfirm.borrowDate')}</p>
             <p className="text-xs font-bold text-slate-800 dark:text-slate-200">{fmt(borrowDate)}</p>
           </div>
           <div className="flex flex-col items-center gap-1.5 rounded-2xl bg-orange-50 p-3 text-center dark:bg-orange-900/20">
             <ClockIcon className="h-5 w-5 text-orange-500" />
-            <p className="text-xs text-orange-400">Due</p>
+            <p className="text-xs text-orange-400">{t('borrowConfirm.dueDate')}</p>
             <p className="text-xs font-bold text-orange-600 dark:text-orange-400">{fmt(dueDate)}</p>
           </div>
           <div className="flex flex-col items-center gap-1.5 rounded-2xl bg-teal-50 p-3 text-center dark:bg-teal-900/20">
             <ArrowPathIcon className="h-5 w-5 text-teal-500" />
-            <p className="text-xs text-teal-400">Extensions</p>
-            <p className="text-xs font-bold text-teal-600 dark:text-teal-400">Up to 2</p>
+            <p className="text-xs text-teal-400">{t('borrowConfirm.borrowPeriod')}</p>
+            <p className="text-xs font-bold text-teal-600 dark:text-teal-400">{loanDays} {t('borrowConfirm.days')}</p>
           </div>
         </div>
 
         {/* Notice */}
         <div className="mx-6 mt-4 rounded-2xl border border-green-200 bg-green-50/70 p-3 dark:border-green-800/30 dark:bg-green-900/10">
           <p className="text-xs leading-relaxed text-green-700 dark:text-green-400">
-            ✅ Book reserved! Ready for pickup at the library within 48 hours.
-            Please bring your ID to confirm and collect your book. Late returns may incur overdue fines.
+            {t('bookDetail.bookReserved')}
+            {t('bookDetail.bookReservedMessage')}
           </p>
         </div>
 
@@ -101,7 +105,7 @@ const BorrowConfirmModal = ({ isOpen, onClose, onConfirm, book, loading }) => {
             disabled={loading}
             className="flex-1"
           >
-            Cancel
+            {t('common.cancel')}
           </Button>
           <button
             onClick={onConfirm}
@@ -110,7 +114,7 @@ const BorrowConfirmModal = ({ isOpen, onClose, onConfirm, book, loading }) => {
           >
             <span className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/20 to-transparent transition-transform duration-700 group-hover:translate-x-full" />
             <BookOpenIcon className="relative h-5 w-5" />
-            <span className="relative">{loading ? 'Submitting...' : 'Confirm Borrow'}</span>
+            <span className="relative">{loading ? t('borrowConfirm.borrowing') : t('borrowConfirm.confirmBorrow')}</span>
           </button>
         </div>
       </div>

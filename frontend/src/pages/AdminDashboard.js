@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { useTranslation } from '../context/LanguageContext';
 import DashboardCards from '../components/DashboardCards';
 import { BookOpenIcon, UsersIcon, ArrowPathIcon, ShieldCheckIcon, BellIcon } from '@heroicons/react/24/outline';
 import Button from '../components/Button';
@@ -8,7 +9,8 @@ import Button from '../components/Button';
 const AdminDashboard = () => {
   const navigate = useNavigate();
   const { user, token } = useAuth();
-  const [backendStatus, setBackendStatus] = useState('Checking...');
+  const { t } = useTranslation();
+  const [backendStatus, setBackendStatus] = useState(t('adminDashboard.checking'));
   const [stats, setStats] = useState({
     totalBooks: 0,
     totalUsers: 0,
@@ -27,52 +29,52 @@ const AdminDashboard = () => {
         });
 
         if (response.ok) {
-          setBackendStatus('Connected - API is working');
+          setBackendStatus(t('adminDashboard.connected'));
         } else {
-          setBackendStatus(`Error: HTTP ${response.status}`);
+          setBackendStatus(t('adminDashboard.error', { status: response.status }));
         }
       } catch (error) {
-        setBackendStatus(`Error: ${error.message}`);
+        setBackendStatus(t('adminDashboard.error', { status: error.message }));
       }
     };
 
     if (token) {
       checkBackend();
     }
-  }, [token]);
+  }, [token, t]);
 
   const quickActions = [
     {
-      title: 'Book Management',
-      description: 'Add, edit, delete books and manage inventory',
+      title: t('adminDashboard.bookManagement'),
+      description: t('adminDashboard.bookManagementDesc'),
       icon: BookOpenIcon,
       path: '/admin/books',
       color: 'from-teal-500 to-cyan-500',
     },
     {
-      title: 'User Management',
-      description: 'Manage user accounts, roles and permissions',
+      title: t('adminDashboard.userManagement'),
+      description: t('adminDashboard.userManagementDesc'),
       icon: UsersIcon,
       path: '/users',
       color: 'from-emerald-500 to-teal-500',
     },
     {
-      title: 'Borrow Workflow',
-      description: 'Track borrow requests, returns and overdue',
+      title: t('adminDashboard.borrowWorkflow'),
+      description: t('adminDashboard.borrowWorkflowDesc'),
       icon: ArrowPathIcon,
       path: '/admin/borrow',
       color: 'from-amber-500 to-orange-500',
     },
     {
-      title: 'Reservations',
-      description: 'Manage book reservations and waiting list',
+      title: t('adminDashboard.reservations'),
+      description: t('adminDashboard.reservationsDesc'),
       icon: BellIcon,
       path: '/admin/reservations',
       color: 'from-cyan-500 to-teal-500',
     },
     {
-      title: 'System Settings',
-      description: 'Configure policies, fines and notifications',
+      title: t('adminDashboard.systemSettings'),
+      description: t('adminDashboard.systemSettingsDesc'),
       icon: ShieldCheckIcon,
       path: '/profile',
       color: 'from-emerald-500 to-teal-500',
@@ -84,13 +86,13 @@ const AdminDashboard = () => {
       {/* Header */}
       <div>
         <p className="text-sm font-semibold uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400">
-          Admin Control Panel
+          {t('adminDashboard.controlPanel')}
         </p>
         <h2 className="mt-2 text-3xl font-black text-slate-900 dark:text-white">
-          Welcome back, {user?.fullName || user?.email}!
+          {t('adminDashboard.welcomeBack', { name: user?.fullName || user?.email })}!
         </h2>
         <p className="mt-2 text-slate-600 dark:text-slate-400">
-          Your role: <span className="font-semibold text-primary">{user?.role}</span> | Manage your library operations efficiently
+          {t('adminDashboard.yourRole')} <span className="font-semibold text-primary">{user?.role}</span> {t('adminDashboard.manageOperations')}
         </p>
       </div>
 
@@ -116,7 +118,7 @@ const AdminDashboard = () => {
                 variant="secondary"
                 onClick={() => navigate(action.path)}
               >
-                Open
+                {t('adminDashboard.open')}
               </Button>
             </div>
           </div>
@@ -127,17 +129,17 @@ const AdminDashboard = () => {
       <div className="rounded-[28px] border border-white/50 bg-white/80 p-6 shadow-lg backdrop-blur-xl dark:border-white/10 dark:bg-slate-900/70">
         <div className="flex items-center justify-between">
           <div>
-            <h3 className="text-lg font-bold text-slate-900 dark:text-white">System Status</h3>
+            <h3 className="text-lg font-bold text-slate-900 dark:text-white">{t('adminDashboard.systemStatus')}</h3>
             <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
-              Backend: {backendStatus}
+              {t('adminDashboard.backend')}: {backendStatus}
             </p>
           </div>
-          <div className={`flex items-center gap-2 rounded-full px-4 py-2 ${backendStatus.includes('Connected') ? 'bg-emerald-500/10 text-emerald-600' : 'bg-rose-500/10 text-rose-600'}`}>
+          <div className={`flex items-center gap-2 rounded-full px-4 py-2 ${backendStatus.includes(t('adminDashboard.connected')) ? 'bg-emerald-500/10 text-emerald-600' : 'bg-rose-500/10 text-rose-600'}`}>
             <span className="relative flex h-3 w-3">
-              <span className={`absolute inline-flex h-full w-full animate-ping rounded-full ${backendStatus.includes('Connected') ? 'bg-emerald-400' : 'bg-rose-400'} opacity-75`}></span>
-              <span className={`relative inline-flex h-3 w-3 rounded-full ${backendStatus.includes('Connected') ? 'bg-emerald-500' : 'bg-rose-500'}`}></span>
+              <span className={`absolute inline-flex h-full w-full animate-ping rounded-full ${backendStatus.includes(t('adminDashboard.connected')) ? 'bg-emerald-400' : 'bg-rose-400'} opacity-75`}></span>
+              <span className={`relative inline-flex h-3 w-3 rounded-full ${backendStatus.includes(t('adminDashboard.connected')) ? 'bg-emerald-500' : 'bg-rose-500'}`}></span>
             </span>
-            <span className="text-sm font-semibold">{backendStatus.includes('Connected') ? 'Online' : 'Offline'}</span>
+            <span className="text-sm font-semibold">{backendStatus.includes(t('adminDashboard.connected')) ? t('adminDashboard.online') : t('adminDashboard.offline')}</span>
           </div>
         </div>
       </div>

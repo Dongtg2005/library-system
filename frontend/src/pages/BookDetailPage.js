@@ -5,6 +5,7 @@ import BorrowConfirmModal from '../components/BorrowConfirmModal';
 import { useAuth } from '../context/AuthContext';
 import { createBorrow, fetchBookById, fetchReviews, addReview, createReservation, getReservationCount } from '../lib/api';
 import { useToast } from '../context/ToastContext';
+import { useTranslation } from '../context/LanguageContext';
 import {
   ArrowLeftIcon,
   BookOpenIcon,
@@ -24,7 +25,7 @@ import {
 } from '@heroicons/react/24/outline';
 import { HeartIcon as HeartSolid, StarIcon as StarSolid } from '@heroicons/react/24/solid';
 
-/* ── Palette of gradient covers ── */
+/* â”€â”€ Palette of gradient covers â”€â”€ */
 const COVER_GRADIENTS = [
   'from-teal-600 via-cyan-500 to-sky-600',
   'from-emerald-500 via-teal-500 to-cyan-500',
@@ -43,18 +44,18 @@ const Skeleton = ({ className = '' }) => (
   <div className={`animate-pulse rounded-xl bg-slate-200 dark:bg-slate-800 ${className}`} />
 );
 
-const AvailBadge = ({ available }) => (
+const AvailBadge = ({ available, availableLabel, unavailableLabel }) => (
   <span className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-bold ring-1 ${
     available 
     ? 'bg-emerald-500/15 text-emerald-600 ring-emerald-500/30 dark:text-emerald-400' 
     : 'bg-rose-500/15 text-rose-600 ring-rose-500/30 dark:text-rose-400'
   }`}>
     {available ? <CheckCircleIcon className="h-4 w-4" /> : <XCircleIcon className="h-4 w-4" />}
-    {available ? 'Available' : 'Unavailable'}
+    {available ? availableLabel : unavailableLabel}
   </span>
 );
 
-const StarRating = ({ rating = 0, count = 0, size = "sm" }) => {
+const StarRating = ({ rating = 0, count = 0, size = "sm", noRatingsLabel = 'No ratings', reviewsLabel = 'reviews' }) => {
   const full = Math.round(rating);
   const iconSize = size === "lg" ? "h-6 w-6" : "h-4 w-4";
   return (
@@ -69,10 +70,10 @@ const StarRating = ({ rating = 0, count = 0, size = "sm" }) => {
         )}
       </div>
       <span className={`${size === "lg" ? "text-xl" : "text-sm"} font-semibold text-slate-700 dark:text-slate-300`}>
-        {rating > 0 ? rating.toFixed(1) : 'No ratings'}
+        {rating > 0 ? rating.toFixed(1) : noRatingsLabel}
       </span>
       {count > 0 && (
-        <span className="text-xs text-slate-400 dark:text-slate-500">({count} reviews)</span>
+        <span className="text-xs text-slate-400 dark:text-slate-500">({count} {reviewsLabel})</span>
       )}
     </div>
   );
@@ -92,7 +93,7 @@ const StatCard = ({ icon: Icon, label, value, highlight }) => (
   </div>
 );
 
-const ReviewItem = ({ review }) => (
+const ReviewItem = ({ review, noRatingsLabel, reviewsLabel }) => (
   <div className="rounded-2xl border border-slate-100 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900/50">
     <div className="flex items-center justify-between">
       <div className="flex items-center gap-3">
@@ -104,7 +105,7 @@ const ReviewItem = ({ review }) => (
           <p className="text-xs text-slate-500 dark:text-slate-400">{new Date(review.createdAt).toLocaleDateString()}</p>
         </div>
       </div>
-      <StarRating rating={review.rating} />
+      <StarRating rating={review.rating} noRatingsLabel={noRatingsLabel} reviewsLabel={reviewsLabel} />
     </div>
     {review.title && <h4 className="mt-3 font-bold text-slate-900 dark:text-white">{review.title}</h4>}
     <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">{review.content}</p>
@@ -116,6 +117,7 @@ const BookDetailPage = () => {
   const navigate = useNavigate();
   const { isAuthenticated, token, user } = useAuth();
   const toast = useToast();
+  const { t } = useTranslation();
 
   const [book, setBook] = useState(null);
   const [reviews, setReviews] = useState([]);
@@ -155,7 +157,7 @@ const BookDetailPage = () => {
         }
       }
     } catch (err) {
-      setError(err.message || 'Failed to load book data');
+      setError(err.message || t('bookDetail.failedLoadBook'));
     } finally {
       setLoading(false);
     }
@@ -183,10 +185,10 @@ const BookDetailPage = () => {
     try {
       await createBorrow(token, book.id);
       setShowModal(false);
-      toast?.addToast({ type: 'success', title: '📚 Book reserved!', message: 'Your book is ready for pickup at the library within 48 hours. Please bring your ID.' });
+      toast?.addToast({ type: 'success', title: t('bookDetail.bookReserved'), message: t('bookDetail.bookReservedMessage') });
       loadData(); // Reload to update availability
     } catch (err) {
-      toast?.addToast({ type: 'error', title: 'Borrow failed', message: err.message });
+      toast?.addToast({ type: 'error', title: t('bookDetail.borrowFailed'), message: err.message });
     } finally {
       setBorrowing(false);
     }
@@ -197,10 +199,10 @@ const BookDetailPage = () => {
     setReserving(true);
     try {
       await createReservation(token, { bookId: book.id, priority: 1 });
-      toast?.addToast({ type: 'success', title: '🔔 Reserved!', message: 'You will be notified when the book is available.' });
+      toast?.addToast({ type: 'success', title: t('bookDetail.reserved'), message: t('bookDetail.reservedMessage') });
       setReservationCount(prev => prev + 1);
     } catch (err) {
-      toast?.addToast({ type: 'error', title: 'Reservation failed', message: err.message });
+      toast?.addToast({ type: 'error', title: t('bookDetail.reservationFailed'), message: err.message });
     } finally {
       setReserving(false);
     }
@@ -211,7 +213,7 @@ const BookDetailPage = () => {
     const next = favorite ? stored.filter((x) => x !== id) : [...new Set([...stored, id])];
     localStorage.setItem('favoriteBookIds', JSON.stringify(next));
     setFavorite(!favorite);
-    toast?.addToast({ type: 'success', title: favorite ? 'Removed' : '❤️ Added to favorites' });
+    toast?.addToast({ type: 'success', title: favorite ? t('bookDetail.removedFromFavorites') : t('bookDetail.addedToFavorites') });
   };
 
   const submitReview = async (e) => {
@@ -224,12 +226,12 @@ const BookDetailPage = () => {
         title: reviewTitle,
         content: reviewContent
       });
-      toast?.addToast({ type: 'success', title: 'Review submitted!', message: 'Thank you for your feedback.' });
+      toast?.addToast({ type: 'success', title: t('bookDetail.reviewSubmitted'), message: t('bookDetail.reviewSubmittedMessage') });
       setReviewTitle('');
       setReviewContent('');
       loadData(); // Reload to show new review and update average rating
     } catch (err) {
-      toast?.addToast({ type: 'error', title: 'Failed to submit', message: err.message });
+      toast?.addToast({ type: 'error', title: t('bookDetail.failedToSubmit'), message: err.message });
     } finally {
       setSubmittingReview(false);
     }
@@ -253,8 +255,8 @@ const BookDetailPage = () => {
   if (error || !book) return (
     <div className="flex flex-col items-center gap-4 rounded-3xl bg-rose-50 p-12 text-center dark:bg-rose-900/10">
       <XCircleIcon className="h-16 w-16 text-rose-400" />
-      <p className="text-lg font-bold text-rose-700 dark:text-rose-400">{error || 'Book not found'}</p>
-      <Button variant="secondary" onClick={() => navigate('/books')}>Back to Books</Button>
+      <p className="text-lg font-bold text-rose-700 dark:text-rose-400">{error || t('bookDetail.bookNotFound')}</p>
+      <Button variant="secondary" onClick={() => navigate('/books')}>{t('bookDetail.backToBooks')}</Button>
     </div>
   );
 
@@ -267,7 +269,7 @@ const BookDetailPage = () => {
       <BorrowConfirmModal isOpen={showModal} onClose={() => setShowModal(false)} onConfirm={confirmBorrow} book={book} loading={borrowing} />
       
       <button onClick={() => navigate('/books')} className="mb-4 inline-flex items-center gap-1.5 text-sm font-semibold text-slate-500 hover:text-primary dark:text-slate-400">
-        <ArrowLeftIcon className="h-4 w-4" /> Back to Books
+        <ArrowLeftIcon className="h-4 w-4" /> {t('bookDetail.backToBooks')}
       </button>
 
       <div className="grid gap-8 lg:grid-cols-[0.38fr_0.62fr]">
@@ -282,14 +284,20 @@ const BookDetailPage = () => {
                 <p className="text-center text-3xl font-black">{book.title}</p>
               </div>
             )}
-            <div className="absolute left-4 top-4"><AvailBadge available={isAvailable} /></div>
+            <div className="absolute left-4 top-4">
+              <AvailBadge
+                available={isAvailable}
+                availableLabel={t('bookDetail.available')}
+                unavailableLabel={t('bookDetail.unavailable')}
+              />
+            </div>
           </div>
 
           <div className="flex gap-3">
             <button onClick={toggleFavorite} className={`flex flex-1 items-center justify-center gap-2 rounded-2xl border py-3 font-bold transition-all ${favorite ? 'border-rose-200 bg-rose-50 text-rose-600' : 'bg-white text-slate-600'}`}>
-              {favorite ? <HeartSolid className="h-5 w-5" /> : <HeartIcon className="h-5 w-5" />} {favorite ? 'Saved' : 'Save'}
+              {favorite ? <HeartSolid className="h-5 w-5" /> : <HeartIcon className="h-5 w-5" />} {favorite ? t('bookDetail.saved') : t('bookDetail.save')}
             </button>
-            <button onClick={() => { navigator.clipboard.writeText(window.location.href); toast.addToast({type:'success', title:'Link copied'}); }} className="flex flex-1 items-center justify-center gap-2 rounded-2xl border bg-white py-3 text-slate-600"><ShareIcon className="h-5 w-5" /> Share</button>
+            <button onClick={() => { navigator.clipboard.writeText(window.location.href); toast.addToast({type:'success', title:t('bookDetail.linkCopied')}); }} className="flex flex-1 items-center justify-center gap-2 rounded-2xl border bg-white py-3 text-slate-600"><ShareIcon className="h-5 w-5" /> {t('bookDetail.share')}</button>
           </div>
         </div>
 
@@ -301,19 +309,25 @@ const BookDetailPage = () => {
             </div>
             <h1 className="text-4xl font-black text-slate-900 dark:text-white">{book.title}</h1>
             <div className="flex items-center gap-2 text-slate-500 font-medium"><UserIcon className="h-5 w-5" /> {book.author}</div>
-            <StarRating rating={book.averageRating || 0} count={book.ratingCount || 0} size="lg" />
+            <StarRating
+              rating={book.averageRating || 0}
+              count={book.ratingCount || 0}
+              size="lg"
+              noRatingsLabel={t('bookDetail.noRatings')}
+              reviewsLabel={t('bookDetail.reviews')}
+            />
           </div>
 
           <div className="grid grid-cols-2 gap-4">
-            <StatCard icon={BookOpenIcon} label="Quantity" value={`${book.availableQty} / ${book.totalQuantity}`} highlight={isAvailable} />
-            <StatCard icon={CheckCircleIcon} label="Status" value={book.status} />
-            <StatCard icon={CalendarIcon} label="Year" value={book.publishedYear || 'N/A'} />
-            <StatCard icon={IdentificationIcon} label="ISBN" value={book.isbn} />
+            <StatCard icon={BookOpenIcon} label={t('bookDetail.quantity')} value={`${book.availableQty} / ${book.totalQuantity}`} highlight={isAvailable} />
+            <StatCard icon={CheckCircleIcon} label={t('common.status')} value={book.status} />
+            <StatCard icon={CalendarIcon} label={t('bookDetail.year')} value={book.publishedYear || 'N/A'} />
+            <StatCard icon={IdentificationIcon} label={t('bookDetail.isbn')} value={book.isbn} />
           </div>
 
           {book.description && (
             <div className="rounded-3xl bg-slate-50 p-6 dark:bg-slate-800/40">
-              <h3 className="text-sm font-bold uppercase tracking-wider text-slate-400 mb-2">Description</h3>
+              <h3 className="text-sm font-bold uppercase tracking-wider text-slate-400 mb-2">{t('bookDetail.description')}</h3>
               <p className="text-slate-600 dark:text-slate-300 leading-relaxed">{book.description}</p>
             </div>
           )}
@@ -323,16 +337,16 @@ const BookDetailPage = () => {
               <>
                 {isAvailable ? (
                   <button onClick={handleBorrow} disabled={borrowing} className={`w-full rounded-2xl py-4 text-lg font-black transition-all bg-primary text-white shadow-xl shadow-primary/20 hover:scale-[1.02] ${borrowing ? 'opacity-50' : ''}`}>
-                    {borrowing ? 'Processing...' : 'BORROW NOW'}
+                    {borrowing ? t('bookDetail.processing') : t('bookDetail.borrowNow')}
                   </button>
                 ) : (
                   <div className="space-y-3">
                     <button onClick={handleReserve} disabled={reserving} className={`w-full rounded-2xl py-4 text-lg font-black transition-all bg-amber-500 text-white shadow-xl shadow-amber-500/20 hover:scale-[1.02] ${reserving ? 'opacity-50' : ''}`}>
-                      {reserving ? 'Processing...' : <><BellIcon className="h-5 w-5 inline mr-2" /> RESERVE BOOK</>}
+                      {reserving ? t('bookDetail.processing') : <><BellIcon className="h-5 w-5 inline mr-2" /> {t('bookDetail.reserveBook')}</>}
                     </button>
                     {reservationCount > 0 && (
                       <p className="text-center text-sm text-slate-500 dark:text-slate-400">
-                        {reservationCount} people in queue
+                        {t('bookDetail.peopleInQueue', { count: reservationCount })}
                       </p>
                     )}
                   </div>
@@ -349,13 +363,13 @@ const BookDetailPage = () => {
         <div className="rounded-[2.5rem] bg-slate-50 p-8 dark:bg-slate-900/30">
           <div className="mb-6 flex items-center gap-3">
             <ChatBubbleBottomCenterTextIcon className="h-8 w-8 text-primary" />
-            <h2 className="text-2xl font-black text-slate-900 dark:text-white">Write a Review</h2>
+            <h2 className="text-2xl font-black text-slate-900 dark:text-white">{t('bookDetail.writeReview')}</h2>
           </div>
           
           {isAuthenticated ? (
             <form onSubmit={submitReview} className="space-y-4">
               <div>
-                <label className="text-sm font-bold text-slate-500">How would you rate it?</label>
+                <label className="text-sm font-bold text-slate-500">{t('bookDetail.howRate')}</label>
                 <div className="mt-2 flex gap-2">
                   {[1, 2, 3, 4, 5].map((s) => (
                     <button key={s} type="button" onClick={() => setNewRating(s)} className="transition hover:scale-110">
@@ -365,34 +379,41 @@ const BookDetailPage = () => {
                 </div>
               </div>
               <div className="space-y-1">
-                <input value={reviewTitle} onChange={e => setReviewTitle(e.target.value)} placeholder="Title of your review" className="w-full rounded-xl border-none bg-white p-3 text-sm shadow-sm dark:bg-slate-800" />
+                <input value={reviewTitle} onChange={e => setReviewTitle(e.target.value)} placeholder={t('bookDetail.reviewTitlePlaceholder')} className="w-full rounded-xl border-none bg-white p-3 text-sm shadow-sm dark:bg-slate-800" />
               </div>
               <div className="space-y-1">
-                <textarea value={reviewContent} onChange={e => setReviewContent(e.target.value)} rows="4" placeholder="Share your experience with this book..." required className="w-full rounded-2xl border-none bg-white p-4 text-sm shadow-sm dark:bg-slate-800" />
+                <textarea value={reviewContent} onChange={e => setReviewContent(e.target.value)} rows="4" placeholder={t('bookDetail.reviewContentPlaceholder')} required className="w-full rounded-2xl border-none bg-white p-4 text-sm shadow-sm dark:bg-slate-800" />
               </div>
               <button type="submit" disabled={submittingReview} className="flex items-center justify-center gap-2 rounded-xl bg-slate-900 px-6 py-3 font-bold text-white transition hover:bg-slate-800 disabled:opacity-50 dark:bg-primary">
-                {submittingReview ? 'Posting...' : <><PaperAirplaneIcon className="h-4 w-4" /> Post Review</>}
+                {submittingReview ? t('bookDetail.posting') : <><PaperAirplaneIcon className="h-4 w-4" /> {t('bookDetail.postReview')}</>}
               </button>
             </form>
           ) : (
             <div className="flex flex-col items-center justify-center h-48 rounded-2xl border-2 border-dashed border-slate-200 text-slate-400">
-              <p>Please log in to write a review</p>
-              <Button size="sm" variant="secondary" onClick={() => navigate('/login')} className="mt-4">Login</Button>
+              <p>{t('bookDetail.loginToReview')}</p>
+              <Button size="sm" variant="secondary" onClick={() => navigate('/login')} className="mt-4">{t('auth.login')}</Button>
             </div>
           )}
         </div>
 
         {/* Recent Reviews */}
         <div className="space-y-6">
-          <h2 className="text-2xl font-black text-slate-900 dark:text-white">Recent Reviews</h2>
+          <h2 className="text-2xl font-black text-slate-900 dark:text-white">{t('bookDetail.recentReviews')}</h2>
           {reviews.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-48 text-slate-400">
               <ChatBubbleBottomCenterTextIcon className="h-12 w-12 opacity-20" />
-              <p className="mt-2">No reviews yet. Be the first!</p>
+              <p className="mt-2">{t('bookDetail.noReviewsYet')}</p>
             </div>
           ) : (
             <div className="space-y-4 max-h-[500px] overflow-y-auto pr-2 custom-scrollbar">
-              {reviews.map(r => <ReviewItem key={r.id} review={r} />)}
+              {reviews.map(r => (
+                <ReviewItem
+                  key={r.id}
+                  review={r}
+                  noRatingsLabel={t('bookDetail.noRatings')}
+                  reviewsLabel={t('bookDetail.reviews')}
+                />
+              ))}
             </div>
           )}
         </div>

@@ -1,23 +1,25 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import Button from '../components/Button';
 import { useAuth } from '../context/AuthContext';
+import { useTranslation } from '../context/LanguageContext';
 import { extendBorrow, fetchBookById, fetchBorrowHistory, returnBorrow } from '../lib/api';
 import { useToast } from '../context/ToastContext';
 
-const tabs = [
-  { key: 'borrowed', label: 'Borrowed', statuses: ['ACTIVE', 'PENDING_APPROVAL'] },
-  { key: 'returned', label: 'Returned', statuses: ['RETURNED'] },
-  { key: 'overdue', label: 'Overdue', statuses: ['OVERDUE'] },
-];
-
 const MyBorrowsPage = () => {
   const { token } = useAuth();
+  const { t } = useTranslation();
   const { addToast } = useToast() || {};
   const [activeTab, setActiveTab] = useState('borrowed');
   const [records, setRecords] = useState([]);
   const [bookMap, setBookMap] = useState({});
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState('');
+
+  const tabs = [
+    { key: 'borrowed', label: t('myBorrowsPage.borrowed'), statuses: ['ACTIVE', 'PENDING_APPROVAL'] },
+    { key: 'returned', label: t('myBorrowsPage.returned'), statuses: ['RETURNED'] },
+    { key: 'overdue', label: t('myBorrowsPage.overdue'), statuses: ['OVERDUE'] },
+  ];
 
   const load = useCallback(async () => {
     if (!token) return;
@@ -41,13 +43,13 @@ const MyBorrowsPage = () => {
 
       setBookMap(Object.fromEntries(entries));
     } catch (error) {
-      addToast?.({ type: 'error', title: 'Load failed', message: error.message || 'Failed to load borrow history.' });
+      addToast?.({ type: 'error', title: t('myBorrowsPage.loadFailed'), message: error.message || t('myBorrowsPage.loadFailedMessage') });
       setRecords([]);
       setBookMap({});
     } finally {
       setLoading(false);
     }
-  }, [addToast, token]);
+  }, [addToast, token, t]);
 
   useEffect(() => {
     load();
@@ -60,10 +62,10 @@ const MyBorrowsPage = () => {
     setSubmitting(borrowId);
     try {
       await extendBorrow(token, borrowId);
-      addToast?.({ type: 'success', title: 'Extended', message: 'Borrow period has been extended.' });
+      addToast?.({ type: 'success', title: t('myBorrowsPage.extended'), message: t('myBorrowsPage.extendedMessage') });
       await load();
     } catch (error) {
-      addToast?.({ type: 'error', title: 'Extend failed', message: error.message || 'Unable to extend.' });
+      addToast?.({ type: 'error', title: t('myBorrowsPage.extendFailed'), message: error.message || t('myBorrowsPage.extendFailedMessage') });
     } finally {
       setSubmitting('');
     }
@@ -73,11 +75,11 @@ const MyBorrowsPage = () => {
     if (!token) return;
     setSubmitting(borrowId);
     try {
-      await returnBorrow(token, borrowId, 'Returned from user portal');
-      addToast?.({ type: 'success', title: 'Returned', message: 'Book return request sent.' });
+      await returnBorrow(token, borrowId, t('myBorrowsPage.returnedFromUserPortal'));
+      addToast?.({ type: 'success', title: t('myBorrowsPage.returned'), message: t('myBorrowsPage.returnedMessage') });
       await load();
     } catch (error) {
-      addToast?.({ type: 'error', title: 'Return failed', message: error.message || 'Unable to return.' });
+      addToast?.({ type: 'error', title: t('myBorrowsPage.returnFailed'), message: error.message || t('myBorrowsPage.returnFailedMessage') });
     } finally {
       setSubmitting('');
     }
@@ -85,8 +87,8 @@ const MyBorrowsPage = () => {
 
   return (
     <div className="rounded-[2rem] border border-white/70 bg-white/85 p-6 page-fade dark:border-slate-800 dark:bg-slate-900/75">
-      <h1 className="text-3xl font-black text-slate-950 dark:text-white">My Books</h1>
-      <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">Data from `/api/v1/borrows/history`.</p>
+      <h1 className="text-3xl font-black text-slate-950 dark:text-white">{t('nav.myBooks')}</h1>
+      <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">{t('myBorrowsPage.dataFrom')}</p>
 
       <div className="mt-6 flex flex-wrap gap-2">
         {tabs.map((tab) => {
@@ -109,17 +111,17 @@ const MyBorrowsPage = () => {
       </div>
 
       {loading ? (
-        <div className="mt-6 rounded-2xl bg-slate-100 px-4 py-8 text-sm dark:bg-slate-800">Loading records...</div>
+        <div className="mt-6 rounded-2xl bg-slate-100 px-4 py-8 text-sm dark:bg-slate-800">{t('myBorrowsPage.loading')}</div>
       ) : (
         <div className="mt-6 overflow-hidden rounded-3xl border border-slate-200 dark:border-slate-800">
           <table className="w-full text-left text-sm">
             <thead className="bg-slate-100 dark:bg-slate-800">
               <tr>
-                <th className="px-4 py-3">Book</th>
-                <th className="px-4 py-3">Borrow Date</th>
-                <th className="px-4 py-3">Due Date</th>
-                <th className="px-4 py-3">Status</th>
-                <th className="px-4 py-3">Action</th>
+                <th className="px-4 py-3">{t('myBorrowsPage.book')}</th>
+                <th className="px-4 py-3">{t('myBorrowsPage.borrowDate')}</th>
+                <th className="px-4 py-3">{t('myBorrowsPage.dueDate')}</th>
+                <th className="px-4 py-3">{t('common.status')}</th>
+                <th className="px-4 py-3">{t('myBorrowsPage.action')}</th>
               </tr>
             </thead>
             <tbody>
@@ -133,12 +135,12 @@ const MyBorrowsPage = () => {
                     <div className="flex gap-2">
                       {['ACTIVE', 'PENDING_APPROVAL'].includes(item.borrowStatus) && (
                         <Button size="sm" variant="secondary" disabled={submitting === item.id} onClick={() => onExtend(item.id)}>
-                          Extend
+                          {t('myBorrowsPage.extend')}
                         </Button>
                       )}
                       {['ACTIVE', 'OVERDUE', 'PENDING_APPROVAL'].includes(item.borrowStatus) && (
                         <Button size="sm" disabled={submitting === item.id} onClick={() => onReturn(item.id)}>
-                          Return
+                          {t('myBorrowsPage.return')}
                         </Button>
                       )}
                     </div>
@@ -147,7 +149,7 @@ const MyBorrowsPage = () => {
               ))}
             </tbody>
           </table>
-          {!list.length && <div className="px-4 py-8 text-sm text-slate-600 dark:text-slate-300">No records in this tab.</div>}
+          {!list.length && <div className="px-4 py-8 text-sm text-slate-600 dark:text-slate-300">{t('myBorrowsPage.noRecords')}</div>}
         </div>
       )}
     </div>

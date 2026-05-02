@@ -12,33 +12,36 @@ import {
 } from '@heroicons/react/24/outline';
 import Button from './Button';
 import Dropdown from './Dropdown';
+import LanguageSelector from './LanguageSelector';
 import ThemeToggle from './ThemeToggle';
 import Toast from './Toast';
 import { useAuth } from '../context/AuthContext';
-
-const navItems = [
-  { label: 'Home', to: '/', icon: HomeIcon },
-  { label: 'Books', to: '/books', icon: BookOpenIcon },
-  { label: 'Categories', to: '/categories', icon: Squares2X2Icon },
-];
-
-const linkClassName = ({ isActive }) =>
-  `inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold transition ${
-    isActive
-      ? 'bg-slate-900 text-white dark:bg-white dark:text-slate-950'
-      : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-white'
-  }`;
+import { useTranslation } from '../context/LanguageContext';
 
 const LibraryLayout = () => {
   const { isAuthenticated, user, logout } = useAuth();
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const role = (user?.role || 'GUEST').toUpperCase();
 
+  const navItems = [
+    { label: t('nav.home'), to: '/', icon: HomeIcon },
+    { label: t('nav.books'), to: '/books', icon: BookOpenIcon },
+    { label: t('nav.categories'), to: '/categories', icon: Squares2X2Icon },
+  ];
+
+  const linkClassName = ({ isActive }) =>
+    `inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold transition ${
+      isActive
+        ? 'bg-slate-900 text-white dark:bg-white dark:text-slate-950'
+        : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-white'
+    }`;
+
   const userMenuItems = [
-    { label: 'Profile', onClick: () => navigate('/profile'), icon: <UserCircleIcon className="h-4 w-4" /> },
-    { label: 'My Books', onClick: () => navigate('/my-books'), icon: <BookOpenIcon className="h-4 w-4" /> },
-    { label: 'Favorites', onClick: () => navigate('/favorites'), icon: <HeartIcon className="h-4 w-4" /> },
-    { label: 'Logout', onClick: logout, icon: <ArrowRightOnRectangleIcon className="h-4 w-4" /> },
+    { label: t('nav.profile'), onClick: () => navigate('/profile'), icon: <UserCircleIcon className="h-4 w-4" /> },
+    { label: t('nav.myBooks'), onClick: () => navigate('/my-books'), icon: <BookOpenIcon className="h-4 w-4" /> },
+    { label: t('nav.favorites'), onClick: () => navigate('/favorites'), icon: <HeartIcon className="h-4 w-4" /> },
+    { label: t('auth.logout'), onClick: logout, icon: <ArrowRightOnRectangleIcon className="h-4 w-4" /> },
   ];
 
   const renderRoleAction = () => {
@@ -46,19 +49,19 @@ const LibraryLayout = () => {
       return (
         <div className="flex items-center gap-2">
           <Button variant="ghost" onClick={() => navigate('/login')}>
-            Login
+            {t('auth.login')}
           </Button>
-          <Button onClick={() => navigate('/register')}>Register</Button>
+          <Button onClick={() => navigate('/register')}>{t('auth.register')}</Button>
         </div>
       );
     }
 
     if (role === 'LIBRARIAN') {
-      return <Button onClick={() => navigate('/dashboard')}>Dashboard</Button>;
+      return <Button onClick={() => navigate('/dashboard')}>{t('nav.dashboard')}</Button>;
     }
 
     if (role === 'ADMIN') {
-      return <Button onClick={() => navigate('/dashboard')}>Admin Panel</Button>;
+      return <Button onClick={() => navigate('/dashboard')}>{t('adminDashboard.controlPanel')}</Button>;
     }
 
     return (
@@ -66,7 +69,7 @@ const LibraryLayout = () => {
         button={
           <button className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 shadow-sm transition hover:border-primary hover:text-primary dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100">
             <UserCircleIcon className="h-5 w-5" />
-            <span className="max-w-28 truncate">{user?.fullName || 'Account'}</span>
+            <span className="max-w-28 truncate">{user?.fullName || t('auth.login')}</span>
             <ChevronDownIcon className="h-4 w-4" />
           </button>
         }
@@ -107,6 +110,7 @@ const LibraryLayout = () => {
           </nav>
 
           <div className="flex items-center gap-3">
+            <LanguageSelector className="w-36" />
             <ThemeToggle />
             {renderRoleAction()}
           </div>
@@ -121,17 +125,17 @@ const LibraryLayout = () => {
         <div className="mx-auto grid max-w-7xl gap-8 px-4 py-10 text-sm text-slate-600 dark:text-slate-300 sm:px-6 lg:grid-cols-3 lg:px-8">
           <div>
             <Link to="/" className="text-base font-bold text-slate-900 transition hover:text-primary dark:text-white">Library System</Link>
-            <p className="mt-3 max-w-sm">A user-facing reading portal connected to your library services, borrow flow, and account history.</p>
+            <p className="mt-3 max-w-sm">{t('home.description')}</p>
           </div>
           <div>
-            <p className="font-semibold text-slate-900 dark:text-white">Contact</p>
+            <p className="font-semibold text-slate-900 dark:text-white">{t('profilePage.email')}</p>
             <p className="mt-3">Email: support@library.local</p>
             <p>Phone: +84 28 1234 5678</p>
             <p>Address: Central Reading Hall</p>
           </div>
           <div>
-            <p className="font-semibold text-slate-900 dark:text-white">About</p>
-            <p className="mt-3">Borrow books, track due dates, and manage your account from one place.</p>
+            <p className="font-semibold text-slate-900 dark:text-white">{t('nav.dashboard')}</p>
+            <p className="mt-3">{t('myBorrows.title')}</p>
             <div className="mt-3 flex items-center gap-3">
               <a href="https://facebook.com" className="hover:text-primary">Facebook</a>
               <a href="https://instagram.com" className="hover:text-primary">Instagram</a>

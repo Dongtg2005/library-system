@@ -1,8 +1,11 @@
 import React, { Fragment } from 'react';
 import { Dialog, Transition } from '@headlessui/react';
 import { XMarkIcon } from '@heroicons/react/24/outline';
+import { useTranslation } from '../context/LanguageContext';
 
 const Modal = ({ open, onClose, title, children, size = 'xl' }) => {
+  const { t } = useTranslation();
+  
   const sizeMap = {
     sm: 'max-w-md',
     md: 'max-w-2xl',
@@ -39,7 +42,11 @@ const Modal = ({ open, onClose, title, children, size = 'xl' }) => {
               <Dialog.Panel className={`w-full ${sizeMap[size]} overflow-hidden rounded-[28px] border border-white/10 bg-white p-6 shadow-2xl dark:bg-slate-900 dark:text-white`}>
                 <div className="mb-5 flex items-center justify-between gap-4">
                   <Dialog.Title className="text-xl font-bold">{title}</Dialog.Title>
-                  <button onClick={onClose} className="rounded-full p-2 text-slate-500 transition hover:bg-slate-100 hover:text-slate-900 dark:hover:bg-slate-800 dark:hover:text-white">
+                  <button 
+                    onClick={onClose} 
+                    className="rounded-full p-2 text-slate-500 transition hover:bg-slate-100 hover:text-slate-900 dark:hover:bg-slate-800 dark:hover:text-white"
+                    title={t('modal.close')}
+                  >
                     <XMarkIcon className="h-5 w-5" />
                   </button>
                 </div>

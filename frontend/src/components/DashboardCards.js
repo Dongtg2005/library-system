@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { AreaChart, Area, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis, BarChart, Bar } from 'recharts';
 import { fetchDashboardStats } from '../lib/api';
 import { useAuth } from '../context/AuthContext';
+import { useTranslation } from '../context/LanguageContext';
 
 const toneMap = {
   primary: 'from-primary/90 to-cyan-500',
@@ -12,6 +13,7 @@ const toneMap = {
 
 const DashboardCards = () => {
   const { token } = useAuth();
+  const { t } = useTranslation();
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -38,7 +40,7 @@ const DashboardCards = () => {
       <div className="flex h-96 items-center justify-center rounded-[32px] border border-dashed border-slate-300 dark:border-slate-700">
         <div className="flex flex-col items-center gap-3">
           <div className="h-10 w-10 animate-spin rounded-full border-4 border-primary border-t-transparent" />
-          <p className="text-sm font-medium text-slate-500">Synchronizing database analytics...</p>
+          <p className="text-sm font-medium text-slate-500">{t('dashboardCards.loading')}</p>
         </div>
       </div>
     );
@@ -47,17 +49,17 @@ const DashboardCards = () => {
   if (error) {
     return (
       <div className="rounded-[32px] bg-rose-50 p-6 text-rose-700 dark:bg-rose-500/10 dark:text-rose-200">
-        <p className="font-bold">Analytics Engine Error</p>
+        <p className="font-bold">{t('dashboardCards.error')}</p>
         <p className="mt-1 text-sm">{error}</p>
       </div>
     );
   }
 
   const statItems = [
-    { label: 'Total Users', value: stats.totalUsers.toLocaleString(), delta: 'Real-time', tone: 'primary' },
-    { label: 'Total Books', value: stats.totalBooks.toLocaleString(), delta: 'Inventory', tone: 'amber' },
-    { label: 'Borrowed Books', value: stats.totalBorrowed.toLocaleString(), delta: 'Active', tone: 'cyan' },
-    { label: 'Overdue Books', value: stats.totalOverdue.toLocaleString(), delta: 'Attention', tone: 'rose' },
+    { label: t('dashboard.totalUsers'), value: stats.totalUsers.toLocaleString(), delta: t('dashboard.realTime'), tone: 'primary' },
+    { label: t('dashboard.totalBooks'), value: stats.totalBooks.toLocaleString(), delta: t('bookTable.stock'), tone: 'amber' },
+    { label: t('dashboard.borrowedBooks'), value: stats.totalBorrowed.toLocaleString(), delta: t('status.active'), tone: 'cyan' },
+    { label: t('dashboard.overdueBooks'), value: stats.totalOverdue.toLocaleString(), delta: t('librarianDashboard.requiresAttention'), tone: 'rose' },
   ];
 
   return (
@@ -85,10 +87,10 @@ const DashboardCards = () => {
         <div className="xl:col-span-2 rounded-[30px] border border-white/50 bg-white/80 p-6 shadow-xl shadow-slate-200/40 backdrop-blur-xl dark:border-white/10 dark:bg-slate-900/70 dark:shadow-slate-950/30">
           <div className="mb-5 flex items-center justify-between">
             <div>
-              <h3 className="text-lg font-bold text-slate-900 dark:text-white">Activity Timeline</h3>
-              <p className="text-sm text-slate-500 dark:text-slate-400">7-day performance metrics from live records</p>
+              <h3 className="text-lg font-bold text-slate-900 dark:text-white">{t('dashboard.activityTimeline')}</h3>
+              <p className="text-sm text-slate-500 dark:text-slate-400">{t('dashboard.realTime')}</p>
             </div>
-            <span className="rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">Live Data</span>
+            <span className="rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">{t('dashboard.realTime')}</span>
           </div>
           <div className="h-80">
             <ResponsiveContainer width="100%" height="100%">
@@ -118,8 +120,8 @@ const DashboardCards = () => {
 
         <div className="rounded-[30px] border border-white/50 bg-white/80 p-6 shadow-xl shadow-slate-200/40 backdrop-blur-xl dark:border-white/10 dark:bg-slate-900/70 dark:shadow-slate-950/30">
           <div className="mb-5">
-            <h3 className="text-lg font-bold text-slate-900 dark:text-white">Collection Growth</h3>
-            <p className="text-sm text-slate-500 dark:text-slate-400">Database entry trend (Weekly)</p>
+            <h3 className="text-lg font-bold text-slate-900 dark:text-white">{t('dashboard.activityTimeline')}</h3>
+            <p className="text-sm text-slate-500 dark:text-slate-400">{t('dashboard.realTime')}</p>
           </div>
           <div className="h-72">
             <ResponsiveContainer width="100%" height="100%">
@@ -141,4 +143,3 @@ const DashboardCards = () => {
 };
 
 export default DashboardCards;
-

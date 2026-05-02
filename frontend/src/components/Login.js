@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
+import { useTranslation } from '../context/LanguageContext';
 import './Login.css';
 
 const Login = ({ onLoginSuccess }) => {
@@ -10,6 +11,7 @@ const Login = ({ onLoginSuccess }) => {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const { login, register } = useAuth();
+  const { t } = useTranslation();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -21,7 +23,7 @@ const Login = ({ onLoginSuccess }) => {
         await login(email, password);
       } else {
         if (!fullName.trim()) {
-          setError('Full name is required');
+          setError(t('auth.fullNameRequired'));
           setLoading(false);
           return;
         }
@@ -29,7 +31,7 @@ const Login = ({ onLoginSuccess }) => {
       }
       onLoginSuccess();
     } catch (err) {
-      setError(err.message || 'Authentication failed');
+      setError(err.message || t('auth.authFailed'));
     } finally {
       setLoading(false);
     }
@@ -38,21 +40,21 @@ const Login = ({ onLoginSuccess }) => {
   return (
     <div className="login-container">
       <div className="login-form">
-        <h1>Library Management System</h1>
-        <h2>{isLogin ? 'Login' : 'Create Account'}</h2>
+        <h1>{t('login.title')}</h1>
+        <h2>{isLogin ? t('auth.login') : t('auth.createAccount')}</h2>
 
         {error && <div className="error-message">{error}</div>}
 
         <form onSubmit={handleSubmit}>
           {!isLogin && (
             <div className="form-group">
-              <label htmlFor="fullName">Full Name</label>
+              <label htmlFor="fullName">{t('auth.fullName')}</label>
               <input
                 id="fullName"
                 type="text"
                 value={fullName}
                 onChange={(e) => setFullName(e.target.value)}
-                placeholder="Enter your full name"
+                placeholder={t('auth.fullNamePlaceholder')}
                 disabled={loading}
                 required
               />
@@ -60,39 +62,39 @@ const Login = ({ onLoginSuccess }) => {
           )}
 
           <div className="form-group">
-            <label htmlFor="email">Email</label>
+            <label htmlFor="email">{t('auth.email')}</label>
             <input
               id="email"
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder="Enter your email"
+              placeholder={t('auth.emailPlaceholder')}
               disabled={loading}
               required
             />
           </div>
 
           <div className="form-group">
-            <label htmlFor="password">Password</label>
+            <label htmlFor="password">{t('auth.password')}</label>
             <input
               id="password"
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              placeholder="Enter your password"
+              placeholder={t('auth.passwordPlaceholder')}
               disabled={loading}
               required
             />
           </div>
 
           <button type="submit" disabled={loading} className="submit-btn">
-            {loading ? (isLogin ? 'Logging in...' : 'Creating account...') : (isLogin ? 'Login' : 'Register')}
+            {loading ? (isLogin ? t('auth.pleaseWait') : t('auth.pleaseWait')) : (isLogin ? t('auth.login') : t('auth.register'))}
           </button>
         </form>
 
         <div className="auth-toggle">
           <text>
-            {isLogin ? "Don't have an account? " : 'Already have an account? '}
+            {isLogin ? t('auth.dontHaveAccount') : t('auth.alreadyHaveAccount')}
           </text>
           <button
             type="button"
@@ -103,7 +105,7 @@ const Login = ({ onLoginSuccess }) => {
             className="toggle-btn"
             disabled={loading}
           >
-            {isLogin ? 'Register' : 'Login'}
+            {isLogin ? t('auth.register') : t('auth.login')}
           </button>
         </div>
       </div>

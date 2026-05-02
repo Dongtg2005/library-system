@@ -1,8 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { fetchBookById } from '../lib/api';
+import { useTranslation } from '../context/LanguageContext';
 
 const FavoritesPage = () => {
+  const { t } = useTranslation();
   const [favorites, setFavorites] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -37,11 +39,11 @@ const FavoritesPage = () => {
 
   return (
     <div className="rounded-[2rem] border border-white/70 bg-white/85 p-6 page-fade dark:border-slate-800 dark:bg-slate-900/75">
-      <h1 className="text-3xl font-black text-slate-950 dark:text-white">Favorites</h1>
-      <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">Uses local favorite IDs and fetches each book from API.</p>
+      <h1 className="text-3xl font-black text-slate-950 dark:text-white">{t('favoritesPage.title')}</h1>
+      <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">{t('favoritesPage.description')}</p>
 
       {loading ? (
-        <div className="mt-6 rounded-2xl bg-slate-100 px-4 py-8 text-sm dark:bg-slate-800">Loading favorites...</div>
+        <div className="mt-6 rounded-2xl bg-slate-100 px-4 py-8 text-sm dark:bg-slate-800">{t('favoritesPage.loading')}</div>
       ) : (
         <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {favorites.map((book) => (
@@ -50,7 +52,11 @@ const FavoritesPage = () => {
               <p className="mt-1 text-sm text-slate-600 dark:text-slate-300">{book.author}</p>
             </Link>
           ))}
-          {!favorites.length && <div className="col-span-full rounded-2xl bg-slate-100 px-4 py-8 text-sm text-slate-600 dark:bg-slate-800 dark:text-slate-300">No favorites yet.</div>}
+          {!favorites.length && (
+            <div className="col-span-full rounded-2xl bg-slate-100 px-4 py-8 text-sm text-slate-600 dark:bg-slate-800 dark:text-slate-300">
+              {t('favoritesPage.noFavorites')}
+            </div>
+          )}
         </div>
       )}
     </div>

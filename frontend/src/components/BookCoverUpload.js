@@ -1,9 +1,11 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Upload, Link as LinkIcon, Trash2, Image as ImageIcon } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { useTranslation } from '../context/LanguageContext';
 
 export default function BookCoverUpload({ bookId, currentCoverUrl, onCoverUpdate }) {
   const { user, token } = useAuth();
+  const { t } = useTranslation();
   const [coverUrl, setCoverUrl] = useState(currentCoverUrl);
   const [isUploading, setIsUploading] = useState(false);
   const [urlInput, setUrlInput] = useState('');
@@ -12,18 +14,15 @@ export default function BookCoverUpload({ bookId, currentCoverUrl, onCoverUpdate
   const fileInputRef = useRef(null);
   const [isDragOver, setIsDragOver] = useState(false);
 
-  // Sync state từ bên ngoài nếu currentCoverUrl thay đổi
   useEffect(() => {
     setCoverUrl(currentCoverUrl);
   }, [currentCoverUrl]);
 
-  // Phân quyền hiển thị TRÊN VIEW
-  // Nếu là GUEST HOẶC USER (role == 'ROLE_USER') -> Chỉ trả về view tĩnh, không hiện upload UI.
   if (!user || user.role === 'ROLE_USER' || user.role === 'ROLE_GUEST') {
     return (
       <div className="w-[160px] h-[220px] bg-gray-100 rounded-md shadow-md border 2 overflow-hidden flex items-center justify-center">
         {coverUrl ? (
-          <img src={coverUrl} alt="Book Cover" className="w-full h-full object-cover" />
+          <img src={coverUrl} alt={t('bookCoverUpload.coverPreview')} className="w-full h-full object-cover" />
         ) : (
           <ImageIcon className="w-12 h-12 text-gray-400" />
         )}
@@ -31,25 +30,21 @@ export default function BookCoverUpload({ bookId, currentCoverUrl, onCoverUpdate
     );
   }
 
-  // --- Logic cho LIBRARIAN và ADMIN (Được Edit) ---
-
   const validateFile = (file) => {
     setError('');
     if (!file) return false;
-    
-    // Kiểm tra ext / type
+
     const validTypes = ['image/jpeg', 'image/png', 'image/webp'];
     if (!validTypes.includes(file.type)) {
-      setError('Chỉ hỗ trợ JPG, PNG, WEBP.');
+      setError(t('bookCoverUpload.onlyJpgPngWebp'));
       return false;
     }
-    
-    // Dung lượng tối đa 2MB = 2 * 1024 * 1024 bytes
+
     if (file.size > 2 * 1024 * 1024) {
-      setError('Dung lượng tối đa 2MB.');
+      setError(t('bookCoverUpload.maxSize2mb'));
       return false;
     }
-    
+
     return true;
   };
 
@@ -68,14 +63,14 @@ export default function BookCoverUpload({ bookId, currentCoverUrl, onCoverUpdate
         },
         body: formData
       });
-      
+
       if (!res.ok) {
-        let errorMsg = `Upload failed with status ${res.status}`;
+        let errorMsg = t('bookCoverUpload.uploadFailed', { status: res.status });
         try {
           const errorData = await res.json();
           errorMsg = errorData.message || errorMsg;
         } catch (e) {
-          // If not JSON, ignore
+          // If not JSON, ignore.
         }
         throw new Error(errorMsg);
       }
@@ -83,16 +78,14 @@ export default function BookCoverUpload({ bookId, currentCoverUrl, onCoverUpdate
       const data = await res.json();
       if (data.success) {
         setCoverUrl(data.coverUrl);
-        // Bắn event/callback cập nhật state cha mà không cần reload
         if (onCoverUpdate) onCoverUpdate(data.coverUrl);
-        
-        // Hoặc Global Event Bus:
-        window.dispatchEvent(new CustomEvent('bookCoverUpdated', { 
-            detail: { bookId, coverUrl: data.coverUrl } 
+
+        window.dispatchEvent(new CustomEvent('bookCoverUpdated', {
+          detail: { bookId, coverUrl: data.coverUrl }
         }));
       }
     } catch (err) {
-      setError(err.message || 'Lỗi khi upload.');
+      setError(err.message || t('bookCoverUpload.uploadError'));
     } finally {
       setIsUploading(false);
     }
@@ -102,7 +95,7 @@ export default function BookCoverUpload({ bookId, currentCoverUrl, onCoverUpdate
     if (!urlInput.trim()) return;
     setError('');
     setIsUploading(true);
-    
+
     try {
       const res = await fetch(`/api/v1/books/${bookId}/cover-from-url`, {
         method: 'POST',
@@ -112,9 +105,9 @@ export default function BookCoverUpload({ bookId, currentCoverUrl, onCoverUpdate
         },
         body: JSON.stringify({ url: urlInput })
       });
-      
+
       if (!res.ok) {
-        let errorMsg = `Download failed with status ${res.status}`;
+        let errorMsg = t('bookCoverUpload.downloadFailed', { status: res.status });
         try {
           const errorData = await res.json();
           errorMsg = errorData.message || errorMsg;
@@ -131,14 +124,14 @@ export default function BookCoverUpload({ bookId, currentCoverUrl, onCoverUpdate
         window.dispatchEvent(new CustomEvent('bookCoverUpdated', { detail: { bookId, coverUrl: data.coverUrl } }));
       }
     } catch (err) {
-      setError(err.message || 'Lỗi khi download ảnh từ URL.');
+      setError(err.message || t('bookCoverUpload.downloadError'));
     } finally {
       setIsUploading(false);
     }
   };
 
   const handleDelete = async () => {
-    if (!window.confirm("Bạn có chắc chắn muốn xóa ảnh bìa này không?")) return;
+    if (!window.confirm(t('bookCoverUpload.confirmDelete'))) return;
     setIsUploading(true);
     try {
       const res = await fetch(`/api/v1/books/${bookId}/cover`, {
@@ -147,14 +140,14 @@ export default function BookCoverUpload({ bookId, currentCoverUrl, onCoverUpdate
           'Authorization': `Bearer ${token}`
         }
       });
-      
-      if (!res.ok) throw new Error('Delete failed');
+
+      if (!res.ok) throw new Error(t('bookCoverUpload.deleteFailed'));
 
       setCoverUrl(null);
       if (onCoverUpdate) onCoverUpdate(null);
       window.dispatchEvent(new CustomEvent('bookCoverUpdated', { detail: { bookId, coverUrl: null } }));
     } catch (err) {
-      setError('Lỗi khi xóa ảnh bìa.');
+      setError(t('bookCoverUpload.deleteError'));
     } finally {
       setIsUploading(false);
     }
@@ -166,34 +159,32 @@ export default function BookCoverUpload({ bookId, currentCoverUrl, onCoverUpdate
     const file = e.dataTransfer.files[0];
     handleFileUpload(file);
   };
-  
+
   return (
     <div className="flex gap-6 items-start">
-      {/* Cột Preview (Chứa Ảnh/Placeholder) */}
       <div className="relative shrink-0 w-[160px] h-[220px] bg-gray-100 rounded-md shadow-md border 2 overflow-hidden flex flex-col items-center justify-center">
         {isUploading && (
           <div className="absolute inset-0 bg-white/70 z-10 flex items-center justify-center">
             <span className="animate-spin rounded-full h-8 w-8 border-b-2 border-teal-600"></span>
           </div>
         )}
-        
+
         {coverUrl ? (
-          <img src={coverUrl} alt="Cover Preview" className="w-full h-full object-cover" />
+          <img src={coverUrl} alt={t('bookCoverUpload.coverPreview')} className="w-full h-full object-cover" />
         ) : (
           <div className="text-gray-400 flex flex-col items-center justify-center">
             <ImageIcon className="w-12 h-12 mb-2" />
-            <span className="text-xs text-center font-medium">Chưa có ảnh bìa</span>
+            <span className="text-xs text-center font-medium">{t('bookCoverUpload.noCover')}</span>
           </div>
         )}
       </div>
 
-      {/* Cột Điều Khiển Upload */}
       <div className="flex flex-col flex-1 max-w-sm">
-        <label className="block text-sm font-medium text-gray-700 mb-2">Quản Lý Ảnh Bìa</label>
-        
+        <label className="block text-sm font-medium text-gray-700 mb-2">{t('bookCoverUpload.manageCover')}</label>
+
         {error && <div className="mb-2 text-sm text-red-600 bg-red-50 p-2 rounded">{error}</div>}
 
-        <div 
+        <div
           onDragOver={(e) => { e.preventDefault(); setIsDragOver(true); }}
           onDragLeave={() => setIsDragOver(false)}
           onDrop={handleDrop}
@@ -201,12 +192,12 @@ export default function BookCoverUpload({ bookId, currentCoverUrl, onCoverUpdate
           className={`border-2 border-dashed rounded-lg p-4 flex flex-col items-center justify-center cursor-pointer transition-colors ${isDragOver ? 'border-teal-500 bg-teal-50' : 'border-gray-300 hover:bg-gray-50'}`}
         >
           <Upload className="w-6 h-6 text-teal-600 mb-2" />
-          <p className="text-sm font-medium text-gray-700">Kéo thả hoặc Nhấn chọn file</p>
-          <p className="text-xs text-gray-500 mt-1">JPG, PNG, WEBP lên tới 2MB</p>
-          <input 
-            type="file" 
+          <p className="text-sm font-medium text-gray-700">{t('bookCoverUpload.dragDropOrClick')}</p>
+          <p className="text-xs text-gray-500 mt-1">{t('bookCoverUpload.supportedFormats')}</p>
+          <input
+            type="file"
             ref={fileInputRef}
-            className="hidden" 
+            className="hidden"
             accept="image/png, image/jpeg, image/webp"
             onChange={(e) => handleFileUpload(e.target.files[0])}
           />
@@ -214,49 +205,49 @@ export default function BookCoverUpload({ bookId, currentCoverUrl, onCoverUpdate
 
         <div className="mt-3 flex items-center justify-between gap-2">
           {!showUrlInput ? (
-            <button 
+            <button
               type="button"
               onClick={() => setShowUrlInput(true)}
               className="text-sm text-teal-600 hover:text-teal-700 flex items-center font-medium transition-colors"
             >
-              <LinkIcon className="w-4 h-4 mr-1" /> Nhập URL tải xuống
+              <LinkIcon className="w-4 h-4 mr-1" /> {t('bookCoverUpload.enterUrl')}
             </button>
           ) : (
-             <div className="flex w-full gap-2 relative">
-               <input 
-                 autoFocus
-                 type="text" 
-                 placeholder="https://..." 
-                 className="flex-1 text-sm border-gray-300 rounded-md shadow-sm focus:border-teal-500 focus:ring-teal-500"
-                 value={urlInput}
-                 onChange={e => setUrlInput(e.target.value)}
-                 onKeyDown={(e) => e.key === 'Enter' && handleUrlUpload()}
-               />
-               <button 
-                type="button" 
+            <div className="flex w-full gap-2 relative">
+              <input
+                autoFocus
+                type="text"
+                placeholder="https://..."
+                className="flex-1 text-sm border-gray-300 rounded-md shadow-sm focus:border-teal-500 focus:ring-teal-500"
+                value={urlInput}
+                onChange={e => setUrlInput(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && handleUrlUpload()}
+              />
+              <button
+                type="button"
                 onClick={handleUrlUpload}
                 disabled={isUploading || !urlInput.trim()}
                 className="bg-teal-600 text-white text-sm px-3 py-1.5 rounded-md hover:bg-teal-700 disabled:opacity-50"
-               >
-                 Tải
-               </button>
-               <button 
-                type="button" 
+              >
+                {t('bookCoverUpload.download')}
+              </button>
+              <button
+                type="button"
                 onClick={() => setShowUrlInput(false)}
                 className="text-gray-400 hover:text-gray-600 px-1 absolute -top-5 right-0 text-xs"
-               >
-                 Hủy
-               </button>
-             </div>
+              >
+                {t('common.cancel')}
+              </button>
+            </div>
           )}
 
           {coverUrl && (
-            <button 
+            <button
               type="button"
               onClick={handleDelete}
               className="text-sm text-red-600 hover:text-red-700 flex items-center font-medium transition-colors ml-auto"
             >
-              <Trash2 className="w-4 h-4 mr-1" /> Xóa ảnh
+              <Trash2 className="w-4 h-4 mr-1" /> {t('bookCoverUpload.deleteImage')}
             </button>
           )}
         </div>

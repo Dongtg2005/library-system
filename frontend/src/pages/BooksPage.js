@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState, useRef } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { fetchBooks, searchBooks, autocompleteBooks } from '../lib/api';
 import useDebounce from '../hooks/useDebounce';
+import { useTranslation } from '../context/LanguageContext';
 
 const statusColors = {
   AVAILABLE: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-200',
@@ -13,6 +14,7 @@ const statusColors = {
 const BooksPage = () => {
   const location = useLocation();
   const navigate = useNavigate();
+  const { t } = useTranslation();
 
   const [books, setBooks] = useState([]);
   const [page, setPage] = useState(0);
@@ -114,7 +116,7 @@ const BooksPage = () => {
         setTotalPages(response?.totalPages || 0);
       } catch (err) {
         if (!mounted) return;
-        setError(err.message || 'Failed to load books');
+        setError(err.message || t('booksPage.failedToLoad'));
         setBooks([]);
         setTotalPages(0);
       } finally {
@@ -151,11 +153,11 @@ const BooksPage = () => {
   return (
     <div className="grid gap-6 lg:grid-cols-[0.3fr_0.7fr] page-fade">
       <aside className="rounded-[2rem] border border-white/70 bg-white/85 p-5 shadow-sm backdrop-blur dark:border-slate-800 dark:bg-slate-900/75">
-        <h2 className="text-lg font-black">Filters</h2>
+        <h2 className="text-lg font-black">{t('common.filter')}</h2>
 
         <div className="mt-4 space-y-4">
           <label className="block text-sm font-medium text-slate-600 dark:text-slate-300">
-            Category
+            {t('booksPage.category')}
             <select
               value={categoryFilter}
               onChange={(event) => {
@@ -164,7 +166,7 @@ const BooksPage = () => {
               }}
               className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-950"
             >
-              <option value="">All Categories</option>
+              <option value="">{t('booksPage.allCategories')}</option>
               {categories.map((category) => (
                 <option key={category} value={category}>{category}</option>
               ))}
@@ -172,7 +174,7 @@ const BooksPage = () => {
           </label>
 
           <label className="block text-sm font-medium text-slate-600 dark:text-slate-300">
-            Author
+            {t('booksPage.author')}
             <select
               value={authorFilter}
               onChange={(event) => {
@@ -181,7 +183,7 @@ const BooksPage = () => {
               }}
               className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-950"
             >
-              <option value="">All Authors</option>
+              <option value="">{t('booksPage.allAuthors')}</option>
               {authors.map((author) => (
                 <option key={author} value={author}>{author}</option>
               ))}
@@ -189,7 +191,7 @@ const BooksPage = () => {
           </label>
 
           <label className="block text-sm font-medium text-slate-600 dark:text-slate-300">
-            Availability
+            {t('booksPage.availability')}
             <select
               value={statusFilter}
               onChange={(event) => {
@@ -198,11 +200,11 @@ const BooksPage = () => {
               }}
               className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-950"
             >
-              <option value="">All Statuses</option>
-              <option value="AVAILABLE">Available</option>
-              <option value="OUT_OF_STOCK">Out of stock</option>
-              <option value="ARCHIVED">Archived</option>
-              <option value="DAMAGED">Damaged</option>
+              <option value="">{t('booksPage.allStatuses')}</option>
+              <option value="AVAILABLE">{t('bookTable.available')}</option>
+              <option value="OUT_OF_STOCK">{t('bookTable.outOfStock')}</option>
+              <option value="ARCHIVED">{t('bookTable.archived')}</option>
+              <option value="DAMAGED">{t('bookTable.damaged')}</option>
             </select>
           </label>
         </div>
@@ -210,7 +212,7 @@ const BooksPage = () => {
 
       <section className="rounded-[2rem] border border-white/70 bg-white/85 p-6 shadow-sm backdrop-blur dark:border-slate-800 dark:bg-slate-900/75">
         <div className="flex flex-wrap items-center justify-between gap-3 relative" ref={searchContainerRef}>
-          <h1 className="text-2xl font-black text-slate-950 dark:text-white">Books</h1>
+          <h1 className="text-2xl font-black text-slate-950 dark:text-white">{t('nav.books')}</h1>
           <div className="relative w-full md:w-72">
               <input
                 type="search"
@@ -219,7 +221,7 @@ const BooksPage = () => {
                   setPage(0);
                   setSearchInput(event.target.value);
                 }}
-                placeholder="Search by title, author, or ISBN..."
+                placeholder={t('booksPage.searchPlaceholder')}
                 className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-2 text-sm outline-none focus:border-primary dark:border-slate-700 dark:bg-slate-950"
               />
               
@@ -248,12 +250,12 @@ const BooksPage = () => {
         )}
 
         {loading ? (
-          <div className="mt-6 rounded-2xl bg-slate-100 px-4 py-8 text-sm text-slate-600 dark:bg-slate-800 dark:text-slate-300">Loading books...</div>
+          <div className="mt-6 rounded-2xl bg-slate-100 px-4 py-8 text-sm text-slate-600 dark:bg-slate-800 dark:text-slate-300">{t('booksPage.loading')}</div>
         ) : (
           <>
             <div className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
               {books.map((book) => {
-                const categoryNames = book.categories?.map(c => c.name).join(', ') || book.category || 'Uncategorized';
+                const categoryNames = book.categories?.map(c => c.name).join(', ') || book.category || t('book.label.uncategorized');
                 return (
                 <article key={book.id} className="group relative overflow-hidden rounded-3xl border border-slate-200 bg-white p-4 transition-all hover:shadow-xl dark:border-slate-800 dark:bg-slate-950/90">
                   <div className="relative mb-4 aspect-[2/3] overflow-hidden rounded-2xl bg-slate-100 dark:bg-slate-900">
@@ -278,13 +280,13 @@ const BooksPage = () => {
                     </span>
                     <span className="text-xs text-slate-500 dark:text-slate-400">{book.availableQty}/{book.totalQuantity}</span>
                   </div>
-                  <Link to={`/books/${book.id}`} className="mt-4 inline-flex text-sm font-semibold text-primary hover:underline">View Detail</Link>
+                  <Link to={`/books/${book.id}`} className="mt-4 inline-flex text-sm font-semibold text-primary hover:underline">{t('book.action.viewDetails')}</Link>
                 </article>
               )})}
             </div>
 
             {!books.length && (
-              <div className="mt-6 rounded-2xl bg-slate-100 px-4 py-8 text-sm text-slate-600 dark:bg-slate-800 dark:text-slate-300">No books found.</div>
+              <div className="mt-6 rounded-2xl bg-slate-100 px-4 py-8 text-sm text-slate-600 dark:bg-slate-800 dark:text-slate-300">{t('booksPage.noBooksFound')}</div>
             )}
 
             <div className="mt-8 flex items-center justify-between">
@@ -294,16 +296,16 @@ const BooksPage = () => {
                 disabled={page === 0}
                 className="rounded-xl border border-slate-200 px-4 py-2 text-sm font-semibold disabled:opacity-50 dark:border-slate-700"
               >
-                Previous
+                {t('booksPage.previous')}
               </button>
-              <p className="text-sm text-slate-600 dark:text-slate-300">Page {page + 1} / {Math.max(totalPages, 1)}</p>
+              <p className="text-sm text-slate-600 dark:text-slate-300">{t('booksPage.page')} {page + 1} / {Math.max(totalPages, 1)}</p>
               <button
                 type="button"
                 onClick={() => setPage((prev) => (prev + 1 < totalPages ? prev + 1 : prev))}
                 disabled={totalPages === 0 || page + 1 >= totalPages}
                 className="rounded-xl border border-slate-200 px-4 py-2 text-sm font-semibold disabled:opacity-50 dark:border-slate-700"
               >
-                Next
+                {t('booksPage.next')}
               </button>
             </div>
           </>

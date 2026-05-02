@@ -5,6 +5,7 @@ import LibraryLayout from './components/LibraryLayout';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { ThemeProvider } from './context/ThemeContext';
 import { ToastProvider } from './context/ToastContext';
+import { LanguageProvider, useTranslation } from './context/LanguageContext';
 import AuthPage from './pages/AuthPage';
 import BookDetailPage from './pages/BookDetailPage';
 import RoleBasedDashboard from './components/RoleBasedDashboard';
@@ -22,13 +23,17 @@ import ReviewsPage from './pages/ReviewsPage';
 import UserPage from './pages/UserPage';
 import ReservationsPage from './pages/ReservationsPage';
 
-const LoadingScreen = () => (
-  <div className="flex min-h-screen items-center justify-center bg-teal-50 text-slate-700 dark:bg-slate-950 dark:text-slate-100">
-    <div className="rounded-3xl border border-teal-100 bg-white px-6 py-4 text-sm font-semibold shadow-lg shadow-teal-500/10 dark:border-slate-800 dark:bg-slate-900">
-      Loading Library System...
+const LoadingScreen = () => {
+  const { t } = useTranslation();
+  
+  return (
+    <div className="flex min-h-screen items-center justify-center bg-teal-50 text-slate-700 dark:bg-slate-950 dark:text-slate-100">
+      <div className="rounded-3xl border border-teal-100 bg-white px-6 py-4 text-sm font-semibold shadow-lg shadow-teal-500/10 dark:border-slate-800 dark:bg-slate-900">
+        {t('common.loading')} Library System...
+      </div>
     </div>
-  </div>
-);
+  );
+};
 
 const RequireAuth = ({ children }) => {
   const { isAuthenticated, loading } = useAuth();
@@ -153,13 +158,15 @@ function AppRoutes() {
 function App() {
   return (
     <BrowserRouter>
-      <AuthProvider>
-        <ThemeProvider>
-          <ToastProvider>
-            <AppRoutes />
-          </ToastProvider>
-        </ThemeProvider>
-      </AuthProvider>
+      <LanguageProvider>
+        <AuthProvider>
+          <ThemeProvider>
+            <ToastProvider>
+              <AppRoutes />
+            </ToastProvider>
+          </ThemeProvider>
+        </AuthProvider>
+      </LanguageProvider>
     </BrowserRouter>
   );
 }
