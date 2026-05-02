@@ -296,6 +296,14 @@ public class BorrowManagementService {
                 .toList();
     }
 
+    @Transactional(readOnly = true)
+    public BorrowResponse checkBorrowStatus(Long memberId, UUID bookId) {
+        var existingBorrow = borrowRecordRepository.findByMemberIdAndBookIdAndBorrowStatusIn(
+                memberId, bookId,
+                List.of(BorrowRecord.BorrowStatus.ACTIVE, BorrowRecord.BorrowStatus.PENDING_APPROVAL));
+        return existingBorrow.map(this::toBorrowResponse).orElse(null);
+    }
+
     private BorrowResponse toBorrowResponse(BorrowRecord record) {
         String memberName = userProfileRepository.findByUserId(record.getMemberId())
                 .map(UserProfile::getFullName)

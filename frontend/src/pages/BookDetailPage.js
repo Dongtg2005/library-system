@@ -3,7 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import Button from '../components/Button';
 import BorrowConfirmModal from '../components/BorrowConfirmModal';
 import { useAuth } from '../context/AuthContext';
-import { createBorrow, fetchBookById, fetchReviews, addReview, createReservation, getReservationCount } from '../lib/api';
+import { createBorrow, fetchBookById, fetchReviews, addReview, createReservation, getReservationCount, checkBorrowStatus } from '../lib/api';
 import { useToast } from '../context/ToastContext';
 import { useTranslation } from '../context/LanguageContext';
 import {
@@ -129,6 +129,7 @@ const BookDetailPage = () => {
   const [imgError, setImgError] = useState(false);
   const [reservationCount, setReservationCount] = useState(0);
   const [reserving, setReserving] = useState(false);
+  const [userBorrowStatus, setUserBorrowStatus] = useState(null); // null = not borrowed, object = borrowed
 
   // Review Form state
   const [newRating, setNewRating] = useState(5);
@@ -147,13 +148,17 @@ const BookDetailPage = () => {
       setBook(bookData);
       setReviews(reviewData.content || []);
       
-      // Load reservation count if authenticated
+      // Load reservation count and borrow status if authenticated
       if (isAuthenticated && token) {
         try {
-          const count = await getReservationCount(token, id);
+          const [count, borrowStatus] = await Promise.all([
+            getReservationCount(token, id),
+            checkBorrowStatus(token, id)
+          ]);
           setReservationCount(count);
+          setUserBorrowStatus(borrowStatus || null);
         } catch (err) {
-          console.error('Failed to load reservation count:', err);
+          console.error('Failed to load reservation count or borrow status:', err);
         }
       }
     } catch (err) {
@@ -174,6 +179,7 @@ const BookDetailPage = () => {
 
   const role = (user?.role || 'GUEST').toUpperCase();
   const isAvailable = book?.status === 'AVAILABLE' && (book?.availableQty ?? 0) > 0;
+  const isAlreadyBorrowed = userBorrowStatus !== null;
 
   const handleBorrow = () => {
     if (!isAuthenticated || !token) { navigate('/login'); return; }
@@ -335,7 +341,21 @@ const BookDetailPage = () => {
           <div className="mt-auto">
             {role === 'USER' && (
               <>
-                {isAvailable ? (
+                {isAlreadyBorrowed ? (
+                  <div className="space-y-2">
+                    <div className="w-full rounded-2xl py-4 text-lg font-black bg-emerald-500 text-white shadow-xl shadow-emerald-500/20 flex items-center justify-center gap-2">
+                      <CheckCircleIcon className="h-6 w-6" />
+                      {userBorrowStatus?.borrowStatus === 'PENDING_APPROVAL' 
+                        ? t('bookDetail.pendingApproval') 
+                        : t('bookDetail.alreadyBorrowed')}
+                    </div>
+                    <p className="text-center text-sm text-slate-500 dark:text-slate-400">
+                      {userBorrowStatus?.borrowStatus === 'PENDING_APPROVAL'
+                        ? t('bookDetail.pendingApprovalMessage')
+                        : t('bookDetail.alreadyBorrowedMessage')}
+                    </p>
+                  </div>
+                ) : isAvailable ? (
                   <button onClick={handleBorrow} disabled={borrowing} className={`w-full rounded-2xl py-4 text-lg font-black transition-all bg-primary text-white shadow-xl shadow-primary/20 hover:scale-[1.02] ${borrowing ? 'opacity-50' : ''}`}>
                     {borrowing ? t('bookDetail.processing') : t('bookDetail.borrowNow')}
                   </button>

@@ -83,6 +83,18 @@ public class BorrowController {
         List<BorrowResponse> response = borrowManagementService.getMemberBorrowHistory(memberId);
         return ResponseEntity.ok(response);
     }
+
+    @GetMapping("/check")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('LIBRARIAN') or hasRole('USER')")
+    public ResponseEntity<BorrowResponse> checkBorrowStatus(@RequestParam UUID bookId) {
+        Long memberId = getCurrentUserId();
+        log.info("Checking borrow status for member: {} and book: {}", memberId, bookId);
+        BorrowResponse response = borrowManagementService.checkBorrowStatus(memberId, bookId);
+        if (response == null) {
+            return ResponseEntity.noContent().build();
+        }
+        return ResponseEntity.ok(response);
+    }
     
     // Admin endpoints for managing all borrows
     @GetMapping("/admin/{memberId}/history")

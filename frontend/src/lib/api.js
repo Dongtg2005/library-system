@@ -96,6 +96,9 @@ export const deleteUser = (token, id) =>
 
 export const fetchBorrowHistory = (token) => apiRequest('/api/v1/borrows/history', { token });
 
+export const checkBorrowStatus = (token, bookId) =>
+  apiRequest(`/api/v1/borrows/check?bookId=${bookId}`, { token });
+
 export const createBorrow = (token, bookId, notes = '') =>
   apiRequest('/api/v1/borrows', {
     method: 'POST',

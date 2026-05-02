@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import Button from '../components/Button';
 import { useAuth } from '../context/AuthContext';
-import { createBorrow, fetchBookById } from '../lib/api';
+import { createBorrow, fetchBookById, checkBorrowStatus } from '../lib/api';
 import { useToast } from '../context/ToastContext';
 import { useTranslation } from '../context/LanguageContext';
 
@@ -17,19 +17,31 @@ const BorrowBookPage = () => {
   const [notes, setNotes] = useState('');
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
+  const [borrowStatus, setBorrowStatus] = useState(null);
+  const [checkingStatus, setCheckingStatus] = useState(false);
 
   useEffect(() => {
     let mounted = true;
 
     const load = async () => {
       setLoading(true);
+      setCheckingStatus(true);
       try {
-        const data = await fetchBookById(bookId);
-        if (mounted) setBook(data);
+        const [data, status] = await Promise.all([
+          fetchBookById(bookId),
+          token ? checkBorrowStatus(token, bookId) : Promise.resolve(null)
+        ]);
+        if (mounted) {
+          setBook(data);
+          setBorrowStatus(status);
+        }
       } catch {
         if (mounted) setBook(null);
       } finally {
-        if (mounted) setLoading(false);
+        if (mounted) {
+          setLoading(false);
+          setCheckingStatus(false);
+        }
       }
     };
 
@@ -68,6 +80,48 @@ const BorrowBookPage = () => {
   if (!book) return <div className="rounded-3xl bg-rose-50 p-8 text-sm text-rose-700 dark:bg-rose-500/10 dark:text-rose-200">{t('bookDetail.bookNotFound')}</div>;
 
   const available = book.status === 'AVAILABLE' && book.availableQty > 0;
+  const isAlreadyBorrowed = borrowStatus !== null;
+
+  // Show already borrowed message
+  if (isAlreadyBorrowed) {
+    return (
+      <div className="rounded-[2rem] border border-white/70 bg-white/85 p-6 page-fade dark:border-slate-800 dark:bg-slate-900/75">
+        <h1 className="text-3xl font-black text-slate-950 dark:text-white">{t('borrowBookPage.title')}</h1>
+        <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">{book.title} - {book.author}</p>
+
+        <div className="mt-6 rounded-2xl bg-emerald-50 p-6 dark:bg-emerald-900/20">
+          <div className="flex items-center gap-3">
+            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-emerald-100 dark:bg-emerald-800">
+              <svg className="h-6 w-6 text-emerald-600 dark:text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+              </svg>
+            </div>
+            <div>
+              <p className="font-bold text-emerald-700 dark:text-emerald-400">
+                {borrowStatus?.borrowStatus === 'PENDING_APPROVAL' 
+                  ? t('borrowBookPage.pendingApproval') 
+                  : t('borrowBookPage.alreadyBorrowed')}
+              </p>
+              <p className="text-sm text-emerald-600 dark:text-emerald-300">
+                {borrowStatus?.borrowStatus === 'PENDING_APPROVAL'
+                  ? t('borrowBookPage.pendingApprovalMessage')
+                  : t('borrowBookPage.alreadyBorrowedMessage')}
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div className="mt-6 flex gap-3">
+          <Button onClick={() => navigate('/my-books')}>
+            {t('borrowBookPage.viewMyBooks')}
+          </Button>
+          <Button variant="ghost" onClick={() => navigate(`/books/${book.id}`)}>
+            {t('common.back')}
+          </Button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="rounded-[2rem] border border-white/70 bg-white/85 p-6 page-fade dark:border-slate-800 dark:bg-slate-900/75">
