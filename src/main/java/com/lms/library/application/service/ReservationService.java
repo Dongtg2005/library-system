@@ -36,6 +36,7 @@ public class ReservationService {
     private final UserProfileRepository userProfileRepository;
     private final BorrowRecordRepository borrowRecordRepository;
     private final BorrowPolicyRepository borrowPolicyRepository;
+    private final NotificationService notificationService;
 
     private static final int RESERVATION_EXPIRY_DAYS = 7;
 
@@ -236,6 +237,17 @@ public class ReservationService {
         firstReservation.setStatus(Reservation.ReservationStatus.FULFILLED);
         firstReservation.setFulfilledAt(LocalDateTime.now());
         reservationRepository.save(firstReservation);
+
+        // Notify user that book is available
+        try {
+            notificationService.notifyUserBookAvailable(
+                firstReservation.getUserId(),
+                book.getTitle(),
+                bookId
+            );
+        } catch (Exception e) {
+            log.error("Failed to create notification for user", e);
+        }
 
         log.info("Auto-fulfilled reservation {} for book {}", firstReservation.getId(), bookId);
     }

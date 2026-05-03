@@ -1,4 +1,5 @@
-import React from 'react';
+import React, { useState } from 'react';
+import ReactDOM from 'react-dom';
 import { NavLink, Outlet, useNavigate, Link } from 'react-router-dom';
 import {
   ArrowRightOnRectangleIcon,
@@ -15,6 +16,8 @@ import Dropdown from './Dropdown';
 import LanguageSelector from './LanguageSelector';
 import ThemeToggle from './ThemeToggle';
 import Toast from './Toast';
+import NotificationBell from './NotificationBell';
+import NotificationDetail from './NotificationDetail';
 import { useAuth } from '../context/AuthContext';
 import { useTranslation } from '../context/LanguageContext';
 
@@ -22,6 +25,7 @@ const LibraryLayout = () => {
   const { isAuthenticated, user, logout } = useAuth();
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const [notificationModal, setNotificationModal] = useState(null);
   const role = (user?.role || 'GUEST').toUpperCase();
 
   const navItems = [
@@ -110,6 +114,7 @@ const LibraryLayout = () => {
           </nav>
 
           <div className="flex items-center gap-3">
+            {isAuthenticated && <NotificationBell onNotificationSelect={setNotificationModal} />}
             <LanguageSelector className="w-36" />
             <ThemeToggle />
             {renderRoleAction()}
@@ -144,6 +149,16 @@ const LibraryLayout = () => {
           </div>
         </div>
       </footer>
+
+      {notificationModal &&
+        ReactDOM.createPortal(
+          <NotificationDetail
+            notification={notificationModal}
+            onClose={() => setNotificationModal(null)}
+          />,
+          document.body
+        )
+      }
     </div>
   );
 };

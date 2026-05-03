@@ -1,5 +1,6 @@
 package com.lms.library.domain.entity;
 
+import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -9,26 +10,65 @@ import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Data
+@Entity
+@Table(name = "notifications")
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
 public class Notification {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+    @Column(name = "user_id", nullable = false)
     private Long userId;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 50)
     private NotificationType type;
+
+    @Column(nullable = false)
     private String title;
+
+    @Column(columnDefinition = "TEXT")
     private String content;
+
+    @Enumerated(EnumType.STRING)
+    @Column(length = 50)
     private ResourceType resourceType;
+
+    @Column(name = "resource_id")
     private UUID resourceId;
-    private Boolean read;
-    private Boolean emailSent;
-    private Boolean pushSent;
+
+    @Column(nullable = false)
+    private Boolean read = false;
+
+    @Column(name = "email_sent")
+    private Boolean emailSent = false;
+
+    @Column(name = "push_sent")
+    private Boolean pushSent = false;
+
+    @Column(name = "scheduled_at")
     private LocalDateTime scheduledAt;
+
+    @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
-    
+
+    @PrePersist
+    protected void onCreate() {
+        createdAt = LocalDateTime.now();
+        if (read == null) read = false;
+        if (emailSent == null) emailSent = false;
+        if (pushSent == null) pushSent = false;
+    }
+
     public enum NotificationType {
-        DUE_SOON, OVERDUE, AVAILABLE, RESERVED, 
-        APPROVED, REJECTED, SYSTEM_ALERT
+        // User notifications
+        DUE_SOON, OVERDUE, AVAILABLE, RESERVED, APPROVED, REJECTED,
+        // Librarian notifications
+        NEW_BORROW_REQUEST, OVERDUE_REMINDER, BOOK_RETURNED,
+        // Admin notifications
+        SYSTEM_ALERT, REPORT_GENERATED
     }
     
     public enum ResourceType {

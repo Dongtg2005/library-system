@@ -43,6 +43,7 @@ public class BorrowManagementService {
     private final UserProfileRepository userProfileRepository;
     private final BookRepository bookRepository;
     private final ReservationService reservationService;
+    private final NotificationService notificationService;
     
     @Transactional(readOnly = true)
     public Page<BorrowResponse> getAllBorrows(BorrowRecord.BorrowStatus status, Pageable pageable) {
@@ -145,6 +146,21 @@ public class BorrowManagementService {
         calculateOverdueFines(memberId);
 
         log.info("Borrow request created with ID: {}, Status: PENDING_APPROVAL", record.getId());
+
+        // Notify librarians about new borrow request
+        try {
+            String memberName = userProfileRepository.findByUserId(memberId)
+                    .map(UserProfile::getFullName)
+                    .orElse("Member #" + memberId);
+            notificationService.notifyLibrarianNewBorrowRequest(
+                memberName,
+                book.getTitle(),
+                book.getId()
+            );
+        } catch (Exception e) {
+            log.error("Failed to create notification for librarians", e);
+        }
+
         return toBorrowResponse(record);
     }
 
@@ -162,6 +178,19 @@ public class BorrowManagementService {
         record.setBorrowStatus(BorrowRecord.BorrowStatus.ACTIVE);
         record.setLibrarianId(librarianId);
         record = borrowRecordRepository.save(record);
+
+        // Notify user about approval
+        try {
+            Book book = bookRepository.findById(record.getBookId())
+                    .orElseThrow(() -> new ResourceNotFoundException("Book not found"));
+            notificationService.notifyUserApproved(
+                record.getMemberId(),
+                book.getTitle(),
+                record.getBookId()
+            );
+        } catch (Exception e) {
+            log.error("Failed to create notification for user approval", e);
+        }
 
         log.info("Borrow request {} approved", borrowRecordId);
         return toBorrowResponse(record);
@@ -196,6 +225,17 @@ public class BorrowManagementService {
         record.setLibrarianId(librarianId);
         record.setRejectionReason(reason);
         record = borrowRecordRepository.save(record);
+
+        // Notify user about rejection
+        try {
+            notificationService.notifyUserRejected(
+                record.getMemberId(),
+                book.getTitle(),
+                reason != null ? reason : "Không có lý do"
+            );
+        } catch (Exception e) {
+            log.error("Failed to create notification for user rejection", e);
+        }
 
         log.info("Borrow request {} rejected with reason: {}", borrowRecordId, reason);
         return toBorrowResponse(record);
@@ -237,6 +277,17 @@ public class BorrowManagementService {
         // Mark book as returned
         record.returnBook(request.getConditionOnReturn());
         borrowRecordRepository.save(record);
+
+        // Notify librarian about book return
+        try {
+            String memberName = userProfile != null ? userProfile.getFullName() : "Member #" + memberId;
+            notificationService.notifyLibrarianBookReturned(
+                memberName,
+                book.getTitle()
+            );
+        } catch (Exception e) {
+            log.error("Failed to create notification for librarian", e);
+        }
 
         // Create fine record if overdue
         if (overdueFine.compareTo(BigDecimal.ZERO) > 0) {

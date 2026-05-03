@@ -171,3 +171,43 @@ export const fulfillReservation = (token, reservationId) =>
 export const getReservationCount = (token, bookId) =>
   apiRequest(`/api/v1/reservations/book/${bookId}/count`, { token });
 
+// Notification API
+export const getNotifications = (token) =>
+  apiRequest('/api/v1/notifications', { token });
+
+export const getNotificationCount = (token) =>
+  apiRequest('/api/v1/notifications/count', { token });
+
+export const getUnreadNotifications = (token) =>
+  apiRequest('/api/v1/notifications/unread', { token });
+
+export const markAsRead = (token, notificationId) =>
+  apiRequest(`/api/v1/notifications/${notificationId}/read`, {
+    method: 'PUT',
+    token
+  });
+
+export const markAllAsRead = (token) =>
+  apiRequest('/api/v1/notifications/read-all', {
+    method: 'PUT',
+    token
+  });
+
+export const deleteNotification = (token, notificationId) =>
+  apiRequest(`/api/v1/notifications/${notificationId}`, {
+    method: 'DELETE',
+    token
+  });
+
+export const deleteAllNotifications = async (token) => {
+  const response = await fetch('/api/v1/notifications', {
+    method: 'DELETE',
+    headers: buildHeaders(token),
+  });
+
+  if (!response.ok) {
+    throw new Error('Failed to delete all notifications');
+  }
+
+  return response;
+};

@@ -1005,6 +1005,19 @@ const translations = {
     'myBorrowsPage.extend': 'Extend',
     'myBorrowsPage.return': 'Return',
     'myBorrowsPage.returnedFromUserPortal': 'Returned from user portal',
+
+    // Notifications
+    'notification.title': 'Notifications',
+    'notification.unread': 'unread',
+    'notification.markAllAsRead': 'Mark all as read',
+    'notification.loading': 'Loading notifications...',
+    'notification.noNotifications': 'No notifications',
+    'notification.justNow': 'Just now',
+    'notification.minutesAgo': 'minutes ago',
+    'notification.hoursAgo': 'hours ago',
+    'notification.daysAgo': 'days ago',
+    'notification.back': 'Back',
+    'notification.viewDetails': 'View Details',
   },
   vi: {
     // Navigation
@@ -2008,6 +2021,19 @@ const translations = {
     'myBorrowsPage.extend': 'Gia hạn',
     'myBorrowsPage.return': 'Trả',
     'myBorrowsPage.returnedFromUserPortal': 'Đã trả từ cổng người dùng',
+
+    // Notifications
+    'notification.title': 'Thông báo',
+    'notification.unread': 'chưa đọc',
+    'notification.markAllAsRead': 'Đánh dấu tất cả đã đọc',
+    'notification.loading': 'Đang tải thông báo...',
+    'notification.noNotifications': 'Không có thông báo',
+    'notification.justNow': 'Vừa xong',
+    'notification.minutesAgo': 'phút trước',
+    'notification.hoursAgo': 'giờ trước',
+    'notification.daysAgo': 'ngày trước',
+    'notification.back': 'Quay lại',
+    'notification.viewDetails': 'Xem chi tiết',
 
     // BorrowBookPage
     'borrowBookPage.title': 'Mượn Sách',
