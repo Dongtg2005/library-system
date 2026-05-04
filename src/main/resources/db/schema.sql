@@ -256,10 +256,28 @@ CREATE TABLE IF NOT EXISTS review_votes (
     id BIGSERIAL PRIMARY KEY,
     review_id BIGINT REFERENCES book_reviews(id) ON DELETE CASCADE,
     user_id BIGINT REFERENCES users(id) ON DELETE CASCADE,
-    helpful BOOLEAN NOT NULL,
+    vote_type VARCHAR(10) NOT NULL CHECK (vote_type IN ('LIKE', 'DISLIKE')),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     UNIQUE(review_id, user_id)
 );
+
+CREATE TABLE IF NOT EXISTS review_comments (
+    id BIGSERIAL PRIMARY KEY,
+    review_id BIGINT REFERENCES book_reviews(id) ON DELETE CASCADE,
+    user_id BIGINT REFERENCES users(id) ON DELETE CASCADE,
+    commenter_name VARCHAR(255) NOT NULL,
+    parent_id BIGINT REFERENCES review_comments(id) ON DELETE CASCADE,
+    content TEXT NOT NULL,
+    like_count INTEGER DEFAULT 0,
+    status VARCHAR(20) DEFAULT 'PUBLISHED' CHECK (status IN ('PUBLISHED', 'HIDDEN', 'DELETED')),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Indexes for performance
+CREATE INDEX IF NOT EXISTS idx_review_comments_review_id ON review_comments(review_id);
+CREATE INDEX IF NOT EXISTS idx_review_comments_parent_id ON review_comments(parent_id);
+CREATE INDEX IF NOT EXISTS idx_review_votes_review_id ON review_votes(review_id);
 
 -- ========================================
 -- 6. FAVORITES & WISHLIST

@@ -211,3 +211,55 @@ export const deleteAllNotifications = async (token) => {
 
   return response;
 };
+
+// Reviews API
+export const fetchBookReviews = (bookId, params = {}) =>
+  apiRequest(withQuery(`/api/v1/books/${bookId}/reviews`, params));
+
+export const fetchBookReviewsPopular = (bookId) =>
+  apiRequest(`/api/v1/books/${bookId}/reviews/popular`);
+
+export const fetchBookRatingSummary = (bookId) =>
+  apiRequest(`/api/v1/books/${bookId}/reviews/summary`);
+
+export const updateReview = (token, reviewId, payload) =>
+  apiRequest(`/api/v1/reviews/${reviewId}`, {
+    method: 'PUT',
+    token,
+    body: payload,
+  });
+
+export const deleteReview = (token, reviewId) =>
+  apiRequest(`/api/v1/reviews/${reviewId}`, {
+    method: 'DELETE',
+    token,
+  });
+
+export const voteReview = (token, payload) =>
+  apiRequest('/api/v1/reviews/vote', {
+    method: 'POST',
+    token,
+    body: payload,
+  });
+
+export const fetchReviewComments = (reviewId) =>
+  apiRequest(`/api/v1/reviews/${reviewId}/comments`);
+
+export const addComment = (token, payload) =>
+  apiRequest('/api/v1/reviews/comments', {
+    method: 'POST',
+    token,
+    body: payload,
+  });
+
+export const likeComment = (token, commentId) =>
+  apiRequest(`/api/v1/reviews/comments/${commentId}/like`, {
+    method: 'POST',
+    token,
+  });
+
+export const deleteComment = (token, commentId) =>
+  apiRequest(`/api/v1/reviews/comments/${commentId}`, {
+    method: 'DELETE',
+    token,
+  });

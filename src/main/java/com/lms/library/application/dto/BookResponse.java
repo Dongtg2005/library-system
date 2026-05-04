@@ -24,6 +24,8 @@ public class BookResponse {
     private Integer availableQty;
     private Book.BookStatus status;
     private String coverImageUrl;
+    private java.math.BigDecimal averageRating;
+    private Integer ratingCount;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
     
@@ -47,6 +49,8 @@ public class BookResponse {
                 .totalQuantity(book.getTotalQuantity())
                 .availableQty(book.getAvailableQty())
                 .status(book.getStatus())
+                .averageRating(book.getAverageRating())
+                .ratingCount(book.getRatingCount())
                 .createdAt(book.getCreatedAt())
                 .updatedAt(book.getUpdatedAt())
                 .build();

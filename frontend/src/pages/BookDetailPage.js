@@ -3,7 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import Button from '../components/Button';
 import BorrowConfirmModal from '../components/BorrowConfirmModal';
 import { useAuth } from '../context/AuthContext';
-import { createBorrow, fetchBookById, fetchReviews, addReview, createReservation, getReservationCount, checkBorrowStatus } from '../lib/api';
+import { createBorrow, fetchBookById, fetchReviews, addReview, createReservation, getReservationCount, checkBorrowStatus, voteReview, fetchReviewComments, addComment } from '../lib/api';
 import { useToast } from '../context/ToastContext';
 import { useTranslation } from '../context/LanguageContext';
 import {
@@ -22,8 +22,10 @@ import {
   ChatBubbleBottomCenterTextIcon,
   PaperAirplaneIcon,
   BellIcon,
+  HandThumbUpIcon,
+  HandThumbDownIcon,
 } from '@heroicons/react/24/outline';
-import { HeartIcon as HeartSolid, StarIcon as StarSolid } from '@heroicons/react/24/solid';
+import { HeartIcon as HeartSolid, StarIcon as StarSolid, HandThumbUpIcon as HandThumbUpSolid, HandThumbDownIcon as HandThumbDownSolid } from '@heroicons/react/24/solid';
 
 /* â”€â”€ Palette of gradient covers â”€â”€ */
 const COVER_GRADIENTS = [
@@ -93,24 +95,197 @@ const StatCard = ({ icon: Icon, label, value, highlight }) => (
   </div>
 );
 
-const ReviewItem = ({ review, noRatingsLabel, reviewsLabel }) => (
-  <div className="rounded-2xl border border-slate-100 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900/50">
-    <div className="flex items-center justify-between">
-      <div className="flex items-center gap-3">
-        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-slate-100 font-bold text-primary dark:bg-slate-800">
-          {review.reviewerName?.charAt(0) || 'U'}
+const CommentItem = ({ comment, onReply, token }) => {
+  const { t } = useTranslation();
+  return (
+    <div className="py-2 border-b last:border-0 border-slate-100 dark:border-slate-700">
+      <div className="flex items-center gap-2 mb-1">
+        <span className="font-semibold text-sm text-slate-900 dark:text-white">{comment.commenterName}</span>
+        <span className="text-xs text-slate-500">{new Date(comment.createdAt).toLocaleDateString()}</span>
+      </div>
+      <p className="text-sm text-slate-600 dark:text-slate-300">{comment.content}</p>
+      {comment.likeCount > 0 && (
+        <span className="text-xs text-slate-500 mt-1">{t('reviews.likeCount', { count: comment.likeCount })}</span>
+      )}
+    </div>
+  );
+};
+
+const ReviewItem = ({ review, token, onUpdate }) => {
+  const { t } = useTranslation();
+  const toast = useToast();
+  const [liked, setLiked] = useState(review.userVoteType === 'LIKE');
+  const [disliked, setDisliked] = useState(review.userVoteType === 'DISLIKE');
+  const [likeCount, setLikeCount] = useState(review.likeCount || 0);
+  const [dislikeCount, setDislikeCount] = useState(review.dislikeCount || 0);
+  const [showComments, setShowComments] = useState(false);
+  const [comments, setComments] = useState([]);
+  const [newComment, setNewComment] = useState('');
+  const [loadingComments, setLoadingComments] = useState(false);
+  const [submittingComment, setSubmittingComment] = useState(false);
+
+  const handleVote = async (voteType) => {
+    if (!token) return;
+    try {
+      await voteReview(token, { reviewId: review.id, voteType });
+      if (voteType === 'LIKE') {
+        if (liked) {
+          setLiked(false);
+          setLikeCount(c => c - 1);
+        } else {
+          setLiked(true);
+          setLikeCount(c => c + 1);
+          if (disliked) { setDisliked(false); setDislikeCount(c => c - 1); }
+        }
+      } else {
+        if (disliked) {
+          setDisliked(false);
+          setDislikeCount(c => c - 1);
+        } else {
+          setDisliked(true);
+          setDislikeCount(c => c + 1);
+          if (liked) { setLiked(false); setLikeCount(c => c - 1); }
+        }
+      }
+    } catch (err) {
+      console.error('Vote failed:', err);
+    }
+  };
+
+  const loadComments = async () => {
+    const willShow = !showComments;
+    
+    if (willShow) {
+      setLoadingComments(true);
+      try {
+        const data = await fetchReviewComments(review.id);
+        console.log('Loaded comments for review', review.id, ':', data);
+        setComments(Array.isArray(data) ? data : []);
+      } catch (err) {
+        console.error('Failed to load comments:', err);
+        setComments([]);
+      } finally {
+        setLoadingComments(false);
+      }
+    }
+    setShowComments(willShow);
+  };
+
+  const submitComment = async (e) => {
+    e.preventDefault();
+    if (!newComment.trim() || !token) return;
+    setSubmittingComment(true);
+    try {
+      await addComment(token, { reviewId: review.id, content: newComment });
+      setNewComment('');
+      toast?.addToast({ type: 'success', title: t('reviews.commentAdded') });
+      // Reload comments
+      const data = await fetchReviewComments(review.id);
+      setComments(data);
+      onUpdate?.();
+    } catch (err) {
+      console.error('Failed to add comment:', err);
+    } finally {
+      setSubmittingComment(false);
+    }
+  };
+
+  return (
+    <div className="rounded-2xl border border-slate-100 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900/50">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-slate-100 font-bold text-primary dark:bg-slate-800">
+            {(review.reviewerName || 'A').charAt(0).toUpperCase()}
+          </div>
+          <div>
+            <p className="text-sm font-bold text-slate-900 dark:text-white">{review.reviewerName}</p>
+            <p className="text-xs text-slate-500 dark:text-slate-400">{new Date(review.createdAt).toLocaleDateString()}</p>
+          </div>
         </div>
-        <div>
-          <p className="text-sm font-bold text-slate-900 dark:text-white">{review.reviewerName}</p>
-          <p className="text-xs text-slate-500 dark:text-slate-400">{new Date(review.createdAt).toLocaleDateString()}</p>
+        <div className="flex items-center gap-1">
+          {[1, 2, 3, 4, 5].map((i) =>
+            i <= review.rating ? (
+              <StarSolid key={i} className="h-4 w-4 text-amber-400" />
+            ) : (
+              <StarIcon key={i} className="h-4 w-4 text-slate-300" />
+            )
+          )}
         </div>
       </div>
-      <StarRating rating={review.rating} noRatingsLabel={noRatingsLabel} reviewsLabel={reviewsLabel} />
+      {review.title && <h4 className="mt-3 font-bold text-slate-900 dark:text-white">{review.title}</h4>}
+      <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">{review.content}</p>
+      
+      {/* Vote & Reply buttons */}
+      <div className="mt-3 flex items-center gap-4 flex-wrap">
+        <button
+          onClick={() => handleVote('LIKE')}
+          className={`flex items-center gap-1 text-sm transition-colors ${liked ? 'text-blue-600' : 'text-slate-500 hover:text-blue-600'}`}
+        >
+          {liked ? <HandThumbUpSolid className="h-4 w-4" /> : <HandThumbUpIcon className="h-4 w-4" />}
+          {t('reviews.helpful')} ({likeCount})
+        </button>
+        <button
+          onClick={() => handleVote('DISLIKE')}
+          className={`flex items-center gap-1 text-sm transition-colors ${disliked ? 'text-red-600' : 'text-slate-500 hover:text-red-600'}`}
+        >
+          {disliked ? <HandThumbDownSolid className="h-4 w-4" /> : <HandThumbDownIcon className="h-4 w-4" />}
+          {t('reviews.notHelpful')} ({dislikeCount})
+        </button>
+        
+        {/* Comments/Reply button */}
+        <button
+          onClick={loadComments}
+          className={`flex items-center gap-1 text-sm ${token ? 'text-blue-600 hover:text-blue-700' : 'text-slate-500 hover:text-blue-600'}`}
+        >
+          <ChatBubbleBottomCenterTextIcon className="h-4 w-4" />
+          {review.commentCount > 0 ? t('reviews.commentCount', { count: review.commentCount }) : t('reviews.reply')}
+        </button>
+      </div>
+
+      {/* Comments section */}
+      {showComments && (
+        <div className="mt-4 pt-4 border-t border-slate-100 dark:border-slate-700">
+          {loadingComments ? (
+            <p className="text-sm text-slate-500">{t('common.loading')}</p>
+          ) : (
+            <>
+              {/* List comments */}
+              {comments.length > 0 ? (
+                <div className="space-y-2 mb-4 pl-2 border-l-2 border-slate-200 dark:border-slate-600">
+                  {comments.map((comment) => (
+                    <CommentItem key={comment.id} comment={comment} token={token} />
+                  ))}
+                </div>
+              ) : (
+                <p className="text-sm text-slate-500 mb-4">
+                  {review.commentCount > 0 
+                    ? t('reviews.loading') 
+                    : t('reviews.noReviews')}
+                </p>
+              )}
+              
+              {/* Comment form */}
+              {token && (
+                <form onSubmit={submitComment} className="flex gap-2">
+                  <input
+                    type="text"
+                    value={newComment}
+                    onChange={(e) => setNewComment(e.target.value)}
+                    placeholder={t('reviews.writeComment')}
+                    className="flex-1 px-3 py-2 text-sm rounded-xl border-none bg-slate-50 dark:bg-slate-800 dark:text-white shadow-sm"
+                  />
+                  <Button type="submit" size="sm" disabled={!newComment.trim() || submittingComment}>
+                    {submittingComment ? t('common.loading') : t('reviews.submitComment')}
+                  </Button>
+                </form>
+              )}
+            </>
+          )}
+        </div>
+      )}
     </div>
-    {review.title && <h4 className="mt-3 font-bold text-slate-900 dark:text-white">{review.title}</h4>}
-    <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">{review.content}</p>
-  </div>
-);
+  );
+};
 
 const BookDetailPage = () => {
   const { id } = useParams();
@@ -130,9 +305,7 @@ const BookDetailPage = () => {
   const [reservationCount, setReservationCount] = useState(0);
   const [reserving, setReserving] = useState(false);
   const [userBorrowStatus, setUserBorrowStatus] = useState(null); // null = not borrowed, object = borrowed
-
-  // Review Form state
-  const [newRating, setNewRating] = useState(5);
+  const [newRating, setNewRating] = useState(0);
   const [reviewTitle, setReviewTitle] = useState('');
   const [reviewContent, setReviewContent] = useState('');
   const [submittingReview, setSubmittingReview] = useState(false);
@@ -141,12 +314,16 @@ const BookDetailPage = () => {
     setLoading(true);
     setError('');
     try {
-      const [bookData, reviewData] = await Promise.all([
-        fetchBookById(id),
-        fetchReviews(id)
-      ]);
+      const bookData = await fetchBookById(id);
       setBook(bookData);
-      setReviews(reviewData.content || []);
+      
+      // Load reviews separately
+      try {
+        const reviewData = await fetchReviews(id);
+        setReviews(reviewData.content || []);
+      } catch (err) {
+        console.error('Failed to load reviews:', err);
+      }
       
       // Load reservation count and borrow status if authenticated
       if (isAuthenticated && token) {
@@ -202,7 +379,7 @@ const BookDetailPage = () => {
 
   const handleReserve = async () => {
     if (!isAuthenticated || !token) { navigate('/login'); return; }
-    setReserving(true);
+    setBorrowing(true);
     try {
       await createReservation(token, { bookId: book.id, priority: 1 });
       toast?.addToast({ type: 'success', title: t('bookDetail.reserved'), message: t('bookDetail.reservedMessage') });
@@ -210,7 +387,7 @@ const BookDetailPage = () => {
     } catch (err) {
       toast?.addToast({ type: 'error', title: t('bookDetail.reservationFailed'), message: err.message });
     } finally {
-      setReserving(false);
+      setBorrowing(false);
     }
   };
 
@@ -222,8 +399,13 @@ const BookDetailPage = () => {
     toast?.addToast({ type: 'success', title: favorite ? t('bookDetail.removedFromFavorites') : t('bookDetail.addedToFavorites') });
   };
 
+  // Submit review
   const submitReview = async (e) => {
     e.preventDefault();
+    if (!newRating) {
+      toast?.addToast({ type: 'warning', title: t('bookDetail.reviewValidationFailed'), message: t('bookDetail.reviewValidationMessage') });
+      return;
+    }
     if (!token) return;
     setSubmittingReview(true);
     try {
@@ -235,6 +417,7 @@ const BookDetailPage = () => {
       toast?.addToast({ type: 'success', title: t('bookDetail.reviewSubmitted'), message: t('bookDetail.reviewSubmittedMessage') });
       setReviewTitle('');
       setReviewContent('');
+      setNewRating(0);
       loadData(); // Reload to show new review and update average rating
     } catch (err) {
       toast?.addToast({ type: 'error', title: t('bookDetail.failedToSubmit'), message: err.message });
@@ -361,8 +544,8 @@ const BookDetailPage = () => {
                   </button>
                 ) : (
                   <div className="space-y-3">
-                    <button onClick={handleReserve} disabled={reserving} className={`w-full rounded-2xl py-4 text-lg font-black transition-all bg-amber-500 text-white shadow-xl shadow-amber-500/20 hover:scale-[1.02] ${reserving ? 'opacity-50' : ''}`}>
-                      {reserving ? t('bookDetail.processing') : <><BellIcon className="h-5 w-5 inline mr-2" /> {t('bookDetail.reserveBook')}</>}
+                    <button onClick={handleReserve} disabled={borrowing} className={`w-full rounded-2xl py-4 text-lg font-black transition-all bg-amber-500 text-white shadow-xl shadow-amber-500/20 hover:scale-[1.02] ${borrowing ? 'opacity-50' : ''}`}>
+                      {borrowing ? t('bookDetail.processing') : <><BellIcon className="h-5 w-5 inline mr-2" /> {t('bookDetail.reserveBook')}</>}
                     </button>
                     {reservationCount > 0 && (
                       <p className="text-center text-sm text-slate-500 dark:text-slate-400">
@@ -430,8 +613,8 @@ const BookDetailPage = () => {
                 <ReviewItem
                   key={r.id}
                   review={r}
-                  noRatingsLabel={t('bookDetail.noRatings')}
-                  reviewsLabel={t('bookDetail.reviews')}
+                  token={token}
+                  onUpdate={loadData}
                 />
               ))}
             </div>

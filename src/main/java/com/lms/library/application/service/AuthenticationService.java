@@ -107,4 +107,17 @@ public class AuthenticationService {
         String email = SecurityContextHolder.getContext().getAuthentication().getName();
         return findByEmail(email).getId();
     }
+
+    public Long getCurrentUserIdOrNull() {
+        try {
+            String email = SecurityContextHolder.getContext().getAuthentication().getName();
+            if (email == null || email.isEmpty() || "anonymousUser".equals(email)) {
+                return null;
+            }
+            User user = userRepository.findByEmail(email).orElse(null);
+            return user != null ? user.getId() : null;
+        } catch (Exception e) {
+            return null;
+        }
+    }
 }

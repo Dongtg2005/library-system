@@ -42,6 +42,8 @@ public class SecurityConfig {
                 // Book & Category browsing: public read access (GET only)
                 .requestMatchers(HttpMethod.GET, "/api/v1/books/**").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/v1/categories/**").permitAll()
+                // Review comments: public read access (GET only)
+                .requestMatchers(HttpMethod.GET, "/api/v1/reviews/*/comments").permitAll()
                 // Auth endpoints that require authentication
                 .requestMatchers("/api/v1/auth/me", "/api/v1/auth/logout").authenticated()
                 // All other endpoints require authentication

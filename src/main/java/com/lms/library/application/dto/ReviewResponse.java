@@ -7,6 +7,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Data
 @NoArgsConstructor
@@ -20,7 +21,13 @@ public class ReviewResponse {
     private String title;
     private String content;
     private Integer helpfulCount;
+    private Long likeCount;
+    private Long dislikeCount;
+    private Long commentCount;
+    private String userVoteType;
     private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
+    private List<ReviewCommentResponse> comments;
 
     public static ReviewResponse from(BookReview review) {
         return ReviewResponse.builder()
@@ -32,6 +39,7 @@ public class ReviewResponse {
                 .content(review.getContent())
                 .helpfulCount(review.getHelpfulCount())
                 .createdAt(review.getCreatedAt())
+                .updatedAt(review.getUpdatedAt())
                 .build();
     }
 }
