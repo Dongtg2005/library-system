@@ -6,6 +6,7 @@ import { useAuth } from '../context/AuthContext';
 import { createBorrow, fetchBookById, fetchReviews, addReview, createReservation, getReservationCount, checkBorrowStatus } from '../lib/api';
 import { useToast } from '../context/ToastContext';
 import { useTranslation } from '../context/LanguageContext';
+import { formatCategoryList } from '../lib/categoryLabels';
 import {
   ArrowLeftIcon,
   BookOpenIcon,
@@ -117,7 +118,7 @@ const BookDetailPage = () => {
   const navigate = useNavigate();
   const { isAuthenticated, token, user } = useAuth();
   const toast = useToast();
-  const { t } = useTranslation();
+  const { t, language } = useTranslation();
 
   const [book, setBook] = useState(null);
   const [reviews, setReviews] = useState([]);
@@ -268,7 +269,9 @@ const BookDetailPage = () => {
 
   const gradient = pickGradient(book.title);
   const showCover = book.coverImageUrl && !imgError;
-  const categoryTags = book.categories?.map(c => typeof c === 'string' ? c : c.name) || [book.category].filter(Boolean);
+  const categoryTags = formatCategoryList(book.categories?.length ? book.categories : [book.category].filter(Boolean), language)
+    .split(', ')
+    .filter(Boolean);
 
   return (
     <>

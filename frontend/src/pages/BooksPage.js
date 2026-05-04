@@ -3,6 +3,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { fetchBooks, searchBooks, autocompleteBooks } from '../lib/api';
 import useDebounce from '../hooks/useDebounce';
 import { useTranslation } from '../context/LanguageContext';
+import { formatCategoryName } from '../lib/categoryLabels';
 
 const statusColors = {
   AVAILABLE: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-200',
@@ -14,7 +15,7 @@ const statusColors = {
 const BooksPage = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const { t } = useTranslation();
+  const { t, language } = useTranslation();
 
   const [books, setBooks] = useState([]);
   const [page, setPage] = useState(0);
@@ -139,8 +140,8 @@ const BooksPage = () => {
           book.categories.forEach(c => set.add(c.name));
       }
     });
-    return Array.from(set);
-  }, [books]);
+    return Array.from(set).map((category) => ({ value: category, label: formatCategoryName(category, language) }));
+  }, [books, language]);
 
   const authors = useMemo(() => {
     const set = new Set();
@@ -168,7 +169,7 @@ const BooksPage = () => {
             >
               <option value="">{t('booksPage.allCategories')}</option>
               {categories.map((category) => (
-                <option key={category} value={category}>{category}</option>
+                <option key={category.value} value={category.value}>{category.label}</option>
               ))}
             </select>
           </label>
