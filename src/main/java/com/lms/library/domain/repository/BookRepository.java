@@ -9,6 +9,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -33,4 +34,7 @@ public interface BookRepository extends JpaRepository<Book, UUID>, JpaSpecificat
                            @Param("category") String category,
                            @Param("status") Book.BookStatus status,
                            Pageable pageable);
+
+       @Query("SELECT b FROM Book b WHERE b.status <> com.lms.library.domain.entity.Book$BookStatus.ARCHIVED ORDER BY COALESCE(b.borrowedQuantity, 0) DESC, b.updatedAt DESC")
+       List<Book> findTopBorrowedBooks(Pageable pageable);
 }

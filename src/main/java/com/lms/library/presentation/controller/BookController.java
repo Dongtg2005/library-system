@@ -73,6 +73,14 @@ public class BookController {
         List<BookResponse> response = bookSearchService.autocomplete(q);
         return ResponseEntity.ok(response);
     }
+
+    @GetMapping("/top-borrowed")
+    public ResponseEntity<List<BookResponse>> getTopBorrowedBooks(
+            @RequestParam(name = "limit", defaultValue = "3") Integer limit) {
+        log.info("Getting top borrowed books with limit: {}", limit);
+        List<BookResponse> response = bookManagementService.getTopBorrowedBooks(limit);
+        return ResponseEntity.ok(response);
+    }
     
     @GetMapping("/{id}")
     public ResponseEntity<BookResponse> getBookById(@PathVariable UUID id) {

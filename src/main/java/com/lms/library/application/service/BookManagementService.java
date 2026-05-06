@@ -8,6 +8,7 @@ import com.lms.library.domain.exception.DuplicateResourceException;
 import com.lms.library.domain.exception.ResourceNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -15,6 +16,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 import java.time.LocalDateTime;
 
+import java.util.List;
 import java.util.UUID;
 
 @Service
@@ -95,6 +97,17 @@ public class BookManagementService {
                 ));
         
         return BookResponse.from(book);
+    }
+
+    @Transactional(readOnly = true)
+    public List<BookResponse> getTopBorrowedBooks(int limit) {
+        int safeLimit = Math.max(1, Math.min(limit, 10));
+        log.info("Getting top borrowed books with limit: {}", safeLimit);
+
+        return bookRepository.findTopBorrowedBooks(PageRequest.of(0, safeLimit))
+                .stream()
+                .map(BookResponse::from)
+                .toList();
     }
     
     @Transactional

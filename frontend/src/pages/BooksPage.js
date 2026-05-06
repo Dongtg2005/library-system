@@ -1,9 +1,10 @@
 import React, { useEffect, useMemo, useState, useRef } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { fetchBooks, searchBooks, autocompleteBooks } from '../lib/api';
+import { fetchBooks, searchBooks, autocompleteBooks, fetchTopBorrowedBooks } from '../lib/api';
 import useDebounce from '../hooks/useDebounce';
 import { useTranslation } from '../context/LanguageContext';
 import { formatCategoryName } from '../lib/categoryLabels';
+import { buildTopRankMap, getBookBadgeText } from '../lib/bookHotTag';
 
 const statusColors = {
   AVAILABLE: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-200',
@@ -18,6 +19,7 @@ const BooksPage = () => {
   const { t, language } = useTranslation();
 
   const [books, setBooks] = useState([]);
+  const [topRankMap, setTopRankMap] = useState({});
   const [page, setPage] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -131,6 +133,25 @@ const BooksPage = () => {
       mounted = false;
     };
   }, [page, debouncedSearchTerm, categoryFilter, authorFilter, statusFilter]);
+
+  useEffect(() => {
+    let mounted = true;
+
+    const loadTopBorrowed = async () => {
+      try {
+        const topBooks = await fetchTopBorrowedBooks({ limit: 3 });
+        if (!mounted) return;
+        setTopRankMap(buildTopRankMap(Array.isArray(topBooks) ? topBooks : []));
+      } catch {
+        if (mounted) setTopRankMap({});
+      }
+    };
+
+    loadTopBorrowed();
+    return () => {
+      mounted = false;
+    };
+  }, []);
 
   const categories = useMemo(() => {
     const set = new Set();
@@ -257,9 +278,15 @@ const BooksPage = () => {
             <div className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
               {books.map((book) => {
                 const categoryNames = book.categories?.map(c => c.name).join(', ') || book.category || t('book.label.uncategorized');
+                const badgeText = getBookBadgeText(book, topRankMap);
                 return (
                 <article key={book.id} className="group relative overflow-hidden rounded-3xl border border-slate-200 bg-white p-4 transition-all hover:shadow-xl dark:border-slate-800 dark:bg-slate-950/90">
                   <div className="relative mb-4 aspect-[2/3] overflow-hidden rounded-2xl bg-slate-100 dark:bg-slate-900">
+                    {badgeText && (
+                      <span className="absolute right-3 top-3 z-10 rounded-full bg-rose-500 px-2.5 py-1 text-[11px] font-black uppercase tracking-wide text-white shadow-lg shadow-rose-500/30">
+                        {badgeText}
+                      </span>
+                    )}
                     {book.coverImageUrl ? (
                       <img 
                         src={book.coverImageUrl} 

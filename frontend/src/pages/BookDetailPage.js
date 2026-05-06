@@ -3,10 +3,11 @@ import { useNavigate, useParams } from 'react-router-dom';
 import Button from '../components/Button';
 import BorrowConfirmModal from '../components/BorrowConfirmModal';
 import { useAuth } from '../context/AuthContext';
-import { createBorrow, fetchBookById, fetchReviews, addReview, createReservation, getReservationCount, checkBorrowStatus, voteReview, fetchReviewComments, addComment } from '../lib/api';
+import { createBorrow, fetchBookById, fetchReviews, addReview, createReservation, getReservationCount, checkBorrowStatus, voteReview, fetchReviewComments, addComment, fetchTopBorrowedBooks } from '../lib/api';
 import { useToast } from '../context/ToastContext';
 import { useTranslation } from '../context/LanguageContext';
 import { formatCategoryList } from '../lib/categoryLabels';
+import { buildTopRankMap, getBookBadgeText } from '../lib/bookHotTag';
 import {
   ArrowLeftIcon,
   BookOpenIcon,
@@ -301,6 +302,7 @@ const BookDetailPage = () => {
   const [error, setError] = useState('');
   const [borrowing, setBorrowing] = useState(false);
   const [favorite, setFavorite] = useState(false);
+  const [topRankMap, setTopRankMap] = useState({});
   const [showModal, setShowModal] = useState(false);
   const [imgError, setImgError] = useState(false);
   const [reservationCount, setReservationCount] = useState(0);
@@ -315,8 +317,12 @@ const BookDetailPage = () => {
     setLoading(true);
     setError('');
     try {
-      const bookData = await fetchBookById(id);
+      const [bookData, topBooks] = await Promise.all([
+        fetchBookById(id),
+        fetchTopBorrowedBooks({ limit: 3 }),
+      ]);
       setBook(bookData);
+      setTopRankMap(buildTopRankMap(Array.isArray(topBooks) ? topBooks : []));
       
       // Load reviews separately
       try {
@@ -340,6 +346,7 @@ const BookDetailPage = () => {
         }
       }
     } catch (err) {
+      setTopRankMap({});
       setError(err.message || t('bookDetail.failedLoadBook'));
     } finally {
       setLoading(false);
@@ -455,6 +462,7 @@ const BookDetailPage = () => {
   const categoryTags = formatCategoryList(book.categories?.length ? book.categories : [book.category].filter(Boolean), language)
     .split(', ')
     .filter(Boolean);
+  const badgeText = getBookBadgeText(book, topRankMap);
 
   return (
     <>
@@ -483,6 +491,11 @@ const BookDetailPage = () => {
                 unavailableLabel={t('bookDetail.unavailable')}
               />
             </div>
+            {badgeText && (
+              <span className="absolute right-4 top-4 rounded-full bg-rose-500 px-3 py-1.5 text-xs font-black uppercase tracking-wide text-white shadow-lg shadow-rose-500/30">
+                {badgeText}
+              </span>
+            )}
           </div>
 
           <div className="flex gap-3">

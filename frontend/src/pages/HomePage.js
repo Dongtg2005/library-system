@@ -4,13 +4,15 @@ import { ArrowRightIcon, MagnifyingGlassIcon, SparklesIcon } from '@heroicons/re
 import Button from '../components/Button';
 import { useAuth } from '../context/AuthContext';
 import { useTranslation } from '../context/LanguageContext';
-import { fetchBooks, fetchBorrowHistory } from '../lib/api';
+import { fetchBooks, fetchBorrowHistory, fetchTopBorrowedBooks } from '../lib/api';
+import { buildTopRankMap, getBookBadgeText } from '../lib/bookHotTag';
 
 const HomePage = () => {
   const { isAuthenticated, token, user } = useAuth();
   const { t } = useTranslation();
   const [books, setBooks] = useState([]);
   const [borrowHistory, setBorrowHistory] = useState([]);
+  const [topRankMap, setTopRankMap] = useState({});
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
 
@@ -20,12 +22,19 @@ const HomePage = () => {
     const load = async () => {
       setLoading(true);
       try {
-        const booksData = await fetchBooks({ page: 0, size: 12 });
+        const [booksData, topBooks] = await Promise.all([
+          fetchBooks({ page: 0, size: 12 }),
+          fetchTopBorrowedBooks({ limit: 3 }),
+        ]);
         if (mounted) {
           setBooks(booksData?.content || []);
+          setTopRankMap(buildTopRankMap(Array.isArray(topBooks) ? topBooks : []));
         }
       } catch {
-        if (mounted) setBooks([]);
+        if (mounted) {
+          setBooks([]);
+          setTopRankMap({});
+        }
       }
 
       if (isAuthenticated && token) {
@@ -153,7 +162,12 @@ const HomePage = () => {
           <div className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
             {featured.map((book) => (
               <article key={book.id} className="rounded-[1.5rem] border border-slate-200 bg-white p-5 transition hover:-translate-y-1 hover:shadow-lg dark:border-slate-800 dark:bg-slate-950/90">
-                <div className="rounded-[1.25rem] bg-[linear-gradient(145deg,#0f172a,#334155_55%,#fb923c_140%)] p-5 text-white">
+                <div className="relative rounded-[1.25rem] bg-[linear-gradient(145deg,#0f172a,#334155_55%,#fb923c_140%)] p-5 text-white">
+                  {getBookBadgeText(book, topRankMap) && (
+                    <span className="absolute right-3 top-3 rounded-full bg-rose-500 px-2.5 py-1 text-[11px] font-black uppercase tracking-wide text-white shadow-lg shadow-rose-500/30">
+                      {getBookBadgeText(book, topRankMap)}
+                    </span>
+                  )}
                   <p className="text-xs uppercase tracking-[0.25em] text-white/70">{book.category || t('home.general')}</p>
                   <p className="mt-2 truncate text-lg font-bold">{book.title}</p>
                 </div>

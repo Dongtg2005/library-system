@@ -22,6 +22,7 @@ public class BookResponse {
     private java.util.List<CategoryResponse> categories;
     private Integer totalQuantity;
     private Integer availableQty;
+    private Integer borrowedQuantity;
     private Book.BookStatus status;
     private String coverImageUrl;
     private java.math.BigDecimal averageRating;
@@ -48,6 +49,7 @@ public class BookResponse {
                 .coverImageUrl(book.getCoverImageUrl())
                 .totalQuantity(book.getTotalQuantity())
                 .availableQty(book.getAvailableQty())
+                .borrowedQuantity(book.getBorrowedQuantity())
                 .status(book.getStatus())
                 .averageRating(book.getAverageRating())
                 .ratingCount(book.getRatingCount())
