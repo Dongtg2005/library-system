@@ -50,19 +50,25 @@ const BorrowManagement = () => {
   }, [token]);
 
   const filtered = useMemo(() => {
-    return rows.filter((row) => {
-      const normalized = row.status.toLowerCase();
-      const matchesSearch = [row.user, row.book, row.status].some((value) =>
-        String(value || '').toLowerCase().includes(query.toLowerCase())
-      );
-      const matchesFilter =
-        filter === 'All' ||
-        (filter === 'Pending' && normalized.includes('pending')) ||
-        (filter === 'Borrowed' && (normalized === 'active')) ||
-        (filter === 'Returned' && normalized.includes('return')) ||
-        (filter === 'Overdue' && normalized.includes('overdue'));
-      return matchesSearch && matchesFilter;
-    });
+    return rows
+      .filter((row) => {
+        const normalized = row.status.toLowerCase();
+        const matchesSearch = [row.user, row.book, row.status].some((value) =>
+          String(value || '').toLowerCase().includes(query.toLowerCase())
+        );
+        const matchesFilter =
+          filter === 'All' ||
+          (filter === 'Pending' && normalized.includes('pending')) ||
+          (filter === 'Borrowed' && (normalized === 'active')) ||
+          (filter === 'Returned' && normalized.includes('return')) ||
+          (filter === 'Overdue' && normalized.includes('overdue'));
+        return matchesSearch && matchesFilter;
+      })
+      .sort((a, b) => {
+        const dateA = new Date(a.borrowDate || 0);
+        const dateB = new Date(b.borrowDate || 0);
+        return dateB - dateA; // Mới nhất lên đầu
+      });
   }, [query, filter, rows]);
 
   const handleApprove = async (id) => {

@@ -55,7 +55,13 @@ const MyBorrowsPage = () => {
     load();
   }, [load]);
 
-  const list = records.filter((item) => tabs.find((tab) => tab.key === activeTab)?.statuses.includes(item.borrowStatus));
+  const list = records
+    .filter((item) => tabs.find((tab) => tab.key === activeTab)?.statuses.includes(item.borrowStatus))
+    .sort((a, b) => {
+      const dateA = new Date(a.borrowDate || 0);
+      const dateB = new Date(b.borrowDate || 0);
+      return dateB - dateA; // Mới nhất lên đầu
+    });
 
   const onExtend = async (borrowId) => {
     if (!token) return;
