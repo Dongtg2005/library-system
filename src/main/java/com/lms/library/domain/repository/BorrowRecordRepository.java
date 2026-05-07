@@ -25,6 +25,11 @@ public interface BorrowRecordRepository extends JpaRepository<BorrowRecord, UUID
 
     int countByMemberIdAndBorrowStatusIn(Long memberId, Collection<BorrowRecord.BorrowStatus> borrowStatus);
 
+    int countByMemberIdAndCreatedAtBetweenAndBorrowStatusIn(Long memberId,
+                                                            java.time.LocalDateTime start,
+                                                            java.time.LocalDateTime end,
+                                                            Collection<BorrowRecord.BorrowStatus> statuses);
+
     List<BorrowRecord> findByBookId(UUID bookId);
 
     @Query("SELECT br FROM BorrowRecord br WHERE br.borrowStatus = 'ACTIVE' AND br.dueDate < CURRENT_DATE")

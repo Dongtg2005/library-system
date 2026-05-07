@@ -3,7 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import Button from '../components/Button';
 import BorrowConfirmModal from '../components/BorrowConfirmModal';
 import { useAuth } from '../context/AuthContext';
-import { createBorrow, fetchBookById, fetchReviews, addReview, createReservation, getReservationCount, checkBorrowStatus, voteReview, fetchReviewComments, addComment, fetchTopBorrowedBooks } from '../lib/api';
+import { createBorrow, fetchBookById, fetchReviews, addReview, createReservation, getReservationCount, checkBorrowStatus, fetchBorrowHistory, voteReview, fetchReviewComments, addComment, fetchTopBorrowedBooks } from '../lib/api';
 import { useToast } from '../context/ToastContext';
 import { useTranslation } from '../context/LanguageContext';
 import { formatCategoryList } from '../lib/categoryLabels';
@@ -308,6 +308,7 @@ const BookDetailPage = () => {
   const [reservationCount, setReservationCount] = useState(0);
   const [reserving, setReserving] = useState(false);
   const [userBorrowStatus, setUserBorrowStatus] = useState(null); // null = not borrowed, object = borrowed
+  const [recentBorrowCount, setRecentBorrowCount] = useState(0);
   const [newRating, setNewRating] = useState(0);
   const [reviewTitle, setReviewTitle] = useState('');
   const [reviewContent, setReviewContent] = useState('');
@@ -332,15 +333,31 @@ const BookDetailPage = () => {
         console.error('Failed to load reviews:', err);
       }
       
-      // Load reservation count and borrow status if authenticated
+      // Load reservation count, borrow status and recent borrow count if authenticated
       if (isAuthenticated && token) {
         try {
-          const [count, borrowStatus] = await Promise.all([
+          const [count, borrowStatus, borrowHistory] = await Promise.all([
             getReservationCount(token, id),
-            checkBorrowStatus(token, id)
+            checkBorrowStatus(token, id),
+            fetchBorrowHistory(token)
           ]);
           setReservationCount(count);
           setUserBorrowStatus(borrowStatus || null);
+
+          // Compute recent borrows in the last 14 days (policy defaults)
+          try {
+            const windowDays = 14;
+            const cutoff = Date.now() - (windowDays * 24 * 60 * 60 * 1000);
+            const recent = Array.isArray(borrowHistory)
+              ? borrowHistory.filter(item => {
+                  const created = new Date(item.createdAt || item.borrowDate || item.borrowTime).getTime();
+                  return !isNaN(created) && created >= cutoff;
+                }).length
+              : 0;
+            setRecentBorrowCount(recent);
+          } catch (e) {
+            setRecentBorrowCount(0);
+          }
         } catch (err) {
           console.error('Failed to load reservation count or borrow status:', err);
         }
@@ -368,6 +385,12 @@ const BookDetailPage = () => {
 
   const handleBorrow = () => {
     if (!isAuthenticated || !token) { navigate('/login'); return; }
+    // Disable if user reached recent borrow limit (default 5 in 14 days)
+    const maxAllowed = 5;
+    if (recentBorrowCount >= maxAllowed) {
+      toast?.addToast({ type: 'error', title: t('bookDetail.borrowLimitReachedTitle'), message: t('bookDetail.borrowLimitReachedMessage', { count: recentBorrowCount, max: maxAllowed, days: 14 }) });
+      return;
+    }
     setShowModal(true);
   };
 
@@ -379,7 +402,14 @@ const BookDetailPage = () => {
       toast?.addToast({ type: 'success', title: t('bookDetail.bookReserved'), message: t('bookDetail.bookReservedMessage') });
       loadData(); // Reload to update availability
     } catch (err) {
-      toast?.addToast({ type: 'error', title: t('bookDetail.borrowFailed'), message: err.message });
+      const isOverLimit = err?.code === 'OVER_BORROW_LIMIT';
+      toast?.addToast({
+        type: 'error',
+        title: isOverLimit ? t('bookDetail.borrowLimitReachedTitle') : t('bookDetail.borrowFailed'),
+        message: isOverLimit
+          ? t('bookDetail.borrowLimitReachedMessage', { count: recentBorrowCount, max: 5, days: 14 })
+          : err.message,
+      });
     } finally {
       setBorrowing(false);
     }
@@ -555,9 +585,16 @@ const BookDetailPage = () => {
                     </p>
                   </div>
                 ) : isAvailable ? (
-                  <button onClick={handleBorrow} disabled={borrowing} className={`w-full rounded-2xl py-4 text-lg font-black transition-all bg-primary text-white shadow-xl shadow-primary/20 hover:scale-[1.02] ${borrowing ? 'opacity-50' : ''}`}>
-                    {borrowing ? t('bookDetail.processing') : t('bookDetail.borrowNow')}
-                  </button>
+                  <>
+                    {recentBorrowCount >= 5 && (
+                      <p className="mb-3 text-center text-sm text-rose-600 dark:text-rose-400">
+                        {t('bookDetail.borrowLimitReachedMessage', { count: recentBorrowCount, max: 5, days: 14 })}
+                      </p>
+                    )}
+                    <button onClick={handleBorrow} disabled={borrowing || recentBorrowCount >= 5} className={`w-full rounded-2xl py-4 text-lg font-black transition-all bg-primary text-white shadow-xl shadow-primary/20 hover:scale-[1.02] ${(borrowing || recentBorrowCount >= 5) ? 'opacity-50' : ''}`}>
+                      {borrowing ? t('bookDetail.processing') : t('bookDetail.borrowNow')}
+                    </button>
+                  </>
                 ) : (
                   <div className="space-y-3">
                     <button onClick={handleReserve} disabled={borrowing} className={`w-full rounded-2xl py-4 text-lg font-black transition-all bg-amber-500 text-white shadow-xl shadow-amber-500/20 hover:scale-[1.02] ${borrowing ? 'opacity-50' : ''}`}>

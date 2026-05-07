@@ -91,13 +91,27 @@ public class BorrowManagementService {
                     userProfile.getOutstandingFines()));
         }
 
-        // 3. Check borrow limit
-        int currentBorrows = borrowRecordRepository.countByMemberIdAndBorrowStatusIn(
-                memberId, List.of(BorrowRecord.BorrowStatus.ACTIVE, BorrowRecord.BorrowStatus.PENDING_APPROVAL));
-        if (!policy.canBorrowMoreBooks(currentBorrows)) {
+        // 3. Check borrow limit within policy window (e.g., max 5 in 14 days)
+        java.time.LocalDateTime currentDateTime = java.time.LocalDateTime.now();
+        java.time.LocalDateTime windowStart = currentDateTime.minusDays(policy.getLoanPeriodDays());
+
+        int recentBorrows = borrowRecordRepository.countByMemberIdAndCreatedAtBetweenAndBorrowStatusIn(
+            memberId,
+            windowStart,
+            currentDateTime,
+            List.of(
+                BorrowRecord.BorrowStatus.ACTIVE,
+                BorrowRecord.BorrowStatus.PENDING_APPROVAL,
+                BorrowRecord.BorrowStatus.RETURNED,
+                BorrowRecord.BorrowStatus.OVERDUE
+            )
+        );
+
+        if (recentBorrows >= policy.getMaxBooksAllowed()) {
             throw new BorrowLimitExceededException(
-                    String.format("You have reached the borrow limit. Current: %d, Maximum allowed: %d",
-                                  currentBorrows, policy.getMaxBooksAllowed()));
+                String.format("Bạn đã mượn %d cuốn trong %d ngày qua. Giới hạn là %d cuốn.",
+                    recentBorrows, policy.getLoanPeriodDays(), policy.getMaxBooksAllowed())
+            );
         }
 
         // 4. Check book availability

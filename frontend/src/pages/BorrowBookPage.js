@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import Button from '../components/Button';
 import { useAuth } from '../context/AuthContext';
-import { createBorrow, fetchBookById, checkBorrowStatus } from '../lib/api';
+import { createBorrow, fetchBookById, checkBorrowStatus, fetchBorrowHistory } from '../lib/api';
 import { useToast } from '../context/ToastContext';
 import { useTranslation } from '../context/LanguageContext';
 
@@ -19,6 +19,7 @@ const BorrowBookPage = () => {
   const [submitting, setSubmitting] = useState(false);
   const [borrowStatus, setBorrowStatus] = useState(null);
   const [checkingStatus, setCheckingStatus] = useState(false);
+  const [recentBorrowCount, setRecentBorrowCount] = useState(0);
 
   useEffect(() => {
     let mounted = true;
@@ -27,13 +28,25 @@ const BorrowBookPage = () => {
       setLoading(true);
       setCheckingStatus(true);
       try {
-        const [data, status] = await Promise.all([
+        const [data, status, history] = await Promise.all([
           fetchBookById(bookId),
-          token ? checkBorrowStatus(token, bookId) : Promise.resolve(null)
+          token ? checkBorrowStatus(token, bookId) : Promise.resolve(null),
+          token ? fetchBorrowHistory(token) : Promise.resolve([])
         ]);
         if (mounted) {
           setBook(data);
           setBorrowStatus(status);
+          try {
+            const windowDays = 14;
+            const cutoff = Date.now() - (windowDays * 24 * 60 * 60 * 1000);
+            const recent = Array.isArray(history) ? history.filter(item => {
+              const created = new Date(item.createdAt || item.borrowDate || item.borrowTime).getTime();
+              return !isNaN(created) && created >= cutoff;
+            }).length : 0;
+            setRecentBorrowCount(recent);
+          } catch (e) {
+            setRecentBorrowCount(0);
+          }
         }
       } catch {
         if (mounted) setBook(null);
@@ -55,6 +68,12 @@ const BorrowBookPage = () => {
   const submitBorrow = async () => {
     if (!token || !book?.id) return;
 
+    const maxAllowed = 5;
+    if (recentBorrowCount >= maxAllowed) {
+      toast?.addToast({ type: 'error', title: t('borrowConfirm.borrowFailed'), message: t('bookDetail.borrowLimitReachedMessage', { count: recentBorrowCount, max: maxAllowed, days: 14 }) });
+      return;
+    }
+
     setSubmitting(true);
     try {
       await createBorrow(token, book.id, notes);
@@ -65,10 +84,13 @@ const BorrowBookPage = () => {
       });
       navigate('/my-books');
     } catch (error) {
-      toast?.addToast({ 
-        type: 'error', 
-        title: t('borrowConfirm.borrowFailed'), 
-        message: error.message || t('common.error') 
+      const isOverLimit = error?.code === 'OVER_BORROW_LIMIT';
+      toast?.addToast({
+        type: 'error',
+        title: isOverLimit ? t('bookDetail.borrowLimitReachedTitle') : t('borrowConfirm.borrowFailed'),
+        message: isOverLimit
+          ? t('bookDetail.borrowLimitReachedMessage', { count: recentBorrowCount, max: 5, days: 14 })
+          : (error.message || t('common.error')),
       });
     } finally {
       setSubmitting(false);
@@ -144,7 +166,7 @@ const BorrowBookPage = () => {
       </label>
 
       <div className="mt-6 flex gap-3">
-        <Button onClick={submitBorrow} disabled={!available || submitting}>
+        <Button onClick={submitBorrow} disabled={!available || submitting || recentBorrowCount >= 5}>
           {submitting ? t('borrowConfirm.borrowing') : t('borrowBookPage.confirmBorrow')}
         </Button>
         <Button variant="ghost" onClick={() => navigate(`/books/${book.id}`)}>
