@@ -115,15 +115,24 @@ const LibrarianDashboard = () => {
 
   const handleConfirmReturn = async (borrowId) => {
     try {
-      const response = await fetch(`/api/v1/borrows/${borrowId}/return`, {
-        method: 'PUT',
-        headers: { 'Authorization': `Bearer ${token}` },
+      const response = await fetch('/api/v1/borrows/return', {
+        method: 'POST',
+        headers: { 
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          borrowRecordId: borrowId,
+          conditionOnReturn: 'GOOD',
+          returnNotes: ''
+        }),
       });
       if (response.ok) {
         toast?.addToast({ type: 'success', title: t('librarianDashboard.returned'), message: t('librarianDashboard.returned') });
         loadDashboardData();
       } else {
-        throw new Error('Failed to confirm return');
+        const error = await response.json();
+        throw new Error(error.message || 'Failed to confirm return');
       }
     } catch (err) {
       toast?.addToast({ type: 'error', title: t('common.error'), message: err.message });

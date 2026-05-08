@@ -64,7 +64,7 @@ public class Notification {
 
     public enum NotificationType {
         // User notifications
-        DUE_SOON, OVERDUE, AVAILABLE, RESERVED, APPROVED, REJECTED,
+        DUE_SOON, OVERDUE, AVAILABLE, RESERVED, APPROVED, REJECTED, EXPIRED,
         // Librarian notifications
         NEW_BORROW_REQUEST, OVERDUE_REMINDER, BOOK_RETURNED,
         // Admin notifications

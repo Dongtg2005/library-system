@@ -186,6 +186,28 @@ public class NotificationService {
         );
     }
 
+    public NotificationDTO notifyUserBookOnHold(Long userId, String bookTitle, UUID bookId, int holdHours) {
+        return createNotification(
+            userId,
+            Notification.NotificationType.AVAILABLE,
+            "Sách đang giữ chỗ cho bạn",
+            String.format("Sách \"%s\" đang được giữ chỗ. Bạn có %d giờ để đến thư viện lấy hoặc xác nhận mượn online. Sau %d giờ sẽ tự động hủy.", bookTitle, holdHours, holdHours),
+            Notification.ResourceType.BOOK,
+            bookId
+        );
+    }
+
+    public NotificationDTO notifyUserHoldExpired(Long userId, String bookTitle, UUID bookId) {
+        return createNotification(
+            userId,
+            Notification.NotificationType.EXPIRED,
+            "Hết thời gian giữ chỗ",
+            String.format("Bạn đã hết thời gian 48 giờ để lấy sách \"%s\". Sách sẽ được chuyển cho người tiếp theo trong danh sách chờ.", bookTitle),
+            Notification.ResourceType.BOOK,
+            bookId
+        );
+    }
+
     // Librarian notifications
     public void notifyLibrarianNewBorrowRequest(String userName, String bookTitle, UUID borrowId) {
         List<com.lms.library.domain.entity.User> librarians = userRepository.findByRoleName("LIBRARIAN");

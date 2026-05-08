@@ -271,6 +271,21 @@ public class UnifiedExceptionHandler {
     }
 
     /**
+     * Handle RuntimeException (e.g., duplicate review, business logic errors)
+     */
+    @ExceptionHandler(RuntimeException.class)
+    public ResponseEntity<Map<String, Object>> handleRuntimeException(
+            RuntimeException ex, WebRequest request) {
+        log.warn("Runtime error: {}", ex.getMessage());
+        return buildErrorResponse(
+                HttpStatus.BAD_REQUEST,
+                "Bad Request",
+                ex.getMessage(),
+                request
+        );
+    }
+
+    /**
      * Handle all other exceptions
      */
     @ExceptionHandler(Exception.class)
@@ -280,7 +295,7 @@ public class UnifiedExceptionHandler {
         return buildErrorResponse(
                 HttpStatus.INTERNAL_SERVER_ERROR,
                 "Internal Server Error",
-                "An unexpected error occurred",
+                ex.getMessage() != null ? ex.getMessage() : "An unexpected error occurred",
                 request
         );
     }

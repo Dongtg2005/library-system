@@ -1,9 +1,9 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import Button from '../components/Button';
 import BorrowConfirmModal from '../components/BorrowConfirmModal';
 import { useAuth } from '../context/AuthContext';
-import { createBorrow, fetchBookById, fetchReviews, addReview, createReservation, getReservationCount, checkBorrowStatus, fetchBorrowHistory, voteReview, fetchReviewComments, addComment, fetchTopBorrowedBooks } from '../lib/api';
+import { createBorrow, fetchBookById, fetchReviews, addReview, createReservation, getReservationCount, checkBorrowStatus, checkReservationStatus, fetchBorrowHistory, voteReview, fetchReviewComments, addComment, fetchTopBorrowedBooks } from '../lib/api';
 import { useToast } from '../context/ToastContext';
 import { useTranslation } from '../context/LanguageContext';
 import { formatCategoryList } from '../lib/categoryLabels';
@@ -20,6 +20,7 @@ import {
   UserIcon,
   CheckCircleIcon,
   XCircleIcon,
+  ShoppingBagIcon,
   ClockIcon,
   ChatBubbleBottomCenterTextIcon,
   PaperAirplaneIcon,
@@ -309,6 +310,8 @@ const BookDetailPage = () => {
   const [reserving, setReserving] = useState(false);
   const [userBorrowStatus, setUserBorrowStatus] = useState(null); // null = not borrowed, object = borrowed
   const [recentBorrowCount, setRecentBorrowCount] = useState(0);
+  const [userReservation, setUserReservation] = useState(null); // null = no reservation, object = reservation
+  const [borrowHistory, setBorrowHistory] = useState([]); // for checking if user has returned the book
   const [newRating, setNewRating] = useState(0);
   const [reviewTitle, setReviewTitle] = useState('');
   const [reviewContent, setReviewContent] = useState('');
@@ -333,16 +336,19 @@ const BookDetailPage = () => {
         console.error('Failed to load reviews:', err);
       }
       
-      // Load reservation count, borrow status and recent borrow count if authenticated
+      // Load reservation count, borrow status, reservation status and recent borrow count if authenticated
       if (isAuthenticated && token) {
         try {
-          const [count, borrowStatus, borrowHistory] = await Promise.all([
+          const [count, borrowStatus, reservationStatus, borrowHistory] = await Promise.all([
             getReservationCount(token, id),
             checkBorrowStatus(token, id),
+            checkReservationStatus(token, id),
             fetchBorrowHistory(token)
           ]);
           setReservationCount(count);
           setUserBorrowStatus(borrowStatus || null);
+          setUserReservation(reservationStatus || null);
+          setBorrowHistory(borrowHistory || []);
 
           // Compute recent borrows in the last 14 days (policy defaults)
           try {
@@ -372,7 +378,7 @@ const BookDetailPage = () => {
 
   useEffect(() => {
     if (id) loadData();
-  }, [id]);
+  }, [id, isAuthenticated, token]);
 
   useEffect(() => {
     const stored = JSON.parse(localStorage.getItem('favoriteBookIds') || '[]');
@@ -382,6 +388,23 @@ const BookDetailPage = () => {
   const role = (user?.role || 'GUEST').toUpperCase();
   const isAvailable = book?.status === 'AVAILABLE' && (book?.availableQty ?? 0) > 0;
   const isAlreadyBorrowed = userBorrowStatus !== null;
+
+  // Check if user has borrowed and returned this book (can review only after returning)
+  const hasReturnedBook = useMemo(() => {
+    if (!Array.isArray(borrowHistory) || !book?.id) return false;
+    return borrowHistory.some(
+      (record) => record.bookId === book.id && record.borrowStatus === 'RETURNED'
+    );
+  }, [borrowHistory, book?.id]);
+
+  // Check if user has already reviewed this book (prevent spam)
+  const hasReviewed = useMemo(() => {
+    if (!Array.isArray(reviews) || !user) return false;
+    const currentUserName = user?.name || user?.username || user?.email || '';
+    return reviews.some(
+      (review) => review.reviewerName === currentUserName
+    );
+  }, [reviews, user]);
 
   const handleBorrow = () => {
     if (!isAuthenticated || !token) { navigate('/login'); return; }
@@ -574,14 +597,24 @@ const BookDetailPage = () => {
                   <div className="space-y-2">
                     <div className="w-full rounded-2xl py-4 text-lg font-black bg-emerald-500 text-white shadow-xl shadow-emerald-500/20 flex items-center justify-center gap-2">
                       <CheckCircleIcon className="h-6 w-6" />
-                      {userBorrowStatus?.borrowStatus === 'PENDING_APPROVAL' 
-                        ? t('bookDetail.pendingApproval') 
+                      {userBorrowStatus?.borrowStatus === 'PENDING_APPROVAL'
+                        ? t('bookDetail.pendingApproval')
                         : t('bookDetail.alreadyBorrowed')}
                     </div>
                     <p className="text-center text-sm text-slate-500 dark:text-slate-400">
                       {userBorrowStatus?.borrowStatus === 'PENDING_APPROVAL'
                         ? t('bookDetail.pendingApprovalMessage')
                         : t('bookDetail.alreadyBorrowedMessage')}
+                    </p>
+                  </div>
+                ) : userReservation?.status === 'ACTIVE' ? (
+                  <div className="space-y-2">
+                    <div className="w-full rounded-2xl py-4 text-lg font-black bg-amber-500 text-white shadow-xl shadow-amber-500/20 flex items-center justify-center gap-2">
+                      <BellIcon className="h-6 w-6" />
+                      {t('bookDetail.reserved')}
+                    </div>
+                    <p className="text-center text-sm text-slate-500 dark:text-slate-400">
+                      {t('bookDetail.reservedMessage')}
                     </p>
                   </div>
                 ) : isAvailable ? (
@@ -623,27 +656,40 @@ const BookDetailPage = () => {
           </div>
           
           {isAuthenticated ? (
-            <form onSubmit={submitReview} className="space-y-4">
-              <div>
-                <label className="text-sm font-bold text-slate-500">{t('bookDetail.howRate')}</label>
-                <div className="mt-2 flex gap-2">
-                  {[1, 2, 3, 4, 5].map((s) => (
-                    <button key={s} type="button" onClick={() => setNewRating(s)} className="transition hover:scale-110">
-                      {s <= newRating ? <StarSolid className="h-8 w-8 text-amber-400" /> : <StarIcon className="h-8 w-8 text-slate-300" />}
-                    </button>
-                  ))}
+            hasReviewed ? (
+              <div className="flex flex-col items-center justify-center h-48 rounded-2xl border-2 border-dashed border-slate-200 text-slate-400">
+                <CheckCircleIcon className="h-10 w-10 text-emerald-500 mb-2" />
+                <p>{t('bookDetail.alreadyReviewed')}</p>
+                <p className="text-sm mt-2">{t('bookDetail.thankYouForReview')}</p>
+              </div>
+            ) : hasReturnedBook ? (
+              <form onSubmit={submitReview} className="space-y-4">
+                <div>
+                  <label className="text-sm font-bold text-slate-500">{t('bookDetail.howRate')}</label>
+                  <div className="mt-2 flex gap-2">
+                    {[1, 2, 3, 4, 5].map((s) => (
+                      <button key={s} type="button" onClick={() => setNewRating(s)} className="transition hover:scale-110">
+                        {s <= newRating ? <StarSolid className="h-8 w-8 text-amber-400" /> : <StarIcon className="h-8 w-8 text-slate-300" />}
+                      </button>
+                    ))}
+                  </div>
                 </div>
+                <div className="space-y-1">
+                  <input value={reviewTitle} onChange={e => setReviewTitle(e.target.value)} placeholder={t('bookDetail.reviewTitlePlaceholder')} className="w-full rounded-xl border-none bg-white p-3 text-sm shadow-sm dark:bg-slate-800" />
+                </div>
+                <div className="space-y-1">
+                  <textarea value={reviewContent} onChange={e => setReviewContent(e.target.value)} rows="4" placeholder={t('bookDetail.reviewContentPlaceholder')} required className="w-full rounded-2xl border-none bg-white p-4 text-sm shadow-sm dark:bg-slate-800" />
+                </div>
+                <button type="submit" disabled={submittingReview} className="flex items-center justify-center gap-2 rounded-xl bg-slate-900 px-6 py-3 font-bold text-white transition hover:bg-slate-800 disabled:opacity-50 dark:bg-primary">
+                  {submittingReview ? t('bookDetail.posting') : <><PaperAirplaneIcon className="h-4 w-4" /> {t('bookDetail.postReview')}</>}
+                </button>
+              </form>
+            ) : (
+              <div className="flex flex-col items-center justify-center h-48 rounded-2xl border-2 border-dashed border-slate-200 text-slate-400">
+                <p>{t('bookDetail.borrowAndReturnToReview')}</p>
+                <p className="text-sm mt-2">{t('bookDetail.canReplyToReviews')}</p>
               </div>
-              <div className="space-y-1">
-                <input value={reviewTitle} onChange={e => setReviewTitle(e.target.value)} placeholder={t('bookDetail.reviewTitlePlaceholder')} className="w-full rounded-xl border-none bg-white p-3 text-sm shadow-sm dark:bg-slate-800" />
-              </div>
-              <div className="space-y-1">
-                <textarea value={reviewContent} onChange={e => setReviewContent(e.target.value)} rows="4" placeholder={t('bookDetail.reviewContentPlaceholder')} required className="w-full rounded-2xl border-none bg-white p-4 text-sm shadow-sm dark:bg-slate-800" />
-              </div>
-              <button type="submit" disabled={submittingReview} className="flex items-center justify-center gap-2 rounded-xl bg-slate-900 px-6 py-3 font-bold text-white transition hover:bg-slate-800 disabled:opacity-50 dark:bg-primary">
-                {submittingReview ? t('bookDetail.posting') : <><PaperAirplaneIcon className="h-4 w-4" /> {t('bookDetail.postReview')}</>}
-              </button>
-            </form>
+            )
           ) : (
             <div className="flex flex-col items-center justify-center h-48 rounded-2xl border-2 border-dashed border-slate-200 text-slate-400">
               <p>{t('bookDetail.loginToReview')}</p>

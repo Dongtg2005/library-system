@@ -1,4 +1,4 @@
-import { PencilSquareIcon, TrashIcon, BellIcon, CheckIcon, XMarkIcon as CloseIcon } from '@heroicons/react/24/outline';
+import { CheckIcon, XMarkIcon as CloseIcon } from '@heroicons/react/24/outline';
 import React, { useEffect, useState } from 'react';
 import Button from './Button';
 import { getAllReservations, cancelReservation, fulfillReservation } from '../lib/api';

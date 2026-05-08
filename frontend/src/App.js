@@ -22,6 +22,7 @@ import ProfilePage from './pages/ProfilePage';
 import ReviewsPage from './pages/ReviewsPage';
 import UserPage from './pages/UserPage';
 import ReservationsPage from './pages/ReservationsPage';
+import UserReservationsPage from './pages/UserReservationsPage';
 
 const LoadingScreen = () => {
   const { t } = useTranslation();
@@ -101,6 +102,7 @@ function AppRoutes() {
         }
       >
         <Route path="my-books" element={<MyBorrowsPage />} />
+        <Route path="my-reservations" element={<UserReservationsPage />} />
         <Route path="favorites" element={<FavoritesPage />} />
         <Route path="history" element={<HistoryPage />} />
         <Route path="profile" element={<ProfilePage />} />

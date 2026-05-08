@@ -27,6 +27,7 @@ public class BookReviewService {
     private final ReviewCommentRepository commentRepository;
     private final BookRepository bookRepository;
     private final UserRepository userRepository;
+    private final BorrowRecordRepository borrowRecordRepository;
 
     @Transactional(readOnly = true)
     public Page<ReviewResponse> getBookReviews(UUID bookId, Pageable pageable, Long currentUserId) {
@@ -87,6 +88,13 @@ public class BookReviewService {
         // Check if user already reviewed this book - one review per user per book
         if (reviewRepository.existsByBookIdAndUserId(bookId, userId)) {
             throw new RuntimeException("You have already reviewed this book. You can only review each book once.");
+        }
+
+        // Check if user has borrowed this book (must have ACTIVE or RETURNED status)
+        boolean hasBorrowed = borrowRecordRepository.existsByMemberIdAndBookIdAndBorrowStatusIn(
+                userId, bookId, List.of(BorrowRecord.BorrowStatus.ACTIVE, BorrowRecord.BorrowStatus.RETURNED));
+        if (!hasBorrowed) {
+            throw new RuntimeException("You can only review books you have borrowed.");
         }
 
         BookReview review = BookReview.builder()

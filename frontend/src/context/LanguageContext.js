@@ -129,7 +129,11 @@ const translations = {
     'status.overdue': 'Overdue',
     'status.returned': 'Returned',
     'status.suspended': 'Suspended',
-    
+    'status.fulfilled': 'Fulfilled',
+    'status.cancelled': 'Cancelled',
+    'status.expired': 'Expired',
+    'status.on_hold': 'On Hold',
+
     // Messages
     'message.bookBorrowed': 'Book borrowed successfully',
     'message.bookReturned': 'Book returned successfully',
@@ -272,7 +276,12 @@ const translations = {
     'bookDetail.processing': 'Processing...',
     'bookDetail.borrowNow': 'Borrow Now',
     'bookDetail.reserveBook': 'Reserve Book',
+    'bookDetail.confirmBorrow': 'Confirm Borrow',
+    'bookDetail.holdExpiresAt': 'Hold expires at',
     'bookDetail.peopleInQueue': 'people in queue',
+    'bookDetail.reservationConfirmed': 'Reservation confirmed!',
+    'bookDetail.reservationConfirmedMessage': 'You have successfully confirmed borrowing. Please pick up the book within the hold period.',
+    'bookDetail.confirmFailed': 'Failed to confirm',
     'bookDetail.howRate': 'How would you rate this book?',
     'bookDetail.reviewTitle': 'Review Title',
     'bookDetail.reviewPlaceholder': 'Share your thoughts about this book...',
@@ -547,7 +556,19 @@ const translations = {
     'reservationTable.cancel': 'Cancel',
     'reservationTable.confirmCancel': 'Are you sure you want to cancel this reservation?',
     'reservationTable.confirmFulfill': 'Mark this reservation as fulfilled?',
-    
+    'reservationTable.onHold': 'On Hold',
+    'reservationTable.confirmBorrow': 'Confirm Borrow',
+    'reservationTable.holdExpires': 'Hold expires',
+    'reservationTable.confirmBorrowMessage': 'Are you sure you want to confirm borrowing this book?',
+    'reservationTable.confirmed': 'Confirmed',
+
+    // MyReservationsPage
+    'myReservationsPage.title': 'My Reservations',
+    'myReservationsPage.description': 'Manage your book reservations. When a book becomes available, a borrow request will be created automatically.',
+    'myReservationsPage.noReservations': 'You have no reservations. Browse books to reserve!',
+    'myReservationsPage.waitingForBook': 'Waiting for book to become available...',
+    'myReservationsPage.borrowRequestCreated': 'Borrow request created! Check My Books.',
+
     // Sidebar
     'sidebar.dashboard': 'Dashboard',
     'sidebar.userManagement': 'User Management',
@@ -899,7 +920,12 @@ const translations = {
     'bookDetail.borrowNow': 'BORROW NOW',
     'bookDetail.processing': 'Processing...',
     'bookDetail.reserveBook': 'RESERVE BOOK',
-    'bookDetail.peopleInQueue': '{count} people in queue',
+    'bookDetail.confirmBorrow': 'XÁC NHẬN MƯỢN',
+    'bookDetail.holdExpiresAt': 'Hết hạn giữ chỗ lúc',
+    'bookDetail.peopleInQueue': '{count} người đang chờ',
+    'bookDetail.reservationConfirmed': 'Đã xác nhận mượn!',
+    'bookDetail.reservationConfirmedMessage': 'Bạn đã xác nhận mượn sách thành công. Vui lòng đến lấy sách trong thời gian giữ chỗ.',
+    'bookDetail.confirmFailed': 'Xác nhận thất bại',
     'bookDetail.alreadyBorrowed': 'Already Borrowed',
     'bookDetail.alreadyBorrowedMessage': 'You are currently borrowing this book',
     'bookDetail.pendingApproval': 'Pending Approval',
@@ -911,6 +937,11 @@ const translations = {
     'bookDetail.posting': 'Posting...',
     'bookDetail.postReview': 'Post Review',
     'bookDetail.loginToReview': 'Please log in to write a review',
+    'bookDetail.borrowToReview': 'Borrow this book to write a review',
+    'bookDetail.borrowAndReturnToReview': 'Borrow and return this book to write a review',
+    'bookDetail.alreadyReviewed': 'You have already reviewed this book',
+    'bookDetail.thankYouForReview': 'Thank you for your review!',
+    'bookDetail.canReplyToReviews': 'You can still reply to existing reviews',
     'bookDetail.recentReviews': 'Recent Reviews',
     'bookDetail.noReviews': 'No reviews yet. Be the first!',
 
@@ -926,7 +957,7 @@ const translations = {
     'booksPage.failedToLoad': 'Failed to load books',
     'booksPage.viewDetail': 'View Detail',
     'booksPage.noBooksFound': 'No books found.',
-    'booksPage.page': 'Page {current} / {total}',
+    'booksPage.page': 'Page',
 
     // HomePage
     'homePage.discoverNextBook': 'Discover Your Next Favorite Book',
@@ -997,7 +1028,6 @@ const translations = {
     'myBorrowsPage.returnedMessage': 'Book return request sent.',
     'myBorrowsPage.returnFailed': 'Return failed',
     'myBorrowsPage.returnFailedMessage': 'Unable to return.',
-    'myBorrowsPage.dataFrom': 'Data from `/api/v1/borrows/history`.',
     'myBorrowsPage.loading': 'Loading records...',
     'myBorrowsPage.book': 'Book',
     'myBorrowsPage.borrowDate': 'Borrow Date',
@@ -1212,7 +1242,11 @@ const translations = {
     'status.overdue': 'Quá hạn',
     'status.returned': 'Đã trả',
     'status.suspended': 'Tạm khóa',
-    
+    'status.fulfilled': 'Đã hoàn thành',
+    'status.cancelled': 'Đã hủy',
+    'status.expired': 'Đã hết hạn',
+    'status.on_hold': 'Đang giữ chỗ',
+
     // Messages
     'message.bookBorrowed': 'Mượn sách thành công',
     'message.bookReturned': 'Trả sách thành công',
@@ -1630,7 +1664,19 @@ const translations = {
     'reservationTable.cancel': 'Hủy',
     'reservationTable.confirmCancel': 'Bạn có chắc chắn muốn hủy đặt sách này?',
     'reservationTable.confirmFulfill': 'Đánh dấu đặt sách này là đã hoàn thành?',
-    
+    'reservationTable.onHold': 'Đang giữ chỗ',
+    'reservationTable.confirmBorrow': 'Xác nhận mượn',
+    'reservationTable.holdExpires': 'Hết hạn giữ',
+    'reservationTable.confirmBorrowMessage': 'Bạn có chắc chắn muốn xác nhận mượn sách này?',
+    'reservationTable.confirmed': 'Đã xác nhận',
+
+    // MyReservationsPage
+    'myReservationsPage.title': 'Đặt trước của tôi',
+    'myReservationsPage.description': 'Quản lý đặt trước sách. Khi sách có sẵn, yêu cầu mượn sẽ được tạo tự động.',
+    'myReservationsPage.noReservations': 'Bạn chưa có đặt trước nào. Tìm sách để đặt trước!',
+    'myReservationsPage.waitingForBook': 'Đang chờ sách có sẵn...',
+    'myReservationsPage.borrowRequestCreated': 'Đã tạo yêu cầu mượn! Kiểm tra Sách của tôi.',
+
     // Sidebar
     'sidebar.dashboard': 'Bảng điều khiển',
     'sidebar.userManagement': 'Quản lý người dùng',
@@ -1993,6 +2039,11 @@ const translations = {
     'bookDetail.posting': 'Đang đăng...',
     'bookDetail.postReview': 'Đăng Đánh giá',
     'bookDetail.loginToReview': 'Vui lòng đăng nhập để viết đánh giá',
+    'bookDetail.borrowToReview': 'Mượn sách này để viết đánh giá',
+    'bookDetail.borrowAndReturnToReview': 'Mượn và trả sách này để viết đánh giá',
+    'bookDetail.alreadyReviewed': 'Bạn đã đánh giá sách này rồi',
+    'bookDetail.thankYouForReview': 'Cảm ơn bạn đã đánh giá!',
+    'bookDetail.canReplyToReviews': 'Bạn vẫn có thể trả lời các đánh giá hiện có',
     'bookDetail.recentReviews': 'Đánh giá Gần đây',
     'bookDetail.noReviews': 'Chưa có đánh giá nào. Hãy là người đầu tiên!',
 
@@ -2008,7 +2059,7 @@ const translations = {
     'booksPage.failedToLoad': 'Không thể tải sách',
     'booksPage.viewDetail': 'Xem Chi tiết',
     'booksPage.noBooksFound': 'Không tìm thấy sách nào.',
-    'booksPage.page': 'Trang {current} / {total}',
+    'booksPage.page': 'Trang',
 
     // HomePage
     'homePage.discoverNextBook': 'Khám phá Sách Yêu thích Tiếp theo của Bạn',

@@ -6,7 +6,7 @@ import { extendBorrow, fetchBookById, fetchBorrowHistory, returnBorrow } from '.
 import { useToast } from '../context/ToastContext';
 
 const MyBorrowsPage = () => {
-  const { token } = useAuth();
+  const { token, user } = useAuth();
   const { t } = useTranslation();
   const { addToast } = useToast() || {};
   const [activeTab, setActiveTab] = useState('borrowed');
@@ -94,7 +94,6 @@ const MyBorrowsPage = () => {
   return (
     <div className="rounded-[2rem] border border-white/70 bg-white/85 p-6 page-fade dark:border-slate-800 dark:bg-slate-900/75">
       <h1 className="text-3xl font-black text-slate-950 dark:text-white">{t('nav.myBooks')}</h1>
-      <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">{t('myBorrowsPage.dataFrom')}</p>
 
       <div className="mt-6 flex flex-wrap gap-2">
         {tabs.map((tab) => {
@@ -144,7 +143,7 @@ const MyBorrowsPage = () => {
                           {t('myBorrowsPage.extend')}
                         </Button>
                       )}
-                      {['ACTIVE', 'OVERDUE', 'PENDING_APPROVAL'].includes(item.borrowStatus) && (
+                      {['ACTIVE', 'OVERDUE', 'PENDING_APPROVAL'].includes(item.borrowStatus) && (user?.role === 'LIBRARIAN' || user?.role === 'ADMIN') && (
                         <Button size="sm" disabled={submitting === item.id} onClick={() => onReturn(item.id)}>
                           {t('myBorrowsPage.return')}
                         </Button>

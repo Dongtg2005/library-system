@@ -277,7 +277,12 @@ public class BorrowManagementService {
 
         // Auto-fulfill first reservation if available
         if (book.isAvailable()) {
-            reservationService.autoFulfillFirstReservation(book.getId());
+            try {
+                reservationService.autoFulfillFirstReservation(book.getId());
+            } catch (Exception e) {
+                log.error("Failed to auto-fulfill reservation for book: {}", book.getId(), e);
+                // Continue with return process even if auto-fulfill fails
+            }
         }
 
         // Decrement user's borrowed count
@@ -331,7 +336,84 @@ public class BorrowManagementService {
                 .overdueFine(overdueFine)
                 .build();
     }
-    
+
+    @Transactional
+    public ReturnResponse processReturnByLibrarian(ReturnRequest request) {
+        log.info("Processing librarian return for borrow record: {}", request.getBorrowRecordId());
+
+        BorrowRecord record = borrowRecordRepository.findById(request.getBorrowRecordId())
+                .orElseThrow(() -> new ResourceNotFoundException("Borrow record not found"));
+
+        // Calculate overdue fine if applicable
+        BigDecimal overdueFine = calculateOverdueFine(record);
+
+        // Return book to inventory
+        Book book = bookRepository.findById(record.getBookId())
+                .orElseThrow(() -> new ResourceNotFoundException("Book not found"));
+        book.returnBook();
+        bookRepository.save(book);
+
+        // Auto-fulfill first reservation if available
+        if (book.isAvailable()) {
+            try {
+                reservationService.autoFulfillFirstReservation(book.getId());
+            } catch (Exception e) {
+                log.error("Failed to auto-fulfill reservation for book: {}", book.getId(), e);
+            }
+        }
+
+        // Decrement user's borrowed count (use record's memberId, not current user)
+        UserProfile userProfile = userProfileRepository.findByUserId(record.getMemberId())
+                .orElse(null);
+        if (userProfile != null) {
+            userProfile.decrementBorrowedCount();
+            userProfileRepository.save(userProfile);
+        }
+
+        // Mark book as returned
+        record.returnBook(request.getConditionOnReturn());
+        borrowRecordRepository.save(record);
+
+        // Notify librarian about book return
+        try {
+            String memberName = userProfile != null ? userProfile.getFullName() : "Member #" + record.getMemberId();
+            notificationService.notifyLibrarianBookReturned(
+                memberName,
+                book.getTitle()
+            );
+        } catch (Exception e) {
+            log.error("Failed to create notification for librarian", e);
+        }
+
+        // Create fine record if overdue
+        if (overdueFine.compareTo(BigDecimal.ZERO) > 0) {
+            Fine fine = Fine.builder()
+                    .borrowRecordId(record.getId())
+                    .memberId(record.getMemberId())
+                    .amount(overdueFine)
+                    .fineType(Fine.FineType.OVERDUE)
+                    .status(Fine.FineStatus.PENDING)
+                    .reason("Book returned overdue by " + record.getOverdueDays() + " days")
+                    .build();
+
+            fineRepository.save(fine);
+
+            // Update user's outstanding fines
+            if (userProfile != null) {
+                userProfile.setOutstandingFines(
+                    userProfile.getOutstandingFines().add(overdueFine));
+                userProfileRepository.save(userProfile);
+            }
+        }
+
+        return ReturnResponse.builder()
+                .borrowRecordId(record.getId())
+                .returnDate(record.getReturnDate())
+                .conditionOnReturn(record.getConditionOnReturn())
+                .overdueFine(overdueFine)
+                .build();
+    }
+
     @Transactional
     public BorrowResponse extendLoan(UUID borrowRecordId, Long memberId) {
         log.info("Extending loan for record: {}", borrowRecordId);

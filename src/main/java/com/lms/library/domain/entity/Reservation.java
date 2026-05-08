@@ -48,6 +48,12 @@ public class Reservation {
     @Column(name = "cancelled_at")
     private LocalDateTime cancelledAt;
 
+    @Column(name = "on_hold_at")
+    private LocalDateTime onHoldAt;
+
+    @Column(name = "hold_expires_at")
+    private LocalDateTime holdExpiresAt;
+
     @Column(name = "notes", columnDefinition = "TEXT")
     private String notes;
 
@@ -63,7 +69,7 @@ public class Reservation {
     }
 
     public enum ReservationStatus {
-        ACTIVE, FULFILLED, CANCELLED, EXPIRED
+        ACTIVE, ON_HOLD, FULFILLED, CANCELLED, EXPIRED
     }
 
     public boolean isActive() {
@@ -76,5 +82,17 @@ public class Reservation {
 
     public boolean canBeFulfilled() {
         return isActive() && !isExpired();
+    }
+
+    public boolean isOnHold() {
+        return ReservationStatus.ON_HOLD.equals(status);
+    }
+
+    public boolean isHoldExpired() {
+        return holdExpiresAt != null && LocalDateTime.now().isAfter(holdExpiresAt);
+    }
+
+    public boolean canConfirmBorrow() {
+        return isOnHold() && !isHoldExpired();
     }
 }

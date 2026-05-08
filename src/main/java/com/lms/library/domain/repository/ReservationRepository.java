@@ -30,6 +30,9 @@ public interface ReservationRepository extends JpaRepository<Reservation, UUID> 
     @Query("SELECT r FROM Reservation r WHERE r.status = 'ACTIVE' AND r.expiresAt < :now")
     List<Reservation> findExpiredReservations(LocalDateTime now);
 
+    @Query("SELECT r FROM Reservation r WHERE r.status = 'ON_HOLD' AND r.holdExpiresAt < :now")
+    List<Reservation> findExpiredHolds(LocalDateTime now);
+
     @Query("SELECT r FROM Reservation r WHERE r.status = 'ACTIVE' AND r.bookId = :bookId ORDER BY r.priority DESC, r.createdAt ASC")
     List<Reservation> findActiveReservationsByBookIdOrdered(UUID bookId);
 

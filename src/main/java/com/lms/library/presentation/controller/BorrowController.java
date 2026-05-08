@@ -58,11 +58,11 @@ public class BorrowController {
     }
     
     @PostMapping("/return")
-    @PreAuthorize("hasRole('ADMIN') or hasRole('LIBRARIAN') or hasRole('USER')")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('LIBRARIAN')")
     public ResponseEntity<ReturnResponse> processReturn(@Valid @RequestBody ReturnRequest request) {
         Long memberId = getCurrentUserId();
-        log.info("Processing return for member: {}", memberId);
-        ReturnResponse response = borrowManagementService.processReturn(memberId, request);
+        log.info("Processing return for librarian: {}", memberId);
+        ReturnResponse response = borrowManagementService.processReturnByLibrarian(request);
         return ResponseEntity.ok(response);
     }
     

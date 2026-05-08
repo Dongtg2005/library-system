@@ -43,4 +43,7 @@ public interface BorrowRecordRepository extends JpaRepository<BorrowRecord, UUID
     Page<BorrowRecord> findByBorrowStatus(BorrowRecord.BorrowStatus status, Pageable pageable);
 
     Optional<BorrowRecord> findByMemberIdAndBookIdAndBorrowStatusIn(Long memberId, UUID bookId, Collection<BorrowRecord.BorrowStatus> statuses);
+
+    // Check if user has ever borrowed this book (ACTIVE or RETURNED)
+    boolean existsByMemberIdAndBookIdAndBorrowStatusIn(Long memberId, UUID bookId, Collection<BorrowRecord.BorrowStatus> statuses);
 }

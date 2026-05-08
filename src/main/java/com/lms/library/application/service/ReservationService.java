@@ -39,6 +39,7 @@ public class ReservationService {
     private final NotificationService notificationService;
 
     private static final int RESERVATION_EXPIRY_DAYS = 7;
+    private static final int HOLD_EXPIRY_HOURS = 48; // 48 hours to pick up the book
 
     @Transactional
     public ReservationResponse createReservation(Long userId, UUID bookId, Integer priority, String notes) {
@@ -167,9 +168,13 @@ public class ReservationService {
         log.info("Reservation fulfilled successfully: {}", reservationId);
     }
 
-    @Transactional
+    /**
+     * Auto-create borrow request for first reservation when book is returned
+     * Creates a PENDING_APPROVAL borrow record for the user who reserved first
+     * Runs in caller's transaction - do not add @Transactional to avoid rollback-only marking
+     */
     public void autoFulfillFirstReservation(UUID bookId) {
-        log.info("Auto-fulfilling first reservation for book: {}", bookId);
+        log.info("Auto-creating borrow request for first reservation of book: {}", bookId);
 
         // Find first active reservation ordered by priority and reserved time
         List<Reservation> reservations = reservationRepository.findActiveReservationsByBookIdOrdered(bookId);
@@ -187,69 +192,175 @@ public class ReservationService {
             return;
         }
 
-        // Get book and reserve it (decrease availableQty to hold for this user)
+        // Get book
         Book book = bookRepository.findById(bookId)
                 .orElseThrow(() -> new ResourceNotFoundException("Book not found"));
-        
-        if (book.isAvailable()) {
-            // Reserve the book by borrowing it (decreases availableQty)
-            book.borrowBook();
-            bookRepository.save(book);
-            log.info("Book {} reserved for user {}", bookId, firstReservation.getUserId());
-        } else {
-            log.info("Book {} not available to reserve", bookId);
+
+        if (!book.isAvailable()) {
+            log.info("Book {} not available to fulfill reservation", bookId);
             return;
         }
 
-        // Create pending borrow record for the user
+        // Get user profile and borrow policy
         UserProfile userProfile = userProfileRepository.findByUserId(firstReservation.getUserId())
                 .orElseThrow(() -> new ResourceNotFoundException("User profile not found"));
-        
-        BorrowPolicy policy = borrowPolicyRepository.findAllByMemberTypeOrderByCreatedAtDesc(BorrowPolicy.MemberType.USER)
-                .stream()
-                .findFirst()
-                .orElse(null);
-        
-        int loanPeriodDays = (policy != null) ? policy.getLoanPeriodDays() : 14;
-        int maxExtensions = (policy != null) ? policy.getMaxExtensions() : 2;
-        
+        BorrowPolicy policy = borrowPolicyRepository.findByMemberType(BorrowPolicy.MemberType.USER)
+                .orElseThrow(() -> new ResourceNotFoundException("No borrow policy found for USER"));
+
+        // Check if policy is effective
+        if (!policy.isEffective()) {
+            log.warn("Borrow policy for USER is not effective, cannot auto-create borrow request");
+            return;
+        }
+
+        // Reserve the book (decrease availableQty)
+        book.borrowBook();
+        bookRepository.save(book);
+        log.info("Book {} reserved for user {}", bookId, firstReservation.getUserId());
+
+        // Create borrow record with PENDING_APPROVAL status
         LocalDate now = LocalDate.now();
         BorrowRecord borrowRecord = BorrowRecord.builder()
                 .memberId(firstReservation.getUserId())
                 .bookId(bookId)
-                .reservationId(firstReservation.getId())
                 .borrowDate(now)
-                .borrowTime(ZonedDateTime.now())
-                .dueDate(now.plusDays(loanPeriodDays))
-                .maxExtensions(maxExtensions)
+                .dueDate(now.plusDays(policy.getLoanPeriodDays()))
                 .borrowStatus(BorrowRecord.BorrowStatus.PENDING_APPROVAL)
+                .conditionOnBorrow(BorrowRecord.BookCondition.GOOD)
+                .reservationId(firstReservation.getId())
                 .notes("Auto-created from reservation")
                 .build();
-        
+
         borrowRecordRepository.save(borrowRecord);
-        log.info("Created pending borrow record {} for user {}", borrowRecord.getId(), firstReservation.getUserId());
+        log.info("Created borrow request {} for reservation {}", borrowRecord.getId(), firstReservation.getId());
 
-        // Update user profile borrowed count
-        userProfile.incrementBorrowedCount();
-        userProfileRepository.save(userProfile);
-
-        // Mark as fulfilled
+        // Mark reservation as fulfilled
         firstReservation.setStatus(Reservation.ReservationStatus.FULFILLED);
         firstReservation.setFulfilledAt(LocalDateTime.now());
         reservationRepository.save(firstReservation);
 
-        // Notify user that book is available
+        // Increment user's borrowed count
+        userProfile.incrementBorrowedCount();
+        userProfileRepository.save(userProfile);
+
+        // Notify user that book is available and borrow request is created
         try {
-            notificationService.notifyUserBookAvailable(
+            notificationService.notifyUserBookOnHold(
                 firstReservation.getUserId(),
                 book.getTitle(),
-                bookId
+                bookId,
+                HOLD_EXPIRY_HOURS
             );
         } catch (Exception e) {
             log.error("Failed to create notification for user", e);
         }
 
-        log.info("Auto-fulfilled reservation {} for book {}", firstReservation.getId(), bookId);
+        log.info("Reservation {} fulfilled - borrow request {} created for user {}",
+                firstReservation.getId(), borrowRecord.getId(), firstReservation.getUserId());
+    }
+
+    /**
+     * User confirms borrowing from ON_HOLD status
+     */
+    @Transactional
+    public ReservationResponse confirmBorrowFromHold(Long userId, UUID reservationId) {
+        log.info("User {} confirming borrow from hold: {}", userId, reservationId);
+
+        Reservation reservation = reservationRepository.findById(reservationId)
+                .orElseThrow(() -> new ResourceNotFoundException("Reservation not found"));
+
+        // Check ownership
+        if (!reservation.getUserId().equals(userId)) {
+            throw new IllegalStateException("You can only confirm your own reservations");
+        }
+
+        // Check status and expiry
+        if (!reservation.isOnHold()) {
+            throw new IllegalStateException("Reservation is not on hold");
+        }
+
+        if (reservation.isHoldExpired()) {
+            throw new IllegalStateException("Hold has expired. The book has been released to the next person.");
+        }
+
+        // Create borrow record
+        Book book = bookRepository.findById(reservation.getBookId())
+                .orElseThrow(() -> new ResourceNotFoundException("Book not found"));
+        
+        UserProfile userProfile = userProfileRepository.findByUserId(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("User profile not found"));
+
+        BorrowPolicy policy = borrowPolicyRepository.findAllByMemberTypeOrderByCreatedAtDesc(BorrowPolicy.MemberType.USER)
+                .stream()
+                .findFirst()
+                .orElse(null);
+
+        int loanPeriodDays = (policy != null) ? policy.getLoanPeriodDays() : 14;
+        int maxExtensions = (policy != null) ? policy.getMaxExtensions() : 2;
+
+        LocalDate today = LocalDate.now();
+        BorrowRecord borrowRecord = BorrowRecord.builder()
+                .memberId(userId)
+                .bookId(reservation.getBookId())
+                .reservationId(reservation.getId())
+                .borrowDate(today)
+                .borrowTime(ZonedDateTime.now())
+                .dueDate(today.plusDays(loanPeriodDays))
+                .maxExtensions(maxExtensions)
+                .borrowStatus(BorrowRecord.BorrowStatus.ACTIVE)
+                .notes("Confirmed from reservation hold")
+                .build();
+
+        borrowRecordRepository.save(borrowRecord);
+        log.info("Created borrow record {} for user {}", borrowRecord.getId(), userId);
+
+        // Update user profile
+        userProfile.incrementBorrowedCount();
+        userProfileRepository.save(userProfile);
+
+        // Mark reservation as fulfilled
+        reservation.setStatus(Reservation.ReservationStatus.FULFILLED);
+        reservation.setFulfilledAt(LocalDateTime.now());
+        reservationRepository.save(reservation);
+
+        return ReservationResponse.from(reservation, book.getTitle(), userProfile.getFullName());
+    }
+
+    /**
+     * Auto-expire ON_HOLD reservations after 48h and notify next person
+     */
+    @Transactional
+    public void expireExpiredHolds() {
+        log.info("Checking for expired holds");
+        List<Reservation> expiredHolds = reservationRepository.findExpiredHolds(LocalDateTime.now());
+        
+        for (Reservation reservation : expiredHolds) {
+            log.info("Expiring hold for reservation: {}", reservation.getId());
+            
+            // Get book and release it
+            Book book = bookRepository.findById(reservation.getBookId()).orElse(null);
+            if (book != null) {
+                // Return the book (increases availableQty)
+                book.returnBook();
+                bookRepository.save(book);
+                
+                // Try to fulfill next reservation
+                autoFulfillFirstReservation(reservation.getBookId());
+            }
+            
+            // Notify user their hold expired
+            try {
+                notificationService.notifyUserHoldExpired(
+                    reservation.getUserId(),
+                    book != null ? book.getTitle() : "Book",
+                    reservation.getBookId()
+                );
+            } catch (Exception e) {
+                log.error("Failed to create hold expired notification", e);
+            }
+        }
+        
+        log.info("Expired {} holds", expiredHolds.size());
     }
 
     @Transactional
@@ -266,5 +377,38 @@ public class ReservationService {
     @Transactional(readOnly = true)
     public long getReservationCount(UUID bookId) {
         return reservationRepository.countByBookIdAndStatus(bookId, Reservation.ReservationStatus.ACTIVE);
+    }
+
+    @Transactional(readOnly = true)
+    public ReservationResponse checkReservationStatus(Long userId, UUID bookId) {
+        log.info("Checking reservation status for user: {} and book: {}", userId, bookId);
+
+        // Check for ON_HOLD first (most relevant for user action)
+        Reservation onHoldReservation = reservationRepository
+                .findByUserIdAndBookIdAndStatus(userId, bookId, Reservation.ReservationStatus.ON_HOLD)
+                .orElse(null);
+
+        if (onHoldReservation != null) {
+            Book book = bookRepository.findById(bookId).orElse(null);
+            UserProfile user = userProfileRepository.findByUserId(userId).orElse(null);
+            return ReservationResponse.from(onHoldReservation,
+                    book != null ? book.getTitle() : null,
+                    user != null ? user.getFullName() : null);
+        }
+
+        // Check for ACTIVE reservation
+        Reservation activeReservation = reservationRepository
+                .findByUserIdAndBookIdAndStatus(userId, bookId, Reservation.ReservationStatus.ACTIVE)
+                .orElse(null);
+
+        if (activeReservation != null) {
+            Book book = bookRepository.findById(bookId).orElse(null);
+            UserProfile user = userProfileRepository.findByUserId(userId).orElse(null);
+            return ReservationResponse.from(activeReservation,
+                    book != null ? book.getTitle() : null,
+                    user != null ? user.getFullName() : null);
+        }
+
+        return null;
     }
 }

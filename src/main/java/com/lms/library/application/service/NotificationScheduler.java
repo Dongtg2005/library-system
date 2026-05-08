@@ -22,6 +22,7 @@ public class NotificationScheduler {
     private final BorrowRecordRepository borrowRecordRepository;
     private final BookRepository bookRepository;
     private final NotificationService notificationService;
+    private final ReservationService reservationService;
 
     // Run every day at 8:00 AM
     @Scheduled(cron = "0 0 8 * * ?")
@@ -77,5 +78,18 @@ public class NotificationScheduler {
         }
 
         log.info("Completed scheduled check for overdue and due soon books");
+    }
+
+    // Run every hour to check for expired ON_HOLD reservations
+    @Scheduled(cron = "0 0 * * * ?")
+    @Transactional
+    public void checkExpiredHolds() {
+        log.info("Starting scheduled check for expired holds");
+        try {
+            reservationService.expireExpiredHolds();
+        } catch (Exception e) {
+            log.error("Failed to check expired holds", e);
+        }
+        log.info("Completed scheduled check for expired holds");
     }
 }

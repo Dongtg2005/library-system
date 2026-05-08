@@ -104,6 +104,9 @@ export const fetchBorrowHistory = (token) => apiRequest('/api/v1/borrows/history
 export const checkBorrowStatus = (token, bookId) =>
   apiRequest(`/api/v1/borrows/check?bookId=${bookId}`, { token });
 
+export const checkReservationStatus = (token, bookId) =>
+  apiRequest(`/api/v1/reservations/check?bookId=${bookId}`, { token });
+
 export const createBorrow = (token, bookId, notes = '') =>
   apiRequest('/api/v1/borrows', {
     method: 'POST',
@@ -169,6 +172,12 @@ export const getAllReservations = (token, params = {}) =>
 
 export const fulfillReservation = (token, reservationId) =>
   apiRequest(`/api/v1/reservations/${reservationId}/fulfill`, {
+    method: 'POST',
+    token,
+  });
+
+export const confirmReservation = (token, reservationId) =>
+  apiRequest(`/api/v1/reservations/${reservationId}/confirm`, {
     method: 'POST',
     token,
   });

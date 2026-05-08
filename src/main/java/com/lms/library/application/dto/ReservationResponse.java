@@ -26,6 +26,8 @@ public class ReservationResponse {
     private Boolean notificationSent;
     private LocalDateTime fulfilledAt;
     private LocalDateTime cancelledAt;
+    private LocalDateTime onHoldAt;
+    private LocalDateTime holdExpiresAt;
     private String notes;
     private LocalDateTime createdAt;
 
@@ -43,6 +45,8 @@ public class ReservationResponse {
                 .notificationSent(reservation.getNotificationSent())
                 .fulfilledAt(reservation.getFulfilledAt())
                 .cancelledAt(reservation.getCancelledAt())
+                .onHoldAt(reservation.getOnHoldAt())
+                .holdExpiresAt(reservation.getHoldExpiresAt())
                 .notes(reservation.getNotes())
                 .createdAt(reservation.getCreatedAt())
                 .build();

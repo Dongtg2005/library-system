@@ -163,8 +163,14 @@ CREATE TABLE IF NOT EXISTS reservations (
     book_id UUID REFERENCES books(id) ON DELETE CASCADE,
     reserved_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     expires_at TIMESTAMP NOT NULL,
-    status VARCHAR(20) DEFAULT 'ACTIVE' CHECK (status IN ('ACTIVE', 'FULFILLED', 'CANCELLED', 'EXPIRED')),
+    status VARCHAR(20) DEFAULT 'ACTIVE' CHECK (status IN ('ACTIVE', 'ON_HOLD', 'FULFILLED', 'CANCELLED', 'EXPIRED')),
     priority INTEGER DEFAULT 1 CHECK (priority BETWEEN 1 AND 3),
+    notification_sent BOOLEAN DEFAULT FALSE,
+    fulfilled_at TIMESTAMP,
+    cancelled_at TIMESTAMP,
+    on_hold_at TIMESTAMP,
+    hold_expires_at TIMESTAMP,
+    notes TEXT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 

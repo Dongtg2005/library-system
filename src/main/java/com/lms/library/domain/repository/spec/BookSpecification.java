@@ -20,13 +20,26 @@ public class BookSpecification {
         return (root, query, criteriaBuilder) -> {
             List<Predicate> predicates = new ArrayList<>();
 
-            // Optimize N+1 Query: fetch JOIN categories only for non-count queries
-            if (Long.class != query.getResultType()) {
-                root.fetch("categories", JoinType.LEFT);
-            }
-
             // Prevent duplicate rows caused by JOIN on ManyToMany/OneToMany
             query.distinct(true);
+
+            // Handle category filter first - need to create join before fetch
+            Join<Book, Category> categoryJoin = null;
+            if (category != null && !category.isBlank()) {
+                categoryJoin = root.join("categories", JoinType.LEFT);
+                predicates.add(criteriaBuilder.equal(
+                    criteriaBuilder.lower(categoryJoin.get("name")),
+                    category.toLowerCase().trim()
+                ));
+            }
+
+            // Optimize N+1 Query: fetch JOIN categories only for non-count queries
+            // Use existing join if category filter was applied, otherwise create new fetch
+            if (Long.class != query.getResultType()) {
+                if (categoryJoin == null) {
+                    root.fetch("categories", JoinType.LEFT);
+                }
+            }
 
             // 1. Keyword search: partial match on title OR author
             if (keyword != null && !keyword.isBlank()) {
@@ -44,15 +57,6 @@ public class BookSpecification {
             // 3. Filter by book status (AVAILABLE / OUT_OF_STOCK / ARCHIVED...)
             if (status != null) {
                 predicates.add(criteriaBuilder.equal(root.get("status"), status));
-            }
-
-            // 4. Filter by category (requires join on book_categories table)
-            if (category != null && !category.isBlank()) {
-                Join<Book, Category> categoryJoin = root.join("categories");
-                predicates.add(criteriaBuilder.equal(
-                    criteriaBuilder.lower(categoryJoin.get("name")),
-                    category.toLowerCase().trim()
-                ));
             }
 
             return criteriaBuilder.and(predicates.toArray(new Predicate[0]));

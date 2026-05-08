@@ -89,10 +89,38 @@ public class ReservationController {
         return ResponseEntity.noContent().build();
     }
 
+    @PostMapping("/{id}/confirm")
+    @PreAuthorize("hasAnyAuthority('ROLE_USER', 'ROLE_LIBRARIAN', 'ROLE_ADMIN')")
+    public ResponseEntity<ReservationResponse> confirmReservation(
+            @PathVariable UUID id,
+            Authentication authentication) {
+        String email = authentication.getName();
+        User user = authenticationService.findByEmail(email);
+        Long userId = user.getId();
+        ReservationResponse response = reservationService.confirmBorrowFromHold(userId, id);
+        return ResponseEntity.ok(response);
+    }
+
     @GetMapping("/book/{bookId}/count")
     @PreAuthorize("hasAnyAuthority('ROLE_USER', 'ROLE_LIBRARIAN', 'ROLE_ADMIN')")
     public ResponseEntity<Long> getReservationCount(@PathVariable UUID bookId) {
         long count = reservationService.getReservationCount(bookId);
         return ResponseEntity.ok(count);
+    }
+
+    @GetMapping("/check")
+    @PreAuthorize("hasAnyAuthority('ROLE_USER', 'ROLE_LIBRARIAN', 'ROLE_ADMIN')")
+    public ResponseEntity<ReservationResponse> checkReservationStatus(
+            @RequestParam UUID bookId,
+            Authentication authentication) {
+        String email = authentication.getName();
+        User user = authenticationService.findByEmail(email);
+        Long userId = user.getId();
+        log.info("Checking reservation status for user: {} and book: {}", userId, bookId);
+        ReservationResponse response = reservationService.checkReservationStatus(userId, bookId);
+        if (response == null) {
+            return ResponseEntity.noContent().build();
+        }
+        return ResponseEntity.ok(response);
     }
 }
