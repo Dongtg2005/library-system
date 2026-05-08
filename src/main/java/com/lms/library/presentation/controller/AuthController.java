@@ -48,7 +48,8 @@ public class AuthController {
         
         // Fix: Lấy User object từ email trước khi build response
         User user = authenticationService.findByEmail(email);
-        AuthResponse response = ControllerHelper.buildAuthResponse(user);
+        java.math.BigDecimal outstandingFines = authenticationService.getOutstandingFines(user.getId());
+        AuthResponse response = ControllerHelper.buildAuthResponse(user, outstandingFines);
         return ResponseEntity.ok(response);
     }
     

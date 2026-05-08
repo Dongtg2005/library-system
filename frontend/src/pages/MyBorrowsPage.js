@@ -126,16 +126,44 @@ const MyBorrowsPage = () => {
                 <th className="px-4 py-3">{t('myBorrowsPage.borrowDate')}</th>
                 <th className="px-4 py-3">{t('myBorrowsPage.dueDate')}</th>
                 <th className="px-4 py-3">{t('common.status')}</th>
+                <th className="px-4 py-3">Phí phạt & Trễ hạn</th>
                 <th className="px-4 py-3">{t('myBorrowsPage.action')}</th>
               </tr>
             </thead>
             <tbody>
               {list.map((item) => (
                 <tr key={item.id} className="border-t border-slate-200 dark:border-slate-800">
-                  <td className="px-4 py-3">{bookMap[item.bookId]?.title || item.bookId}</td>
+                  <td className="px-4 py-3 font-semibold text-slate-900 dark:text-slate-100">{item.bookTitle || bookMap[item.bookId]?.title || item.bookId}</td>
                   <td className="px-4 py-3">{item.borrowDate || '-'}</td>
                   <td className="px-4 py-3">{item.dueDate || '-'}</td>
-                  <td className="px-4 py-3">{item.borrowStatus}</td>
+                  <td className="px-4 py-3">
+                    <span className={`rounded-full px-2 py-1 text-xs font-bold ${
+                      item.borrowStatus === 'OVERDUE' ? 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300' :
+                      item.borrowStatus === 'ACTIVE' ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300' :
+                      'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-300'
+                    }`}>
+                      {item.borrowStatus}
+                    </span>
+                  </td>
+                  <td className="px-4 py-3">
+                    {item.borrowStatus === 'OVERDUE' || (item.fineAmount && item.fineAmount > 0) ? (
+                      <div className="flex flex-col gap-0.5">
+                        {item.overdueDays > 0 && (
+                          <span className="text-xs font-bold text-red-600 dark:text-red-400">Trễ {item.overdueDays} ngày</span>
+                        )}
+                        {item.fineAmount > 0 && (
+                          <span className="text-sm font-black text-amber-600 dark:text-amber-400">
+                            {item.fineAmount.toLocaleString()} VND
+                            <span className={`ml-1 text-xs font-bold ${item.finePaid ? 'text-green-600' : 'text-red-500'}`}>
+                              ({item.finePaid ? 'Đã đóng' : 'Chưa đóng'})
+                            </span>
+                          </span>
+                        )}
+                      </div>
+                    ) : (
+                      <span className="text-slate-400 font-medium">-</span>
+                    )}
+                  </td>
                   <td className="px-4 py-3">
                     <div className="flex gap-2">
                       {['ACTIVE', 'PENDING_APPROVAL'].includes(item.borrowStatus) && (

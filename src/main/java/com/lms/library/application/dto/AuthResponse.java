@@ -21,6 +21,9 @@ public class AuthResponse {
     private String accessToken;
     private LocalDateTime expiresAt;
 
+    private java.math.BigDecimal outstandingFines = java.math.BigDecimal.ZERO;
+    private Boolean hasOutstandingFines = false;
+
     private static String resolveRole(User user) {
         if (user.getRoles() == null || user.getRoles().isEmpty()) {
             return "USER";
@@ -38,6 +41,10 @@ public class AuthResponse {
     }
     
     public static AuthResponse from(User user, String token, LocalDateTime expiresAt) {
+        return from(user, token, expiresAt, java.math.BigDecimal.ZERO);
+    }
+
+    public static AuthResponse from(User user, String token, LocalDateTime expiresAt, java.math.BigDecimal outstandingFines) {
         String roleName = resolveRole(user);
         return AuthResponse.builder()
                 .userId(user.getId())
@@ -47,6 +54,8 @@ public class AuthResponse {
                 .tokenType("Bearer")
                 .accessToken(token)
                 .expiresAt(expiresAt)
+                .outstandingFines(outstandingFines != null ? outstandingFines : java.math.BigDecimal.ZERO)
+                .hasOutstandingFines(outstandingFines != null && outstandingFines.compareTo(java.math.BigDecimal.ZERO) > 0)
                 .build();
     }
 }

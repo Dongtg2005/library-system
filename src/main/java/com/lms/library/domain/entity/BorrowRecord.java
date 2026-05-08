@@ -145,7 +145,16 @@ public class BorrowRecord {
     }
 
     public int getOverdueDays() {
-        if (!isOverdue() || dueDate == null) {
+        if (dueDate == null) {
+            return 0;
+        }
+        if (isReturned() && returnDate != null) {
+            if (returnDate.isAfter(dueDate)) {
+                return (int) java.time.temporal.ChronoUnit.DAYS.between(dueDate, returnDate);
+            }
+            return 0;
+        }
+        if (!isOverdue()) {
             return 0;
         }
         return (int) java.time.temporal.ChronoUnit.DAYS.between(dueDate, LocalDate.now());

@@ -82,8 +82,12 @@ public class AuthenticationService {
             throw new InvalidCredentialsException("Account is disabled");
         }
         
+        java.math.BigDecimal outstandingFines = userProfileRepository.findByUserId(user.getId())
+                .map(com.lms.library.domain.entity.UserProfile::getOutstandingFines)
+                .orElse(java.math.BigDecimal.ZERO);
+
         String token = jwtUtil.generateToken(user);
-        return AuthResponse.from(user, token, jwtUtil.getExpirationTime());
+        return AuthResponse.from(user, token, jwtUtil.getExpirationTime(), outstandingFines);
     }
     
     @Transactional(readOnly = true)
@@ -119,5 +123,12 @@ public class AuthenticationService {
         } catch (Exception e) {
             return null;
         }
+    }
+
+    @Transactional(readOnly = true)
+    public java.math.BigDecimal getOutstandingFines(Long userId) {
+        return userProfileRepository.findByUserId(userId)
+                .map(com.lms.library.domain.entity.UserProfile::getOutstandingFines)
+                .orElse(java.math.BigDecimal.ZERO);
     }
 }

@@ -28,6 +28,10 @@ public class ControllerHelper {
     }
     
     public static AuthResponse buildAuthResponse(User user) {
+        return buildAuthResponse(user, java.math.BigDecimal.ZERO);
+    }
+    
+    public static AuthResponse buildAuthResponse(User user, java.math.BigDecimal outstandingFines) {
         String roleName = "USER";
         if (user.getRoles() != null && !user.getRoles().isEmpty()) {
             if (user.getRoles().stream().anyMatch(role -> "ADMIN".equalsIgnoreCase(role.getName()))) {
@@ -42,6 +46,8 @@ public class ControllerHelper {
                 .fullName(user.getFullName())
                 .role(roleName)
                 .tokenType("Bearer")
+                .outstandingFines(outstandingFines != null ? outstandingFines : java.math.BigDecimal.ZERO)
+                .hasOutstandingFines(outstandingFines != null && outstandingFines.compareTo(java.math.BigDecimal.ZERO) > 0)
                 .build();
     }
 }

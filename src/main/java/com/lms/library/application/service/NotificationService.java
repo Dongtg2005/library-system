@@ -153,6 +153,18 @@ public class NotificationService {
         );
     }
 
+    public NotificationDTO notifyUserFineCreated(Long userId, java.math.BigDecimal amount, String bookTitle) {
+        return createNotification(
+            userId,
+            Notification.NotificationType.OVERDUE,
+            "Phí phạt trả sách muộn",
+            String.format("Bạn có khoản phí phạt mới trị giá %,.0f VND cho cuốn sách \"%s\" do trả muộn.", amount, bookTitle),
+            Notification.ResourceType.BOOK,
+            null
+        );
+    }
+
+
     public NotificationDTO notifyUserBookAvailable(Long userId, String bookTitle, UUID bookId) {
         return createNotification(
             userId,

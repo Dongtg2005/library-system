@@ -34,6 +34,17 @@ public class BorrowResponse {
     private String returnNotes;
     private String rejectionReason;
 
+    // Book Details
+    private String bookTitle;
+    private String bookAuthor;
+    private String coverImageUrl;
+
+    // Fine details
+    private java.math.BigDecimal fineAmount;
+    private Boolean finePaid;
+    private java.time.LocalDateTime finePaidAt;
+    private Integer overdueDays;
+
     public static BorrowResponse from(BorrowRecord record) {
         return from(record, null);
     }

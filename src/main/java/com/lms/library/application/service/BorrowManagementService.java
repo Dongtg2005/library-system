@@ -310,6 +310,10 @@ public class BorrowManagementService {
 
         // Create fine record if overdue
         if (overdueFine.compareTo(BigDecimal.ZERO) > 0) {
+            record.setFineAmount(overdueFine);
+            record.setFinePaid(false);
+            borrowRecordRepository.save(record);
+
             Fine fine = Fine.builder()
                     .borrowRecordId(record.getId())
                     .memberId(memberId)
@@ -326,6 +330,13 @@ public class BorrowManagementService {
                 userProfile.setOutstandingFines(
                     userProfile.getOutstandingFines().add(overdueFine));
                 userProfileRepository.save(userProfile);
+            }
+
+            // Notify user about fine creation
+            try {
+                notificationService.notifyUserFineCreated(memberId, overdueFine, book.getTitle());
+            } catch (Exception e) {
+                log.error("Failed to notify user about fine creation", e);
             }
         }
 
@@ -387,6 +398,10 @@ public class BorrowManagementService {
 
         // Create fine record if overdue
         if (overdueFine.compareTo(BigDecimal.ZERO) > 0) {
+            record.setFineAmount(overdueFine);
+            record.setFinePaid(false);
+            borrowRecordRepository.save(record);
+
             Fine fine = Fine.builder()
                     .borrowRecordId(record.getId())
                     .memberId(record.getMemberId())
@@ -403,6 +418,13 @@ public class BorrowManagementService {
                 userProfile.setOutstandingFines(
                     userProfile.getOutstandingFines().add(overdueFine));
                 userProfileRepository.save(userProfile);
+            }
+
+            // Notify user about fine creation
+            try {
+                notificationService.notifyUserFineCreated(record.getMemberId(), overdueFine, book.getTitle());
+            } catch (Exception e) {
+                log.error("Failed to notify user about fine creation", e);
             }
         }
 
@@ -455,7 +477,22 @@ public class BorrowManagementService {
         String memberName = userProfileRepository.findByUserId(record.getMemberId())
                 .map(UserProfile::getFullName)
                 .orElse("Member #" + record.getMemberId());
-        return BorrowResponse.from(record, memberName);
+        
+        Book book = bookRepository.findById(record.getBookId()).orElse(null);
+        String bookTitle = book != null ? book.getTitle() : "Unknown Book";
+        String bookAuthor = book != null ? book.getAuthor() : "Unknown Author";
+        String coverImageUrl = book != null ? book.getCoverImageUrl() : null;
+
+        BorrowResponse response = BorrowResponse.from(record, memberName);
+        response.setBookTitle(bookTitle);
+        response.setBookAuthor(bookAuthor);
+        response.setCoverImageUrl(coverImageUrl);
+        response.setFineAmount(record.getFineAmount());
+        response.setFinePaid(record.getFinePaid());
+        response.setFinePaidAt(record.getFinePaidAt());
+        response.setOverdueDays(record.getOverdueDays());
+        
+        return response;
     }
     
     private void calculateOverdueFines(Long memberId) {
