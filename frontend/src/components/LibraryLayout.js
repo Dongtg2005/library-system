@@ -18,6 +18,7 @@ import ThemeToggle from './ThemeToggle';
 import Toast from './Toast';
 import NotificationBell from './NotificationBell';
 import NotificationDetail from './NotificationDetail';
+import ChatWidget from './ChatWidget';
 import { useAuth } from '../context/AuthContext';
 import { useTranslation } from '../context/LanguageContext';
 
@@ -159,6 +160,9 @@ const LibraryLayout = () => {
           document.body
         )
       }
+
+      {/* AI Chat Widget - chỉ hiển thị khi đã đăng nhập */}
+      {isAuthenticated && <ChatWidget />}
     </div>
   );
 };

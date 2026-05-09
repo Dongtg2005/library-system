@@ -105,3 +105,10 @@ spring.servlet.multipart:
   max-file-size: 50MB
   max-request-size: 50MB
   file-size-threshold: 2MB
+
+# Gemini AI Configuration
+gemini:
+  api:
+    key: ${GEMINI_API_KEY:}
+    url: https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent
+    timeout: 30

@@ -51,6 +51,7 @@ services:
       SPRING_DATA_REDIS_PORT: ${REDIS_PORT:-6379}
       SPRING_DATA_REDIS_PASSWORD: ${REDIS_PASSWORD}
       JWT_SECRET: ${JWT_SECRET:-LibraryManagementSystemSecureJWTKeyFor2024ProductionDeployment}
+      GEMINI_API_KEY: ${GEMINI_API_KEY:-AIzaSyBl3H1_8nESXPcMP5hNCOkuT9WNxtr9lcU}
       JAVA_OPTS: "-Xms1g -Xmx4g -XX:+UseG1GC -XX:+UseStringDeduplication"
     depends_on:
       postgres:
