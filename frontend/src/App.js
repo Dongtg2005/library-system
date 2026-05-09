@@ -7,6 +7,7 @@ import { ThemeProvider } from './context/ThemeContext';
 import { ToastProvider } from './context/ToastContext';
 import { LanguageProvider, useTranslation } from './context/LanguageContext';
 import AuthPage from './pages/AuthPage';
+import OAuth2RedirectHandler from './components/OAuth2RedirectHandler';
 import BookDetailPage from './pages/BookDetailPage';
 import RoleBasedDashboard from './components/RoleBasedDashboard';
 import BookPage from './pages/BookPage';
@@ -76,6 +77,7 @@ function AppRoutes() {
         <Route path="categories" element={<CategoriesPage />} />
       </Route>
 
+      <Route path="/oauth2/redirect" element={<OAuth2RedirectHandler />} />
       <Route path="/auth" element={<Navigate to="/login" replace />} />
       <Route
         path="/login"

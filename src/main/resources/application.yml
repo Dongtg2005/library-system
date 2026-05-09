@@ -36,6 +36,20 @@ spring:
       secret: ${JWT_SECRET:mySecretKeyForLibraryManagementSystem2024}
       expiration: 604800 # 7 days
       refresh-expiration: 2592000 # 30 days for refresh token
+    oauth2:
+      client:
+        registration:
+          google:
+            client-id: ${GOOGLE_CLIENT_ID:dummy-id}
+            client-secret: ${GOOGLE_CLIENT_SECRET:dummy-secret}
+            scope: email, profile
+            redirect-uri: "{baseUrl}/oauth2/callback/{registrationId}"
+
+app:
+  frontend-url: ${FRONTEND_URL:http://localhost:3000}
+  jwt:
+    access-token-expiration: 900000       # 15 phút
+    refresh-token-expiration: 604800000   # 7 ngày
   
   main:
     allow-bean-definition-overriding: true

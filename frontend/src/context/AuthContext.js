@@ -21,17 +21,80 @@ export const AuthProvider = ({ children }) => {
         setUser(userData);
       } else {
         localStorage.removeItem('token');
+        localStorage.removeItem('refreshToken');
         setToken(null);
         setUser(null);
       }
     } catch (error) {
       console.error('Token validation error:', error);
       localStorage.removeItem('token');
+      localStorage.removeItem('refreshToken');
       setToken(null);
       setUser(null);
     } finally {
       setLoading(false);
     }
+  }, []);
+
+  const loginWithTokens = useCallback((accessToken, refreshToken) => {
+    localStorage.setItem('token', accessToken);
+    localStorage.setItem('refreshToken', refreshToken);
+    setToken(accessToken);
+    validateToken(accessToken);
+  }, [validateToken]);
+
+  // Override global fetch to automatically handle token refreshment on 401 Unauthorized
+  useEffect(() => {
+    const originalFetch = window.fetch;
+    window.fetch = async function (url, options) {
+      let response = await originalFetch(url, options);
+      
+      if (response.status === 401 && !url.includes('/api/v1/auth/refresh')) {
+        const storedRefreshToken = localStorage.getItem('refreshToken');
+        if (storedRefreshToken) {
+          try {
+            const refreshRes = await originalFetch('/api/v1/auth/refresh', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ refreshToken: storedRefreshToken }),
+            });
+            
+            if (refreshRes.ok) {
+              const refreshData = await refreshRes.json();
+              localStorage.setItem('token', refreshData.token);
+              localStorage.setItem('refreshToken', refreshData.refreshToken);
+              setToken(refreshData.token);
+              
+              // Retry original request with new token
+              const newOptions = { ...options };
+              if (newOptions) {
+                if (!newOptions.headers) {
+                  newOptions.headers = {};
+                }
+                newOptions.headers = {
+                  ...newOptions.headers,
+                  'Authorization': `Bearer ${refreshData.token}`,
+                };
+              }
+              return originalFetch(url, newOptions);
+            } else {
+              // Refresh token expired or revoked -> logout
+              localStorage.removeItem('token');
+              localStorage.removeItem('refreshToken');
+              setToken(null);
+              setUser(null);
+            }
+          } catch (err) {
+            console.error('Auto refresh token failed:', err);
+          }
+        }
+      }
+      return response;
+    };
+
+    return () => {
+      window.fetch = originalFetch;
+    };
   }, []);
 
   // Validate token on mount and whenever it changes
@@ -97,6 +160,7 @@ export const AuthProvider = ({ children }) => {
 
   const logout = async () => {
     try {
+      const storedRefreshToken = localStorage.getItem('refreshToken');
       if (token) {
         await fetch('/api/v1/auth/logout', {
           method: 'POST',
@@ -104,12 +168,14 @@ export const AuthProvider = ({ children }) => {
             'Authorization': `Bearer ${token}`,
             'Content-Type': 'application/json',
           },
+          body: JSON.stringify({ refreshToken: storedRefreshToken }),
         });
       }
     } catch (error) {
       console.error('Logout error:', error);
     } finally {
       localStorage.removeItem('token');
+      localStorage.removeItem('refreshToken');
       setToken(null);
       setUser(null);
     }
@@ -123,6 +189,7 @@ export const AuthProvider = ({ children }) => {
     login,
     register,
     logout,
+    loginWithTokens,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
