@@ -11,7 +11,7 @@ import Modal from './Modal';
 import BookCoverUpload from './BookCoverUpload';
 // Import mock data và API functions
 import { bookRows, PagedData } from '../data/mockData';
-import { createBook, deleteBook, fetchBooks, searchBooks, updateBook, fetchCategoriesTree } from '../lib/api';
+import { createBook, createCategory, deleteBook, fetchBooks, searchBooks, updateBook, fetchCategoriesTree } from '../lib/api';
 import { formatCategoryList, formatCategoryName } from '../lib/categoryLabels';
 // Import custom hooks
 import { useAuth } from '../context/AuthContext';
@@ -51,6 +51,10 @@ const BookTable = () => {
   const [formError, setFormError] = useState('');
   // Danh sách danh mục (categories) từ API
   const [categoryList, setCategoryList] = useState([]);
+  // Tên danh mục mới đang nhập
+  const [newCategoryName, setNewCategoryName] = useState('');
+  // Trạng thái đang tạo danh mục mới
+  const [creatingCategory, setCreatingCategory] = useState(false);
 
   // Chuẩn hóa mock data: chuyển đổi định dạng của bookRows để match với API response
   const normalizedMockBooks = useMemo(
@@ -199,6 +203,23 @@ const BookTable = () => {
       loadBooks();
     } catch (saveError) {
       setFormError(saveError.message || t('bookTable.saveFailed'));
+    }
+  };
+
+  // Tạo danh mục mới và tự động chọn vào form
+  const handleCreateCategory = async () => {
+    const name = newCategoryName.trim();
+    if (!name || !token) return;
+    setCreatingCategory(true);
+    try {
+      const created = await createCategory(token, { name, description: '' });
+      setCategoryList((prev) => [...prev, created]);
+      setForm((prev) => ({ ...prev, categoryIds: [...prev.categoryIds, created.id] }));
+      setNewCategoryName('');
+    } catch (err) {
+      setFormError(err.message || t('bookTable.saveFailed'));
+    } finally {
+      setCreatingCategory(false);
     }
   };
 
@@ -401,6 +422,26 @@ const BookTable = () => {
               </div>
             </Listbox>
             
+            {/* ===== CREATE NEW CATEGORY INLINE ===== */}
+            <div className="mt-3 flex gap-2">
+              <input
+                type="text"
+                value={newCategoryName}
+                onChange={(e) => setNewCategoryName(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && handleCreateCategory()}
+                placeholder={t('bookTable.newCategoryPlaceholder') || 'Tên danh mục mới...'}
+                className="flex-1 rounded-xl border border-slate-200 bg-white px-3 py-1.5 text-sm outline-none focus:border-primary dark:border-slate-700 dark:bg-slate-950"
+              />
+              <button
+                type="button"
+                onClick={handleCreateCategory}
+                disabled={!newCategoryName.trim() || creatingCategory}
+                className="rounded-xl bg-primary px-3 py-1.5 text-xs font-bold text-white disabled:opacity-40 hover:opacity-90 transition-opacity"
+              >
+                {creatingCategory ? '...' : (t('bookTable.addCategory') || '+ Thêm')}
+              </button>
+            </div>
+
             {/* ===== SELECTED TAGS DISPLAY ===== */}
             {/* Hiển thị các category được chọn dưới dạng tag */}
             {form.categoryIds.length > 0 && (

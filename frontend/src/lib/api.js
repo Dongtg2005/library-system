@@ -54,6 +54,9 @@ export const fetchBookById = (id) => apiRequest(`/api/v1/books/${id}`);
 export const fetchCategories = (token) => apiRequest('/api/v1/categories', { token });
 
 export const fetchCategoriesTree = (token) => apiRequest('/api/v1/categories/tree', { token });
+
+export const createCategory = (token, payload) =>
+  apiRequest('/api/v1/categories', { method: 'POST', token, body: payload });
 export const createBook = (token, payload) =>
   apiRequest('/api/v1/books', {
     method: 'POST',
