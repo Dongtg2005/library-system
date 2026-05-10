@@ -590,7 +590,6 @@ const translations = {
 
     // CategoriesPage
     'categoriesPage.title': 'Categories',
-    'categoriesPage.description': 'Aggregated from `/api/v1/books` response.',
     'categoriesPage.loading': 'Loading categories...',
     'categoriesPage.noCategories': 'No categories found',
     'categoriesPage.uncategorized': 'Uncategorized',
@@ -1698,7 +1697,6 @@ const translations = {
 
     // CategoriesPage
     'categoriesPage.title': 'Danh mục',
-    'categoriesPage.description': 'Tổng hợp từ phản hồi `/api/v1/books`.',
     'categoriesPage.loading': 'Đang tải danh mục...',
     'categoriesPage.noCategories': 'Không tìm thấy danh mục nào',
     'categoriesPage.uncategorized': 'Chưa phân loại',

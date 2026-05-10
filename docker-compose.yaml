@@ -52,8 +52,8 @@ services:
       SPRING_DATA_REDIS_PASSWORD: ${REDIS_PASSWORD}
       JWT_SECRET: ${JWT_SECRET:-LibraryManagementSystemSecureJWTKeyFor2024ProductionDeployment}
       GEMINI_API_KEY: ${GEMINI_API_KEY}
-      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID}
-      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET}
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-dummy-client-id}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-dummy-client-secret}
       FRONTEND_URL: http://localhost:3000
       JAVA_OPTS: "-Xms1g -Xmx4g -XX:+UseG1GC -XX:+UseStringDeduplication"
     depends_on:
