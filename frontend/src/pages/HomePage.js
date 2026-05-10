@@ -27,8 +27,12 @@ const HomePage = () => {
           fetchTopBorrowedBooks({ limit: 3 }),
         ]);
         if (mounted) {
-          setBooks(booksData?.content || []);
-          setTopRankMap(buildTopRankMap(Array.isArray(topBooks) ? topBooks : []));
+          const topList = Array.isArray(topBooks) ? topBooks : [];
+          const regularBooks = booksData?.content || [];
+          const topIds = new Set(topList.map((b) => String(b.id)));
+          const merged = [...topList, ...regularBooks.filter((b) => !topIds.has(String(b.id)))];
+          setBooks(merged);
+          setTopRankMap(buildTopRankMap(topList));
         }
       } catch {
         if (mounted) {
@@ -60,12 +64,16 @@ const HomePage = () => {
 
   const featured = useMemo(() => {
     const keyword = search.trim().toLowerCase();
-    const source = books.slice(0, 8);
+    const topIds = new Set(Object.keys(topRankMap));
+    const topBooks = books.filter((b) => topIds.has(String(b.id)))
+      .sort((a, b) => (topRankMap[String(a.id)] || 99) - (topRankMap[String(b.id)] || 99));
+    const rest = books.filter((b) => !topIds.has(String(b.id)));
+    const source = [...topBooks, ...rest].slice(0, 8);
     if (!keyword) return source;
     return source.filter((book) =>
       [book.title, book.author, book.category].some((value) => value?.toLowerCase().includes(keyword)),
     );
-  }, [books, search]);
+  }, [books, search, topRankMap]);
 
   const categories = useMemo(() => {
     const map = books.reduce((acc, book) => {

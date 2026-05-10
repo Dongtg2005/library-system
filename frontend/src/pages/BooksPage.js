@@ -18,7 +18,8 @@ const BooksPage = () => {
   const navigate = useNavigate();
   const { t, language } = useTranslation();
 
-  const [books, setBooks] = useState([]);
+  const [rawBooks, setRawBooks] = useState([]);
+  const [topBooks, setTopBooks] = useState([]);
   const [topRankMap, setTopRankMap] = useState({});
   const [page, setPage] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
@@ -98,7 +99,7 @@ const BooksPage = () => {
       setLoading(true);
       setError('');
       try {
-        const hasFilters = debouncedSearchTerm || categoryFilter || authorFilter || statusFilter;
+        const hasFilters = !!(debouncedSearchTerm || categoryFilter || authorFilter || statusFilter);
         const params = {
           page,
           size: 12,
@@ -115,12 +116,12 @@ const BooksPage = () => {
         const response = hasFilters ? await searchBooks(params) : await fetchBooks(params);
         if (!mounted) return;
 
-        setBooks(response?.content || []);
+        setRawBooks(response?.content || []);
         setTotalPages(response?.totalPages || 0);
       } catch (err) {
         if (!mounted) return;
         setError(err.message || t('booksPage.failedToLoad'));
-        setBooks([]);
+        setRawBooks([]);
         setTotalPages(0);
       } finally {
         if (mounted) setLoading(false);
@@ -139,11 +140,13 @@ const BooksPage = () => {
 
     const loadTopBorrowed = async () => {
       try {
-        const topBooks = await fetchTopBorrowedBooks({ limit: 3 });
+        const top = await fetchTopBorrowedBooks({ limit: 3 });
         if (!mounted) return;
-        setTopRankMap(buildTopRankMap(Array.isArray(topBooks) ? topBooks : []));
+        const topList = Array.isArray(top) ? top : [];
+        setTopBooks(topList);
+        setTopRankMap(buildTopRankMap(topList));
       } catch {
-        if (mounted) setTopRankMap({});
+        if (mounted) { setTopBooks([]); setTopRankMap({}); }
       }
     };
 
@@ -152,6 +155,16 @@ const BooksPage = () => {
       mounted = false;
     };
   }, []);
+
+  const hasFilters = !!(debouncedSearchTerm || categoryFilter || authorFilter || statusFilter);
+
+  const books = useMemo(() => {
+    if (!hasFilters && page === 0 && topBooks.length > 0) {
+      const topIds = new Set(topBooks.map((b) => String(b.id)));
+      return [...topBooks, ...rawBooks.filter((b) => !topIds.has(String(b.id)))].slice(0, 12);
+    }
+    return rawBooks;
+  }, [rawBooks, topBooks, hasFilters, page]);
 
   const categories = useMemo(() => {
     const set = new Set();

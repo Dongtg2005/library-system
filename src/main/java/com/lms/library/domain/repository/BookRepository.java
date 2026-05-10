@@ -35,6 +35,8 @@ public interface BookRepository extends JpaRepository<Book, UUID>, JpaSpecificat
                            @Param("status") Book.BookStatus status,
                            Pageable pageable);
 
-       @Query("SELECT b FROM Book b WHERE b.status <> com.lms.library.domain.entity.Book$BookStatus.ARCHIVED ORDER BY COALESCE(b.borrowedQuantity, 0) DESC, b.updatedAt DESC")
-       List<Book> findTopBorrowedBooks(Pageable pageable);
+    @Query("SELECT b FROM Book b WHERE b.status <> com.lms.library.domain.entity.Book$BookStatus.ARCHIVED " +
+           "ORDER BY (SELECT COUNT(br) FROM BorrowRecord br WHERE br.bookId = b.id) DESC, " +
+           "COALESCE(b.borrowedQuantity, 0) DESC, b.updatedAt DESC")
+    List<Book> findTopBorrowedBooks(Pageable pageable);
 }

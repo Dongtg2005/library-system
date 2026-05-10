@@ -957,6 +957,7 @@ const translations = {
     'booksPage.viewDetail': 'View Detail',
     'booksPage.noBooksFound': 'No books found.',
     'booksPage.page': 'Page',
+    'booksPage.topBorrowed': 'Most Borrowed',
 
     // HomePage
     'homePage.discoverNextBook': 'Discover Your Next Favorite Book',
@@ -2058,6 +2059,7 @@ const translations = {
     'booksPage.viewDetail': 'Xem Chi tiết',
     'booksPage.noBooksFound': 'Không tìm thấy sách nào.',
     'booksPage.page': 'Trang',
+    'booksPage.topBorrowed': 'Mượn Nhiều Nhất',
 
     // HomePage
     'homePage.discoverNextBook': 'Khám phá Sách Yêu thích Tiếp theo của Bạn',
