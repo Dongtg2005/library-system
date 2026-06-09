@@ -269,6 +269,13 @@ public class BorrowManagementService {
         // Calculate overdue fine if applicable
         BigDecimal overdueFine = calculateOverdueFine(record);
 
+        // Fetch user profile
+        UserProfile userProfile = userProfileRepository.findByUserId(memberId)
+                .orElse(null);
+
+        // Process fine update before changing status to RETURNED
+        updateOverdueFineForRecord(record, userProfile);
+
         // Return book to inventory
         Book book = bookRepository.findById(record.getBookId())
                 .orElseThrow(() -> new ResourceNotFoundException("Book not found"));
@@ -286,8 +293,6 @@ public class BorrowManagementService {
         }
 
         // Decrement user's borrowed count
-        UserProfile userProfile = userProfileRepository.findByUserId(memberId)
-                .orElse(null);
         if (userProfile != null) {
             userProfile.decrementBorrowedCount();
             userProfileRepository.save(userProfile);
@@ -308,31 +313,8 @@ public class BorrowManagementService {
             log.error("Failed to create notification for librarian", e);
         }
 
-        // Create fine record if overdue
+        // Notify user about fine creation
         if (overdueFine.compareTo(BigDecimal.ZERO) > 0) {
-            record.setFineAmount(overdueFine);
-            record.setFinePaid(false);
-            borrowRecordRepository.save(record);
-
-            Fine fine = Fine.builder()
-                    .borrowRecordId(record.getId())
-                    .memberId(memberId)
-                    .amount(overdueFine)
-                    .fineType(Fine.FineType.OVERDUE)
-                    .status(Fine.FineStatus.PENDING)
-                    .reason("Book returned overdue by " + record.getOverdueDays() + " days")
-                    .build();
-
-            fineRepository.save(fine);
-
-            // Update user's outstanding fines
-            if (userProfile != null) {
-                userProfile.setOutstandingFines(
-                    userProfile.getOutstandingFines().add(overdueFine));
-                userProfileRepository.save(userProfile);
-            }
-
-            // Notify user about fine creation
             try {
                 notificationService.notifyUserFineCreated(memberId, overdueFine, book.getTitle());
             } catch (Exception e) {
@@ -358,6 +340,13 @@ public class BorrowManagementService {
         // Calculate overdue fine if applicable
         BigDecimal overdueFine = calculateOverdueFine(record);
 
+        // Fetch user profile
+        UserProfile userProfile = userProfileRepository.findByUserId(record.getMemberId())
+                .orElse(null);
+
+        // Process fine update before changing status to RETURNED
+        updateOverdueFineForRecord(record, userProfile);
+
         // Return book to inventory
         Book book = bookRepository.findById(record.getBookId())
                 .orElseThrow(() -> new ResourceNotFoundException("Book not found"));
@@ -374,8 +363,6 @@ public class BorrowManagementService {
         }
 
         // Decrement user's borrowed count (use record's memberId, not current user)
-        UserProfile userProfile = userProfileRepository.findByUserId(record.getMemberId())
-                .orElse(null);
         if (userProfile != null) {
             userProfile.decrementBorrowedCount();
             userProfileRepository.save(userProfile);
@@ -396,31 +383,8 @@ public class BorrowManagementService {
             log.error("Failed to create notification for librarian", e);
         }
 
-        // Create fine record if overdue
+        // Notify user about fine creation
         if (overdueFine.compareTo(BigDecimal.ZERO) > 0) {
-            record.setFineAmount(overdueFine);
-            record.setFinePaid(false);
-            borrowRecordRepository.save(record);
-
-            Fine fine = Fine.builder()
-                    .borrowRecordId(record.getId())
-                    .memberId(record.getMemberId())
-                    .amount(overdueFine)
-                    .fineType(Fine.FineType.OVERDUE)
-                    .status(Fine.FineStatus.PENDING)
-                    .reason("Book returned overdue by " + record.getOverdueDays() + " days")
-                    .build();
-
-            fineRepository.save(fine);
-
-            // Update user's outstanding fines
-            if (userProfile != null) {
-                userProfile.setOutstandingFines(
-                    userProfile.getOutstandingFines().add(overdueFine));
-                userProfileRepository.save(userProfile);
-            }
-
-            // Notify user about fine creation
             try {
                 notificationService.notifyUserFineCreated(record.getMemberId(), overdueFine, book.getTitle());
             } catch (Exception e) {
@@ -501,21 +465,99 @@ public class BorrowManagementService {
                 .filter(BorrowRecord::isOverdue)
                 .toList();
         
+        UserProfile userProfile = userProfileRepository.findByUserId(memberId).orElse(null);
         for (BorrowRecord record : overdueRecords) {
-            BigDecimal fineAmount = calculateOverdueFine(record);
-            if (fineAmount.compareTo(BigDecimal.ZERO) > 0) {
-                Fine fine = Fine.builder()
-                        .borrowRecordId(record.getId())
-                        .memberId(memberId)
-                        .amount(fineAmount)
-                        .fineType(Fine.FineType.OVERDUE)
-                        .status(Fine.FineStatus.PENDING)
-                        .reason("Book overdue by " + record.getOverdueDays() + " days")
-                        .build();
-                
-                fineRepository.save(fine);
+            updateOverdueFineForRecord(record, userProfile);
+        }
+    }
+
+    private BigDecimal updateOverdueFineForRecord(BorrowRecord record, UserProfile userProfile) {
+        if (!record.isOverdue()) {
+            return BigDecimal.ZERO;
+        }
+
+        BigDecimal totalOverdueFine = calculateOverdueFine(record);
+        if (totalOverdueFine.compareTo(BigDecimal.ZERO) <= 0) {
+            return BigDecimal.ZERO;
+        }
+
+        // Find total paid overdue fines for this record
+        BigDecimal totalPaidFines = fineRepository.findByBorrowRecordId(record.getId()).stream()
+                .filter(f -> f.getFineType() == Fine.FineType.OVERDUE && f.getStatus() == Fine.FineStatus.PAID)
+                .map(Fine::getAmount)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        BigDecimal newPendingAmount = totalOverdueFine.subtract(totalPaidFines);
+        if (newPendingAmount.compareTo(BigDecimal.ZERO) < 0) {
+            newPendingAmount = BigDecimal.ZERO;
+        }
+
+        // Find existing pending overdue fine
+        Fine pendingFine = fineRepository.findByBorrowRecordId(record.getId()).stream()
+                .filter(f -> f.getFineType() == Fine.FineType.OVERDUE && f.getStatus() == Fine.FineStatus.PENDING)
+                .findFirst()
+                .orElse(null);
+
+        if (pendingFine != null) {
+            BigDecimal difference = newPendingAmount.subtract(pendingFine.getAmount());
+            pendingFine.setAmount(newPendingAmount);
+            pendingFine.setReason("Book overdue by " + record.getOverdueDays() + " days");
+            fineRepository.save(pendingFine);
+
+            if (userProfile != null) {
+                BigDecimal newOutstanding = userProfile.getOutstandingFines().add(difference);
+                if (newOutstanding.compareTo(BigDecimal.ZERO) < 0) {
+                    newOutstanding = BigDecimal.ZERO;
+                }
+                userProfile.setOutstandingFines(newOutstanding);
+                userProfileRepository.save(userProfile);
+            }
+        } else if (newPendingAmount.compareTo(BigDecimal.ZERO) > 0) {
+            Fine newFine = Fine.builder()
+                    .borrowRecordId(record.getId())
+                    .memberId(record.getMemberId())
+                    .amount(newPendingAmount)
+                    .fineType(Fine.FineType.OVERDUE)
+                    .status(Fine.FineStatus.PENDING)
+                    .reason("Book overdue by " + record.getOverdueDays() + " days")
+                    .build();
+            fineRepository.save(newFine);
+
+            if (userProfile != null) {
+                userProfile.setOutstandingFines(userProfile.getOutstandingFines().add(newPendingAmount));
+                userProfileRepository.save(userProfile);
             }
         }
+
+        // Update BorrowRecord's fine details
+        record.setFineAmount(totalOverdueFine);
+        record.setFinePaid(newPendingAmount.compareTo(BigDecimal.ZERO) == 0);
+        borrowRecordRepository.save(record);
+
+        return newPendingAmount;
+    }
+
+    @Transactional
+    public void runDailyOverdueAndFineCalculation() {
+        log.info("Starting daily overdue and fine calculation job");
+        List<BorrowRecord> overdueRecords = borrowRecordRepository.findOverdueRecords();
+        log.info("Found {} overdue records to process", overdueRecords.size());
+
+        for (BorrowRecord record : overdueRecords) {
+            try {
+                // If status was ACTIVE, mark as OVERDUE
+                if (record.getBorrowStatus() == BorrowRecord.BorrowStatus.ACTIVE) {
+                    record.markAsOverdue();
+                    borrowRecordRepository.save(record);
+                }
+
+                UserProfile userProfile = userProfileRepository.findByUserId(record.getMemberId()).orElse(null);
+                updateOverdueFineForRecord(record, userProfile);
+            } catch (Exception e) {
+                log.error("Failed to process daily fine for record: {}", record.getId(), e);
+            }
+        }
+        log.info("Completed daily overdue and fine calculation job");
     }
     
     private BigDecimal calculateOverdueFine(BorrowRecord record) {

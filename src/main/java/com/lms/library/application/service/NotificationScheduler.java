@@ -23,12 +23,27 @@ public class NotificationScheduler {
     private final BookRepository bookRepository;
     private final NotificationService notificationService;
     private final ReservationService reservationService;
+    private final BorrowManagementService borrowManagementService;
 
     // Run every day at 8:00 AM
     @Scheduled(cron = "0 0 8 * * ?")
     @Transactional
     public void checkOverdueAndDueSoonBooks() {
         log.info("Starting scheduled check for overdue and due soon books");
+
+        // 1. Run daily fine calculation batch
+        try {
+            borrowManagementService.runDailyOverdueAndFineCalculation();
+        } catch (Exception e) {
+            log.error("Failed to run daily fine calculation job", e);
+        }
+
+        // 2. Mark expired reservations (older than 7 days) as EXPIRED
+        try {
+            reservationService.markExpiredReservations();
+        } catch (Exception e) {
+            log.error("Failed to mark expired reservations", e);
+        }
 
         // Check for overdue books
         List<BorrowRecord> overdueRecords = borrowRecordRepository.findOverdueRecords();

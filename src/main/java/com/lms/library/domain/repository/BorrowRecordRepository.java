@@ -32,7 +32,7 @@ public interface BorrowRecordRepository extends JpaRepository<BorrowRecord, UUID
 
     List<BorrowRecord> findByBookId(UUID bookId);
 
-    @Query("SELECT br FROM BorrowRecord br WHERE br.borrowStatus = 'ACTIVE' AND br.dueDate < CURRENT_DATE")
+    @Query("SELECT br FROM BorrowRecord br WHERE (br.borrowStatus = 'ACTIVE' OR br.borrowStatus = 'OVERDUE') AND br.dueDate < CURRENT_DATE")
     List<BorrowRecord> findOverdueRecords();
 
     @Query(value = "SELECT * FROM borrow_records br WHERE br.borrow_status = 'ACTIVE' AND br.due_date >= CURRENT_DATE AND br.due_date <= CURRENT_DATE + INTERVAL '3 days'", nativeQuery = true)
